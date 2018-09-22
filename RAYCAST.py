@@ -69,8 +69,13 @@ class Raycast:
         self.render = SETTINGS.render
         self.tile_size = SETTINGS.tile_size
         self.door_size = self.tile_size / 2
-        self.wall_width = int(SETTINGS.canvas_target_width / self.res)
-        self.wall_height = int(SETTINGS.canvas_target_height / self.res)
+        # TODO: Compute and store these known/knowable values instead of recomputing
+        # rounding up `wall_width` so that we don't clip the walls 
+        # on the right hand side of the screen
+        self.wall_width = math.ceil(SETTINGS.canvas_target_width / self.res)
+        # rounding up `wall_width` so that we don't clip the walls 
+        # on the right hand side of the screen
+        self.wall_height = math.floor(SETTINGS.canvas_target_height / self.res)
         self.canvas = canvas
         self.canvas2 = canvas2
 

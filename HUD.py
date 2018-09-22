@@ -23,8 +23,9 @@ class hud:
         
         self.scale_width = self.rect.width / self.scale_width
         self.scale_height = self.rect.height / self.scale_height
-        # use relative postioning
-        self.rect.topleft = (0, SETTINGS.canvas_target_height - self.rect.height)
+        # use relative postioning to set the actual playable area
+        SETTINGS.canvas_game_area_height = SETTINGS.canvas_target_height - self.rect.height
+        self.rect.topleft = (0, SETTINGS.canvas_game_area_height)
 
         self.text = [TEXT.Text(int(self.rect.width/35), self.rect.y + int(self.rect.height/2.5), 'PLAYER ARMOR', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 35),
                      TEXT.Text(int(self.rect.width/3.4), self.rect.y + int(self.rect.height/2.5), 'PLAYER HEALTH', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 35),
