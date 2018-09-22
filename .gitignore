@@ -4,7 +4,8 @@ build/
 dist/
 .venv/
 .vscode/
+.idea/
+pyinstaller.exe
+data/CrashReport.log
 data/settings.dat
 data/statistics.dat
-data/CrashReport.log
-pyinstaller.exe

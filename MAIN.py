@@ -77,7 +77,11 @@ class Load:
     def get_canvas_size(self):
         SETTINGS.canvas_map_width = len(SETTINGS.levels_list[SETTINGS.current_level].array[0])*SETTINGS.tile_size
         SETTINGS.canvas_map_height = len(SETTINGS.levels_list[SETTINGS.current_level].array)*SETTINGS.tile_size
-        SETTINGS.canvas_actual_width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+        #SETTINGS.canvas_actual_width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+        #SETTINGS.canvas_actual_height = int(SETTINGS.canvas_target_height / SETTINGS.resolution) * SETTINGS.resolution
+        SETTINGS.canvas_actual_width = SETTINGS.canvas_target_width
+        SETTINGS.canvas_actual_height = SETTINGS.canvas_target_height
+        SETTINGS.canvas_aspect_ratio = SETTINGS.canvas_actual_width / SETTINGS.canvas_actual_height
         SETTINGS.player_map_pos = SETTINGS.levels_list[SETTINGS.current_level].player_pos
         SETTINGS.player_pos[0] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * SETTINGS.tile_size) + SETTINGS.tile_size/2)
         SETTINGS.player_pos[1] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * SETTINGS.tile_size) + SETTINGS.tile_size/2)
@@ -167,14 +171,18 @@ class Canvas:
         self.height = height
         self.res_width = 0
         if SETTINGS.mode == 1:
-            self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+            #self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+            #self.height = SETTINGS.canvas_target_height
+            self.width = SETTINGS.canvas_target_width
             self.height = SETTINGS.canvas_target_height
             self.res_width = SETTINGS.canvas_actual_width
 
         if SETTINGS.fullscreen:
-            self.window = pygame.display.set_mode((self.width, int(self.height+(self.height*0.15))) ,pygame.FULLSCREEN)
+            # self.window = pygame.display.set_mode((self.width, int(self.height+(self.height*0.15))) ,pygame.FULLSCREEN)
+            self.window = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         else:
-            self.window = pygame.display.set_mode((self.width, int(self.height+(self.height*0.15))))
+            # self.window = pygame.display.set_mode((self.width, int(self.height+(self.height*0.15))))
+            self.window = pygame.display.set_mode((self.width, self.height))
         self.canvas = pygame.Surface((self.width, self.height))
         
         pygame.display.set_caption("DUGA")
