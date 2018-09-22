@@ -333,8 +333,8 @@ class Raycast:
         if wall_dist:
             # this is where the distorted wall shapse are occuring
             #wall_height = int((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))))
-            # ok this fixed the wall aspect ratio but fucked the sprites
-            wall_height = int(((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))) * (self.wall_width - self.wall_height)) / 0.5)            
+            # TODO: ok this improved(?) wall aspect ratio but fucked the sprites
+            wall_height = int(((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))) * (SETTINGS.canvas_aspect_ratio)) / 0.5)                      
             SETTINGS.zbuffer.append(Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh))
             SETTINGS.zbuffer[ray_number].distance = wall_dist
             rendered_slice = pygame.transform.scale(SETTINGS.zbuffer[ray_number].slice, (self.wall_width, wall_height))

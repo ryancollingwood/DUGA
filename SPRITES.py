@@ -76,12 +76,15 @@ class Sprite:
             if self.parent:
                 self.parent.in_canvas = False
 
+        # todo doe sthis help?
+        sprite_height = int(sprite_height * SETTINGS.canvas_aspect_ratio) 
+
         self.new_size = pygame.transform.scale(self.texture, (sprite_width, sprite_height))
         self.new_rect = self.new_size.get_rect()
         # I think my changes to HUD screwed this up
         #self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
         # TODO Fix this
-        self.new_rect.center = (xTmp, (SETTINGS.canvas_game_area_height/2) )
+        self.new_rect.center = (xTmp, (SETTINGS.canvas_target_height/2) )
         
         if self.parent:
             self.parent.hit_rect = self.new_rect

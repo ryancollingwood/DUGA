@@ -1,0 +1,10 @@
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "main.py", line 455, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "main.py", line 261, in render_screen
+    sprite.get_pos(canvas)
+  File "C:\DUGA\SPRITES.py", line 81, in get_pos
+    self.new_size = pygame.transform.scale(self.texture, (sprite_width, sprite_height))
+TypeError: integer argument expected, got float
