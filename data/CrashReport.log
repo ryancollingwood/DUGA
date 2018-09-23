@@ -1,0 +1,62 @@
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "c:\DUGA\MAIN.py", line 452, in main_loop
+    gameRaycast.calculate()
+  File "c:\DUGA\RAYCAST.py", line 117, in calculate
+    self.cast(SETTINGS.player_rect, degree, ray_number)
+  File "c:\DUGA\RAYCAST.py", line 174, in cast
+    H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / TAN_IN_RADIANS[angle]
+KeyError: 331.8204
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "c:\DUGA\MAIN.py", line 452, in main_loop
+    gameRaycast.calculate()
+  File "c:\DUGA\RAYCAST.py", line 117, in calculate
+    self.cast(SETTINGS.player_rect, degree, ray_number)
+  File "c:\DUGA\RAYCAST.py", line 174, in cast
+    H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / TAN_IN_RADIANS[angle]
+KeyError: 335.89180000000005
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "c:\DUGA\MAIN.py", line 457, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "c:\DUGA\MAIN.py", line 263, in render_screen
+    sprite.get_pos(canvas)
+  File "c:\DUGA\SPRITES.py", line 63, in get_pos
+    if thetaTemp > DEGREES_270 and angle < DEGREES_90:
+NameError: name 'DEGREES_270' is not defined
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "c:\DUGA\MAIN.py", line 452, in main_loop
+    gameRaycast.calculate()
+  File "c:\DUGA\RAYCAST.py", line 117, in calculate
+    self.cast(SETTINGS.player_rect, degree, ray_number)
+  File "c:\DUGA\RAYCAST.py", line 175, in cast
+    H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / get_tan_in_radians(angle)
+NameError: name 'get_tan_in_radians' is not defined
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "c:\DUGA\MAIN.py", line 457, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "c:\DUGA\MAIN.py", line 263, in render_screen
+    sprite.get_pos(canvas)
+  File "c:\DUGA\SPRITES.py", line 63, in get_pos
+    if thetaTemp > DEGREES_270 and angle < DEGREES_90:
+NameError: name 'DEGREES_270' is not defined
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "c:\DUGA\MAIN.py", line 452, in main_loop
+    gameRaycast.calculate()
+  File "c:\DUGA\RAYCAST.py", line 123, in calculate
+    self.cast(SETTINGS.player_rect, degree, ray_number)
+  File "c:\DUGA\RAYCAST.py", line 177, in cast
+    H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / get_tan_in_radians(angle)
+  File "c:\DUGA\RAYCAST.py", line 76, in get_tan_in_radians
+    return TAN_IN_RADIANS[angle]
+KeyError: -0.0009
