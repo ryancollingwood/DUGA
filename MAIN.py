@@ -175,7 +175,9 @@ class Canvas:
         self.height = height
         self.res_width = 0
         if SETTINGS.mode == 1:
-            self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+            #self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+            #self.height = SETTINGS.canvas_target_height
+            self.width = SETTINGS.canvas_target_width
             self.height = SETTINGS.canvas_target_height
             self.res_width = SETTINGS.canvas_actual_width
 
