@@ -1,11 +1,8 @@
 import pygame
 import math
 import SETTINGS
-from consts.geom import DEGREES_360, DEGREES_270, DEGREES_180, DEGREES_90
+
  # I noticed, that the sprites are not projected correctly. However, I do not have the guts to fix it. Feel free to take a look.
-
-SPRITE_MAX_HEIGHT = 2500
-
 
 class Sprite:
     '''== Create a sprite ==\ntexture -> loaded texture | ID -> unique\npos -> px coords          | texture_type -> sprite, npc'''
@@ -52,25 +49,22 @@ class Sprite:
 
         thetaTemp = math.atan2(ypos, xpos)
         thetaTemp = math.degrees(thetaTemp)
-        
         if thetaTemp < 0:
-            thetaTemp += DEGREES_360
+            thetaTemp += 360
             
         self.theta = thetaTemp
 
         yTmp = angle + (fov/2) - thetaTemp
-        
-        if thetaTemp > DEGREES_270 and angle < DEGREES_90:
-            yTmp = angle + (fov/2) - thetaTemp + DEGREES_360
-        if angle > DEGREES_270 and thetaTemp < DEGREES_90:
-            yTmp = angle + (fov/2) - thetaTemp - DEGREES_360
+        if thetaTemp > 270 and angle < 90:
+            yTmp = angle + (fov/2) - thetaTemp + 360
+        if angle > 270 and thetaTemp < 90:
+            yTmp = angle + (fov/2) - thetaTemp - 360
 
         xTmp = yTmp * SETTINGS.canvas_actual_width / fov
                                                     
         sprite_height = int((self.rect.height / dist) * (100 / math.tan(math.radians(fov * 0.8))))
-        
-        if sprite_height > SPRITE_MAX_HEIGHT:
-            sprite_height = SPRITE_MAX_HEIGHT
+        if sprite_height > 2500:
+            sprite_height = 2500
 
         sprite_width = int(self.rect.width / self.rect.height * sprite_height)
         

@@ -2,7 +2,6 @@
 
 import SETTINGS
 import PLAYER
-from consts.geom import DEGREES_360, DEGREES_270, DEGREES_180, DEGREES_90, DEGREES_0
 import pygame
 import math
 
@@ -60,20 +59,7 @@ class Slice:
             self.shade_slice = pygame.Surface(self.tempslice.get_size()).convert_alpha()
             self.shade_slice.fill((SETTINGS.shade_rgba[0]*intensity, SETTINGS.shade_rgba[1]*intensity,
                                    SETTINGS.shade_rgba[2]*intensity, SETTINGS.shade_rgba[3]*intensity))
-
-# todo pre-calc and pickle        
-TAN_IN_RADIANS = {}
-
-ANGLE_PERCISION = 10000
-for x in range((DEGREES_360 * ANGLE_PERCISION) *-1, DEGREES_360 * ANGLE_PERCISION):
-    angle = float(x)/float(ANGLE_PERCISION)
-    TAN_IN_RADIANS[angle] = math.tan(math.radians(angle))
-
-def get_tan_in_radians(angle):
-
-    trunc_angle = str(angle).split(".")
-    angle = float(trunc_angle[0]+"."+trunc_angle[1][0:4]) 
-    return TAN_IN_RADIANS[angle]
+        
 
 class Raycast:
     '''== Raycasting class ==\ncanvas -> Game canvas'''
@@ -90,7 +76,7 @@ class Raycast:
         self.wall_height = int(SETTINGS.canvas_target_height / self.res)
         self.wall_width_to_height_difference = self.wall_width - self.wall_height
         self.fov_mod = self.fov * 0.8
-        self.wall_height_mod = (DEGREES_360 / math.tan(math.radians(self.fov_mod))) * (self.wall_width_to_height_difference)        
+        self.wall_height_mod = (360 / math.tan(math.radians(self.fov_mod))) * (self.wall_width_to_height_difference)        
         self.canvas = canvas
         self.canvas2 = canvas2
 
@@ -113,10 +99,10 @@ class Raycast:
 
         while ray < fov:
             degree = angle - ray
-            if degree <= DEGREES_0:
-                degree += DEGREES_360
-            elif degree > DEGREES_360:
-                degree -= DEGREES_360
+            if degree <= 0:
+                degree += 360
+            elif degree > 360:
+                degree -= 360
 
             self.beta = abs(degree - angle)
              
@@ -158,31 +144,30 @@ class Raycast:
             elif V_hit:
                 if V_distance < H_distance:
                     return True
-
+            
 
     def cast(self, player_rect, angle, ray_number):
         H_hit = False
         V_hit = False
         H_offset = V_offset = 0
         end_pos = (0, 0)
-
         angle -= 0.001
 
         #Horizontal
-        if angle < DEGREES_180:
+        if angle < 180:
             H_y = int(player_rect.center[1] / self.tile_size) * self.tile_size
         else:
             H_y = int(player_rect.center[1] / self.tile_size) * self.tile_size + self.tile_size
 
-        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / get_tan_in_radians(angle)
+        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / math.tan(math.radians(angle))
 
         #Vertical
-        if angle > DEGREES_270 or angle < DEGREES_90:
+        if angle > 270 or angle < 90:
             V_x = int(player_rect.center[0] / self.tile_size) * self.tile_size + self.tile_size
         else:
             V_x = int(player_rect.center[0] / self.tile_size) * self.tile_size
 
-        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * get_tan_in_radians(angle)
+        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * math.tan(math.radians(angle))
 
         #Extend
         for x in range(0, SETTINGS.render):
@@ -205,12 +190,12 @@ class Raycast:
                         self.current_htile = tile
                         if tile.type == 'hdoor':
                             H_y -= self.door_size
-                            H_x += self.door_size / get_tan_in_radians(angle)
+                            H_x += self.door_size / math.tan(math.radians(angle))
                             H_offset = offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                             if H_offset < 0:
                                 H_hit = False
                                 H_y += self.door_size
-                                H_x -= self.door_size / get_tan_in_radians(angle)
+                                H_x -= self.door_size / math.tan(math.radians(angle))
                         else:
                             H_offset = offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                             
@@ -220,12 +205,12 @@ class Raycast:
                         self.current_htile = tile
                         if tile.type == 'hdoor':
                             H_y += self.door_size
-                            H_x -= self.door_size / get_tan_in_radians(angle)
+                            H_x -= self.door_size / math.tan(math.radians(angle))
                             H_offset = offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                             if H_offset < 0:
                                 H_hit = False
                                 H_y -= self.door_size
-                                H_x += self.door_size / get_tan_in_radians(angle)
+                                H_x += self.door_size / math.tan(math.radians(angle))
                         else:
                             H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                                 
@@ -239,12 +224,12 @@ class Raycast:
                         self.current_vtile = tile
                         if tile.type == 'vdoor':
                             V_x += self.door_size
-                            V_y -= self.door_size * get_tan_in_radians(angle)
+                            V_y -= self.door_size * math.tan(math.radians(angle))
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
                             if V_offset < 0:
                                V_hit = False
                                V_x -= self.door_size
-                               V_y += self.door_size * get_tan_in_radians(angle)
+                               V_y += self.door_size * math.tan(math.radians(angle))
                         else:
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
                             
@@ -254,35 +239,35 @@ class Raycast:
                         self.current_vtile = tile
                         if tile.type == 'vdoor':
                             V_x -= self.door_size
-                            V_y += self.door_size * get_tan_in_radians(angle)
+                            V_y += self.door_size * math.tan(math.radians(angle))
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
                             if V_offset < 0:
                                V_hit = False
                                V_x += self.door_size
-                               V_y -= self.door_size * get_tan_in_radians(angle)
+                               V_y -= self.door_size * math.tan(math.radians(angle))
                         else:
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
                                
             #Extend actual ray
             if not H_hit:
-                if angle < DEGREES_180:
+                if angle < 180:
                     H_y -= self.tile_size
                 else:
                     H_y += self.tile_size
-                if angle >= DEGREES_180:
-                    H_x -= self.tile_size / get_tan_in_radians(angle)
+                if angle >= 180:
+                    H_x -= self.tile_size / math.tan(math.radians(angle))
                 else:
-                    H_x += self.tile_size / get_tan_in_radians(angle)                
+                    H_x += self.tile_size / math.tan(math.radians(angle))                
 
             if not V_hit:
-                if angle > DEGREES_270 or angle < DEGREES_90: # ->
+                if angle > 270 or angle < 90: # ->
                     V_x += self.tile_size
                 else:
                     V_x -= self.tile_size
-                if angle >= DEGREES_270 or angle < DEGREES_90: # <-
-                    V_y -= self.tile_size * get_tan_in_radians(angle)
+                if angle >= 270 or angle < 90: # <-
+                    V_y -= self.tile_size * math.tan(math.radians(angle))
                 else:
-                    V_y += self.tile_size * get_tan_in_radians(angle)
+                    V_y += self.tile_size * math.tan(math.radians(angle))
 
 
         if V_hit and H_hit:
