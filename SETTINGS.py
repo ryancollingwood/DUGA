@@ -37,11 +37,14 @@ playing_tutorial = False
 '''Canvas settings'''
 canvas_target_width = 700    #700
 canvas_target_height = 550    #600
-#Below this point are the non-configurable canvas variables.
+# Below this point are the non-configurable canvas variables.
 canvas_actual_width = 0
+canvas_actual_height = 0
+# What the height of the gameplay are less the HUD
+canvas_game_area_height = canvas_target_height
+canvas_aspect_ratio = 0
 canvas_map_width = None
 canvas_map_height = None
-window_height = int(canvas_target_height + (canvas_target_height *0.15))
 switch_mode = False
 axes = (0, 0)
 screen_shake = 0

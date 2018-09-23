@@ -358,6 +358,7 @@ class Gun:
         canvas.blit(self.current_img, self.aim_pos)
 
     def re_init(self):
+        # TODO: found the default aim position to be a bit to low with HUD positioning changes
         self.aim_pos = [SETTINGS.canvas_actual_width/2 - self.raw_aim_pos[0] * 6, SETTINGS.canvas_target_height/2 - self.raw_aim_pos[1] * 6]
         self.OG_aim_pos = [SETTINGS.canvas_actual_width/2 - self.raw_aim_pos[0] * 6, SETTINGS.canvas_target_height/2 - self.raw_aim_pos[1] * 6]
         self.hit_rect = pygame.Rect((SETTINGS.canvas_actual_width/2)-(self.accuracy/2), 0, self.accuracy, 600)

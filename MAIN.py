@@ -31,6 +31,12 @@ import MENU
 import MUSIC
 import TUTORIAL
 
+SECONDS_IN_MINUTE = 60
+MILLISECONDS_IN_SECOND = 1000.0
+
+FOV_MIN = 10
+FOV_MAX = 100
+
 pygame.init()
 pygame.font.init()
 pygame.display.set_mode((1,1))
@@ -77,7 +83,9 @@ class Load:
     def get_canvas_size(self):
         SETTINGS.canvas_map_width = len(SETTINGS.levels_list[SETTINGS.current_level].array[0])*SETTINGS.tile_size
         SETTINGS.canvas_map_height = len(SETTINGS.levels_list[SETTINGS.current_level].array)*SETTINGS.tile_size
-        SETTINGS.canvas_actual_width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+        SETTINGS.canvas_actual_width = SETTINGS.canvas_target_width
+        SETTINGS.canvas_actual_height = SETTINGS.canvas_target_height
+        SETTINGS.canvas_aspect_ratio = SETTINGS.canvas_actual_width / SETTINGS.canvas_actual_height
         SETTINGS.player_map_pos = SETTINGS.levels_list[SETTINGS.current_level].player_pos
         SETTINGS.player_pos[0] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * SETTINGS.tile_size) + SETTINGS.tile_size/2)
         SETTINGS.player_pos[1] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * SETTINGS.tile_size) + SETTINGS.tile_size/2)
@@ -172,9 +180,9 @@ class Canvas:
             self.res_width = SETTINGS.canvas_actual_width
 
         if SETTINGS.fullscreen:
-            self.window = pygame.display.set_mode((self.width, int(self.height+(self.height*0.15))) ,pygame.FULLSCREEN)
+            self.window = pygame.display.set_mode((self.width, self.height) ,pygame.FULLSCREEN)
         else:
-            self.window = pygame.display.set_mode((self.width, int(self.height+(self.height*0.15))))
+            self.window = pygame.display.set_mode((self.width, self.height))
         self.canvas = pygame.Surface((self.width, self.height))
         
         pygame.display.set_caption("DUGA")
@@ -376,7 +384,7 @@ def main_loop():
     
     while not game_exit:
         SETTINGS.zbuffer = []
-        if SETTINGS.play_seconds >= 60:
+        if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
             SETTINGS.statistics['playtime'] += 1
             SETTINGS.play_seconds = 0
         else:
@@ -430,10 +438,10 @@ def main_loop():
                 #Update logic
                 gamePlayer.control(gameCanvas.canvas)
                 
-                if SETTINGS.fov >= 100:
-                    SETTINGS.fov = 100
-                elif SETTINGS.fov <= 10:
-                    SETTINGS.fov = 10
+                if SETTINGS.fov >= FOV_MAX:
+                    SETTINGS.fov = FOV_MAX
+                elif SETTINGS.fov <= FOV_MIN:
+                    SETTINGS.fov = FOV_MIN
 
                 if SETTINGS.switch_mode:
                     gameCanvas.change_mode()
@@ -476,7 +484,7 @@ def main_loop():
         #Update Game
         pygame.display.update()
         delta_time = clock.tick(SETTINGS.fps)
-        SETTINGS.dt = delta_time / 1000.0
+        SETTINGS.dt = delta_time / MILLISECONDS_IN_SECOND
         SETTINGS.cfps = int(clock.get_fps())
         #pygame.display.set_caption(SETTINGS.caption % SETTINGS.cfps)
 

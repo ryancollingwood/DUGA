@@ -8,7 +8,8 @@ class Sprite:
     '''== Create a sprite ==\ntexture -> loaded texture | ID -> unique\npos -> px coords          | texture_type -> sprite, npc'''
     def __init__(self, texture, ID, pos, texture_type, parent = None):
         self.texture = texture
-        self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*2, SETTINGS.tile_size*4)).convert_alpha()
+        #self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*2, SETTINGS.tile_size*4)).convert_alpha()
+        self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*4, SETTINGS.tile_size*8)).convert_alpha()
         self.texture_type = texture_type
         self.type = texture_type
         self.ID = ID
