@@ -12,24 +12,33 @@ import SETTINGS
 import PLAYER
 import TEXTURES
 import MAP
-import RAYCAST
-import SPRITES
-import NPC
 import LEVELS
-import GUNS
 import PATHFINDING
 import TEXT
 #-- Game imports --
 import EFFECTS
 import HUD
-import ITEMS
 import INVENTORY
 import ENTITIES
-import SEGMENTS
 import GENERATION
 import MENU
 import MUSIC
 import TUTORIAL
+import consts.colours
+import consts.geom
+import consts.player
+import consts.raycast
+import gamedata.items
+import gamedata.npcs
+import gamedata.textures
+import gamedata.tiles
+import gamestate.inventory
+import gamestate.items
+import gamestate.player
+import gamestate.rendering
+import gamestate.sprites
+import render.raycast
+from render.gamecanvas import GameCanvas
 
 SECONDS_IN_MINUTE = 60
 MILLISECONDS_IN_SECOND = 1000.0
@@ -48,15 +57,15 @@ class Load:
         ID = 0
         current_texture = 0
         self.timer = 0
-        for texture in TEXTURES.all_textures:
-            if SETTINGS.texture_type[ID] == 'sprite':
-                SETTINGS.texture_list.append(pygame.image.load(texture))
+        for texture in gamedata.textures.all_textures:
+            if gamedata.tiles.texture_type[ID] == 'sprite':
+                gamedata.textures.texture_list.append(pygame.image.load(texture))
             else:
-                SETTINGS.texture_list.append(Texture(texture, ID))
+                gamedata.textures.texture_list.append(Texture(texture, ID))
             ID += 1
         #Update the dictionary in SETTINGS
-        for texture in SETTINGS.texture_list:
-            SETTINGS.tile_texture.update({current_texture : texture})
+        for texture in gamedata.textures.texture_list:
+            gamedata.tiles.tile_texture.update({current_texture : texture})
             current_texture += 1
 
         #Mixer goes under here as well
@@ -66,12 +75,12 @@ class Load:
         with open(os.path.join('data', 'settings.dat'), 'rb') as settings_file:
             settings = pickle.load(settings_file)
             
-        SETTINGS.fov = settings['fov']
-        SETTINGS.sensitivity = settings['sensitivity']
+        consts.raycast.fov = settings['fov']
+        consts.player.sensitivity = settings['sensitivity']
         SETTINGS.volume = settings['volume']
         SETTINGS.music_volume = settings['music volume']
-        SETTINGS.resolution = settings['graphics'][0]
-        SETTINGS.render = settings['graphics'][1]
+        consts.raycast.resolution = settings['graphics'][0]
+        consts.raycast.render = settings['graphics'][1]
         SETTINGS.fullscreen = settings['fullscreen']
 
         #Load statistics
@@ -81,16 +90,16 @@ class Load:
         SETTINGS.statistics = stats
 
     def get_canvas_size(self):
-        SETTINGS.canvas_map_width = len(SETTINGS.levels_list[SETTINGS.current_level].array[0])*SETTINGS.tile_size
-        SETTINGS.canvas_map_height = len(SETTINGS.levels_list[SETTINGS.current_level].array)*SETTINGS.tile_size
+        SETTINGS.canvas_map_width = len(SETTINGS.levels_list[SETTINGS.current_level].array[0]) * consts.geom.tile_size
+        SETTINGS.canvas_map_height = len(SETTINGS.levels_list[SETTINGS.current_level].array) * consts.geom.tile_size
         SETTINGS.canvas_actual_width = SETTINGS.canvas_target_width
         SETTINGS.canvas_actual_height = SETTINGS.canvas_target_height
         SETTINGS.canvas_aspect_ratio = SETTINGS.canvas_actual_width / SETTINGS.canvas_actual_height
-        SETTINGS.player_map_pos = SETTINGS.levels_list[SETTINGS.current_level].player_pos
-        SETTINGS.player_pos[0] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * SETTINGS.tile_size) + SETTINGS.tile_size/2)
-        SETTINGS.player_pos[1] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * SETTINGS.tile_size) + SETTINGS.tile_size/2)
-        if len(SETTINGS.gun_list) != 0:
-            for gun in SETTINGS.gun_list:
+        gamestate.player.player_map_pos = SETTINGS.levels_list[SETTINGS.current_level].player_pos
+        gamestate.player.player_pos[0] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * consts.geom.tile_size) + consts.geom.tile_size / 2)
+        gamestate.player.player_pos[1] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * consts.geom.tile_size) + consts.geom.tile_size / 2)
+        if len(gamedata.items.gun_list) != 0:
+            for gun in gamedata.items.gun_list:
                 gun.re_init()
 
     def load_entities(self):
@@ -114,37 +123,37 @@ class Load:
 
     def load_new_level(self):    
         #Remove old level info
-        SETTINGS.npc_list = []
-        SETTINGS.all_items = []
+        gamedata.npcs.npc_list = []
+        gamestate.items.all_items = []
         SETTINGS.walkable_area = []
         SETTINGS.all_tiles = []
         SETTINGS.all_doors = []
         SETTINGS.all_solid_tiles = []
-        SETTINGS.all_sprites = []
+        gamestate.sprites.all_sprites = []
         
         #Retrieve new level info
         self.get_canvas_size()
         gameMap.__init__(SETTINGS.levels_list[SETTINGS.current_level].array)
-        SETTINGS.player_rect.center = (SETTINGS.levels_list[SETTINGS.current_level].player_pos[0]*SETTINGS.tile_size, SETTINGS.levels_list[SETTINGS.current_level].player_pos[1]*SETTINGS.tile_size)
-        SETTINGS.player_rect.centerx += SETTINGS.tile_size/2
-        SETTINGS.player_rect.centery += SETTINGS.tile_size/2
-        gamePlayer.real_x = SETTINGS.player_rect.centerx
-        gamePlayer.real_y = SETTINGS.player_rect.centery
+        gamestate.player.player_rect.center = (SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * consts.geom.tile_size, SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * consts.geom.tile_size)
+        gamestate.player.player_rect.centerx += consts.geom.tile_size / 2
+        gamestate.player.player_rect.centery += consts.geom.tile_size / 2
+        gamePlayer.real_x = gamestate.player.player_rect.centerx
+        gamePlayer.real_y = gamestate.player.player_rect.centery
 
-        if SETTINGS.shade and SETTINGS.levels_list[SETTINGS.current_level].shade:
-            SETTINGS.shade_rgba = SETTINGS.levels_list[SETTINGS.current_level].shade_rgba
-            SETTINGS.shade_visibility = SETTINGS.levels_list[SETTINGS.current_level].shade_visibility
+        if consts.raycast.shade and SETTINGS.levels_list[SETTINGS.current_level].shade:
+            consts.raycast.shade_rgba = SETTINGS.levels_list[SETTINGS.current_level].shade_rgba
+            consts.raycast.shade_visibility = SETTINGS.levels_list[SETTINGS.current_level].shade_visibility
 
         if SETTINGS.current_level > 0:
             SETTINGS.changing_level = False
-            SETTINGS.player_states['fade'] = True
+            gamestate.player.player_states['fade'] = True
         else:
-            SETTINGS.player_states['fade'] = True
-            SETTINGS.player_states['black'] = True
+            gamestate.player.player_states['fade'] = True
+            gamestate.player.player_states['black'] = True
 
-        SETTINGS.player_states['title'] = True
+        gamestate.player.player_states['title'] = True
                 
-        SETTINGS.walkable_area = list(PATHFINDING.pathfind(SETTINGS.player_map_pos, SETTINGS.all_tiles[-1].map_pos))
+        SETTINGS.walkable_area = list(PATHFINDING.pathfind(gamestate.player.player_map_pos, SETTINGS.all_tiles[-1].map_pos))
         gameMap.move_inaccessible_entities()
         ENTITIES.spawn_npcs()
         ENTITIES.spawn_items()
@@ -166,86 +175,31 @@ class Texture:
             self.slices.append(row)
             row += 1
 
-
-#Canvas
-class Canvas:
-    '''== Create game canvas ==\nwidth -> px\nheight -> px'''
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.res_width = 0
-        if SETTINGS.mode == 1:
-            #self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
-            #self.height = SETTINGS.canvas_target_height
-            self.width = SETTINGS.canvas_target_width
-            self.height = SETTINGS.canvas_target_height
-            self.res_width = SETTINGS.canvas_actual_width
-
-        if SETTINGS.fullscreen:
-            self.window = pygame.display.set_mode((self.width, self.height) ,pygame.FULLSCREEN)
-        else:
-            self.window = pygame.display.set_mode((self.width, self.height))
-        self.canvas = pygame.Surface((self.width, self.height))
-        
-        pygame.display.set_caption("DUGA")
-
-        self.shade = [pygame.Surface((self.width, self.height)).convert_alpha(),
-                      pygame.Surface((self.width, self.height/1.2)).convert_alpha(),
-                      pygame.Surface((self.width, self.height/2)).convert_alpha(),
-                      pygame.Surface((self.width, self.height/4)).convert_alpha(),
-                      pygame.Surface((self.width, self.height/8)).convert_alpha(),
-                      pygame.Surface((self.width, self.height/18)).convert_alpha()]
-        self.rgba = [SETTINGS.shade_rgba[0], SETTINGS.shade_rgba[1], SETTINGS.shade_rgba[2], int(min(255, SETTINGS.shade_rgba[3]*(50/SETTINGS.shade_visibility)))]
-
-    def change_mode(self):
-        if SETTINGS.mode == 1: #1 - 3D / 0 - 2D
-            SETTINGS.mode = 0
-            self.__init__(SETTINGS.canvas_actual_width, SETTINGS.canvas_target_height)
-        else:
-            SETTINGS.mode = 1
-            self.__init__(self.res_width, SETTINGS.canvas_target_height)
-        SETTINGS.switch_mode = False
-
-    def draw(self):
-        if SETTINGS.mode == 1:
-            self.canvas.fill(SETTINGS.levels_list[SETTINGS.current_level].sky_color)
-            self.window.fill(SETTINGS.BLACK)
-            pygame.draw.rect(self.canvas, SETTINGS.levels_list[SETTINGS.current_level].ground_color, (0, self.height/2, self.width, self.height/2))
-
-            if SETTINGS.shade:
-                for i in range(len(self.shade)):
-                    if i != 5:
-                        self.shade[i].fill((self.rgba[0], self.rgba[1], self.rgba[2], self.rgba[3]))
-                    else:
-                        self.shade[i].fill((self.rgba[0], self.rgba[1], self.rgba[2], SETTINGS.shade_rgba[3]))
-                    self.canvas.blit(self.shade[i], (0, self.height/2 - self.shade[i].get_height()/2))
-
-        else:
-            self.window.fill(SETTINGS.WHITE)
+from consts import geom
 
 def sort_distance(x):
-    if x == None:
+    if x is None:
         return 0
     else:
         return x.distance
 
 def sort_atan(x):
-    if SETTINGS.middle_ray_pos:
-        pos = SETTINGS.middle_ray_pos
+    if gamestate.rendering.middle_ray_pos:
+        pos = gamestate.rendering.middle_ray_pos
     else:
-        pos = SETTINGS.player_rect.center
+        pos = gamestate.player.player_rect.center
         
     #find the position on each tile that is closest to middle_ray_pos
-    xpos = max(x.rect.left, min(pos[0], x.rect.right)) - SETTINGS.player_rect.centerx
-    ypos = SETTINGS.player_rect.centery - max(x.rect.top, min(pos[1], x.rect.bottom))
+    xpos = max(x.rect.left, min(pos[0], x.rect.right)) - gamestate.player.player_rect.centerx
+    ypos = gamestate.player.player_rect.centery - max(x.rect.top, min(pos[1], x.rect.bottom))
     theta = math.atan2(ypos, xpos)
     theta = math.degrees(theta)
-    theta -= SETTINGS.player_angle
+    theta -= consts.player.player_angle
 
-    if theta < 0:
-        theta += 360
-    if theta > 180:
-        theta -= 360
+    if theta < geom.DEGREES_0:
+        theta += geom.DEGREES_360
+    if theta > geom.DEGREES_180:
+        theta -= geom.DEGREES_360
 
     if x.type == 'end':
         SETTINGS.end_angle = theta
@@ -259,26 +213,26 @@ def render_screen(canvas):
     SETTINGS.rendered_tiles = []
 
     #Get sprite positions
-    for sprite in SETTINGS.all_sprites:
+    for sprite in gamestate.sprites.all_sprites:
         sprite.get_pos(canvas)
 
     #Sort zbuffer and solid tiles
-    SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
+    gamestate.rendering.zbuffer = sorted(gamestate.rendering.zbuffer, key=sort_distance, reverse=True)
     SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, sort_atan(x), x.distance))
 
     #Calculate which tiles are visible
     for tile in SETTINGS.all_solid_tiles:
-        if tile.distance and SETTINGS.tile_visible[tile.ID]:
-            if sort_atan(tile) <= SETTINGS.fov:
-                if tile.distance < SETTINGS.render * SETTINGS.tile_size:
+        if tile.distance and gamedata.tiles.tile_visible[tile.ID]:
+            if sort_atan(tile) <= consts.raycast.fov:
+                if tile.distance < consts.raycast.render * consts.geom.tile_size:
                     SETTINGS.rendered_tiles.append(tile)
                             
-            elif tile.distance <= SETTINGS.tile_size * 1.5:
+            elif tile.distance <= consts.geom.tile_size * 1.5:
                 SETTINGS.rendered_tiles.append(tile)
                 
 
     #Render all items in zbuffer
-    for item in SETTINGS.zbuffer:
+    for item in gamestate.rendering.zbuffer:
         if item == None:
             pass
         elif item.type == 'slice':
@@ -286,25 +240,26 @@ def render_screen(canvas):
             if item.vh == 'v':
                 #Make vertical walls slightly darker
                 canvas.blit(item.darkslice, (item.xpos, item.rect.y))
-            if SETTINGS.shade:
+            if consts.raycast.shade:
                 canvas.blit(item.shade_slice, (item.xpos, item.rect.y))
                 
         else:
-            if item.new_rect.right > 0 and item.new_rect.x < SETTINGS.canvas_actual_width and item.distance < (SETTINGS.render * SETTINGS.tile_size):
+            if item.new_rect.right > 0 and item.new_rect.x < SETTINGS.canvas_actual_width and item.distance < (
+                    consts.raycast.render * consts.geom.tile_size):
                 item.draw(canvas)
                 
     #Draw weapon if it is there
-    if SETTINGS.current_gun:
-        SETTINGS.current_gun.draw(gameCanvas.canvas)
-    elif SETTINGS.next_gun:
-        SETTINGS.next_gun.draw(gameCanvas.canvas)
+    if gamestate.inventory.current_gun:
+        gamestate.inventory.current_gun.draw(gameCanvas.canvas)
+    elif gamestate.inventory.next_gun:
+        gamestate.inventory.next_gun.draw(gameCanvas.canvas)
 
     #Draw Inventory and effects
-    if SETTINGS.player_states['invopen']:
+    if gamestate.player.player_states['invopen']:
         gameInv.draw(gameCanvas.canvas)
     EFFECTS.render(gameCanvas.canvas)
 
-    SETTINGS.zbuffer = []
+    gamestate.rendering.zbuffer = []
 
     #Draw HUD and canvas
     gameCanvas.window.blit(canvas, (SETTINGS.axes))
@@ -315,25 +270,25 @@ def render_screen(canvas):
             tutorialController.control(gameCanvas.window)
 
 def update_game():
-    if SETTINGS.npc_list:
-        for npc in SETTINGS.npc_list:
+    if gamedata.npcs.npc_list:
+        for npc in gamedata.npcs.npc_list:
             if not npc.dead:
                 npc.think()
 
-    SETTINGS.ground_weapon = None
-    for item in SETTINGS.all_items:
+    gamestate.inventory.ground_weapon = None
+    for item in gamestate.items.all_items:
         item.update()
 
-    if (SETTINGS.changing_level and SETTINGS.player_states['black']) or SETTINGS.player_states['dead']:
+    if (SETTINGS.changing_level and gamestate.player.player_states['black']) or gamestate.player.player_states['dead']:
         if SETTINGS.current_level < len(SETTINGS.levels_list)-1 and SETTINGS.changing_level:
             SETTINGS.current_level += 1
             SETTINGS.statistics['last levels']
             gameLoad.load_new_level()
         
-        elif (SETTINGS.current_level == len(SETTINGS.levels_list)-1 or SETTINGS.player_states['dead']) and gameLoad.timer < 4 and not SETTINGS.player_states['fade']:
-            if not SETTINGS.player_states['dead'] and SETTINGS.current_level == len(SETTINGS.levels_list)-1 and text.string != 'YOU  WON':
+        elif (SETTINGS.current_level == len(SETTINGS.levels_list) - 1 or gamestate.player.player_states['dead']) and gameLoad.timer < 4 and not gamestate.player.player_states['fade']:
+            if not gamestate.player.player_states['dead'] and SETTINGS.current_level == len(SETTINGS.levels_list)-1 and text.string != 'YOU  WON':
                 text.update_string('YOU  WON')
-            elif SETTINGS.player_states['dead'] and text.string != 'GAME  OVER':
+            elif gamestate.player.player_states['dead'] and text.string != 'GAME  OVER':
                 text.update_string('GAME  OVER')
             text.draw(gameCanvas.window)
             if not SETTINGS.game_won:
@@ -385,7 +340,7 @@ def main_loop():
 #    allfps = []
     
     while not game_exit:
-        SETTINGS.zbuffer = []
+        gamestate.rendering.zbuffer = []
         if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
             SETTINGS.statistics['playtime'] += 1
             SETTINGS.play_seconds = 0
@@ -410,7 +365,7 @@ def main_loop():
             musicController.control_music()
             
             if SETTINGS.menu_showing and menuController.current_type == 'main':
-                gameCanvas.window.fill(SETTINGS.WHITE)
+                gameCanvas.window.fill(consts.colours.WHITE)
                 menuController.control()
 
                 #Load custom maps
@@ -440,10 +395,10 @@ def main_loop():
                 #Update logic
                 gamePlayer.control(gameCanvas.canvas)
                 
-                if SETTINGS.fov >= FOV_MAX:
-                    SETTINGS.fov = FOV_MAX
-                elif SETTINGS.fov <= FOV_MIN:
-                    SETTINGS.fov = FOV_MIN
+                if consts.raycast.fov >= FOV_MAX:
+                    consts.raycast.fov = FOV_MAX
+                elif consts.raycast.fov <= FOV_MIN:
+                    consts.raycast.fov = FOV_MIN
 
                 if SETTINGS.switch_mode:
                     gameCanvas.change_mode()
@@ -463,15 +418,15 @@ def main_loop():
                     gameMap.draw(gameCanvas.window)                
                     gamePlayer.draw(gameCanvas.window)
 
-                    for x in SETTINGS.raylines:
-                        pygame.draw.line(gameCanvas.window, SETTINGS.RED, (x[0][0]/4, x[0][1]/4), (x[1][0]/4, x[1][1]/4))
-                    SETTINGS.raylines = []
+                    for x in gamestate.rendering.raylines:
+                        pygame.draw.line(gameCanvas.window, consts.colours.RED, (x[0][0] / 4, x[0][1] / 4), (x[1][0] / 4, x[1][1] / 4))
+                    gamestate.rendering.raylines = []
 
-                    for i in SETTINGS.npc_list:
-                        if i.rect and i.dist <= SETTINGS.render * SETTINGS.tile_size * 1.2:
-                            pygame.draw.rect(gameCanvas.window, SETTINGS.RED, (i.rect[0]/4, i.rect[1]/4, i.rect[2]/4, i.rect[3]/4))
+                    for i in gamedata.npcs.npc_list:
+                        if i.rect and i.dist <= consts.raycast.render * consts.geom.tile_size * 1.2:
+                            pygame.draw.rect(gameCanvas.window, consts.colours.RED, (i.rect[0] / 4, i.rect[1] / 4, i.rect[2] / 4, i.rect[3] / 4))
                         elif i.rect:
-                            pygame.draw.rect(gameCanvas.window, SETTINGS.DARKGREEN, (i.rect[0]/4, i.rect[1]/4, i.rect[2]/4, i.rect[3]/4))
+                            pygame.draw.rect(gameCanvas.window, consts.colours.DARKGREEN, (i.rect[0] / 4, i.rect[1] / 4, i.rect[2] / 4, i.rect[3] / 4))
 
                 update_game()
 
@@ -508,15 +463,15 @@ if __name__ == '__main__':
 
     #Setup and classes
 
-    text = TEXT.Text(0,0,"YOU  WON", SETTINGS.WHITE, "DUGAFONT.ttf", 48)
-    beta = TEXT.Text(5,5,"DUGA  BETA  BUILD  V. 1.3", SETTINGS.WHITE, "DUGAFONT.ttf", 20)
+    text = TEXT.Text(0, 0,"YOU  WON", consts.colours.WHITE, "DUGAFONT.ttf", 48)
+    beta = TEXT.Text(5, 5,"DUGA  BETA  BUILD  V. 1.3", consts.colours.WHITE, "DUGAFONT.ttf", 20)
     text.update_pos(SETTINGS.canvas_actual_width/2 - text.layout.get_width()/2, SETTINGS.canvas_target_height/2 - text.layout.get_height()/2)
 
     #Classes for later use
     gameMap = MAP.Map(SETTINGS.levels_list[SETTINGS.current_level].array)
-    gameCanvas = Canvas(SETTINGS.canvas_map_width, SETTINGS.canvas_map_height)
-    gamePlayer = PLAYER.Player(SETTINGS.player_pos)
-    gameRaycast = RAYCAST.Raycast(gameCanvas.canvas, gameCanvas.window)
+    gameCanvas = GameCanvas(SETTINGS.canvas_map_width, SETTINGS.canvas_map_height)
+    gamePlayer = PLAYER.Player(gamestate.player.player_pos)
+    gameRaycast = render.raycast.Raycast(gameCanvas.canvas, gameCanvas.window)
     gameInv = INVENTORY.inventory({'bullet': 150, 'shell':25, 'ferromag' : 50})
     gameHUD = HUD.hud()
 

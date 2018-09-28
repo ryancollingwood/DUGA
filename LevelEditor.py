@@ -11,6 +11,11 @@ import ENTITIES
 import SETTINGS
 import TEXTURES
 import TEXT
+import consts.colours
+import gamedata.items
+import gamedata.npcs
+import gamedata.textures
+import gamedata.tiles
 
 pygame.init()
 pygame.font.init()
@@ -77,7 +82,7 @@ def determine_size():
 def what_now():
     global ltype
     isgood = False
-    sc = gc = (SETTINGS.WHITE)
+    sc = gc = (consts.colours.WHITE)
     print()
     while not isgood:
         isgood = True
@@ -165,39 +170,39 @@ class Canvas:
         self.exit = False
 
         self.tile_textures = []
-        for i in range(len(TEXTURES.all_textures)):
-            texture = TEXTURES.all_textures[i]
+        for i in range(len(gamedata.textures.all_textures)):
+            texture = gamedata.textures.all_textures[i]
             t = pygame.image.load(texture).convert_alpha()
             t = pygame.transform.scale(t, (64,64))
-            if SETTINGS.texture_type[i] == 'vdoor':
+            if gamedata.tiles.texture_type[i] == 'vdoor':
                 t = pygame.transform.rotate(t, 90)
             self.tile_textures.append(t)
 
         #Author
-        self.authortext = TEXT.Text(self.width - 135, 5, 'Author: %s', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 11)
+        self.authortext = TEXT.Text(self.width - 135, 5, 'Author: %s', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 11)
 
         #Export
-        self.exporttext = TEXT.Text(20, self.height-32, 'EXPORT', SETTINGS.BLACK, 'DUGAFONT.ttf', 14)
+        self.exporttext = TEXT.Text(20, self.height - 32, 'EXPORT', consts.colours.BLACK, 'DUGAFONT.ttf', 14)
         self.exportbtn = pygame.Surface((64,32))
         self.exportrct = self.exportbtn.get_rect()
         self.exportrct.topleft = (15, self.height-40)
-        self.exportbtn.fill(SETTINGS.WHITE)
+        self.exportbtn.fill(consts.colours.WHITE)
 
         #Selected mode
-        self.selecttext = TEXT.Text(100, self.height-32, mode, SETTINGS.GREEN, 'DUGAFONT.ttf', 24)
+        self.selecttext = TEXT.Text(100, self.height - 32, mode, consts.colours.GREEN, 'DUGAFONT.ttf', 24)
 
         #Tile
-        self.nxttext = TEXT.Text(self.width-28, 60, '>', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+        self.nxttext = TEXT.Text(self.width - 28, 60, '>', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
         self.nexttile = pygame.Surface((30, 40))
         self.nexttilerct = self.nexttile.get_rect()
         self.nexttilerct.topleft = (self.width-40, 50)
-        self.nexttile.fill(SETTINGS.WHITE)
-        self.prvtext = TEXT.Text(self.width-135, 60, '<', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+        self.nexttile.fill(consts.colours.WHITE)
+        self.prvtext = TEXT.Text(self.width - 135, 60, '<', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
         self.prevtile = pygame.Surface((30, 40))
         self.prevtilerct = self.prevtile.get_rect()
         self.prevtilerct.topleft = (self.width-140, 50)
-        self.prevtile.fill(SETTINGS.WHITE)
-        self.tiletypetext = TEXT.Text(self.width-95, 15, 'TEXTURE TYPE', SETTINGS.WHITE, 'DUGAFONT.ttf', 20)
+        self.prevtile.fill(consts.colours.WHITE)
+        self.tiletypetext = TEXT.Text(self.width - 95, 15, 'TEXTURE TYPE', consts.colours.WHITE, 'DUGAFONT.ttf', 20)
         
         self.tilerect = self.tile_textures[current_id].get_rect()
         self.tilerect.topleft = (self.width-107, 40)
@@ -206,62 +211,62 @@ class Canvas:
         self.startpossurf = pygame.Surface((64,64))
         self.startposrct = self.startpossurf.get_rect()
         self.startposrct.topleft = (self.width-105, 335)
-        self.startpossurf.fill(SETTINGS.DARKRED)
-        self.startpostxt = TEXT.Text(self.width-95, 345, 'START', SETTINGS.WHITE, 'DUGAFONT.ttf', 15)
-        self.startpostxt2 = TEXT.Text(self.width-95, 370, 'POS', SETTINGS.WHITE, 'DUGAFONT.ttf', 15)
+        self.startpossurf.fill(consts.colours.DARKRED)
+        self.startpostxt = TEXT.Text(self.width - 95, 345, 'START', consts.colours.WHITE, 'DUGAFONT.ttf', 15)
+        self.startpostxt2 = TEXT.Text(self.width - 95, 370, 'POS', consts.colours.WHITE, 'DUGAFONT.ttf', 15)
 
         #Segment?
         if ltype == "segment":
             #Doors
-            self.doortxt = TEXT.Text(30, self.height-110, 'ENTRANCES', SETTINGS.BLUE, 'DUGAFONT.ttf', 20)
+            self.doortxt = TEXT.Text(30, self.height - 110, 'ENTRANCES', consts.colours.BLUE, 'DUGAFONT.ttf', 20)
             #up
             self.doorup = pygame.Surface((20,20))
             self.dooruprct = self.doorup.get_rect()
             self.dooruprct.topleft = (30, self.height-80)
-            self.doorup.fill(SETTINGS.WHITE)
-            self.dooruptxt = TEXT.Text(36, self.height-76, '^', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+            self.doorup.fill(consts.colours.WHITE)
+            self.dooruptxt = TEXT.Text(36, self.height - 76, '^', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
             #down
             self.doordown = pygame.Surface((20, 20))
             self.doordownrct = self.doordown.get_rect()
             self.doordownrct.topleft = (55, self.height-80)
-            self.doordown.fill(SETTINGS.WHITE)
-            self.doordowntxt = TEXT.Text(60, self.height-80, 'v', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+            self.doordown.fill(consts.colours.WHITE)
+            self.doordowntxt = TEXT.Text(60, self.height - 80, 'v', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
             #left
             self.doorleft = pygame.Surface((20, 20))
             self.doorleftrct = self.doorleft.get_rect()
             self.doorleftrct.topleft = (80, self.height-80)
-            self.doorleft.fill(SETTINGS.WHITE)
-            self.doorlefttxt = TEXT.Text(85, self.height-80, '<', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+            self.doorleft.fill(consts.colours.WHITE)
+            self.doorlefttxt = TEXT.Text(85, self.height - 80, '<', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
             #right
             self.doorright = pygame.Surface((20, 20))
             self.doorrightrct = self.doorright.get_rect()
             self.doorrightrct.topleft = (105, self.height-80)
-            self.doorright.fill(SETTINGS.WHITE)
-            self.doorrighttxt = TEXT.Text(110, self.height-80, '>', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+            self.doorright.fill(consts.colours.WHITE)
+            self.doorrighttxt = TEXT.Text(110, self.height - 80, '>', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
 
             #typeleft
             self.segtypeleft = pygame.Surface((20,20))
             self.segtypeleftrct = self.segtypeleft.get_rect()
             self.segtypeleftrct.topleft = (20, self.height-140)
-            self.segtypeleft.fill(SETTINGS.WHITE)
-            self.segtypelefttxt = TEXT.Text(25, self.height-140, '<', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+            self.segtypeleft.fill(consts.colours.WHITE)
+            self.segtypelefttxt = TEXT.Text(25, self.height - 140, '<', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
 
             #segtype
-            self.segtypetxt = TEXT.Text(20, self.height-160, 'SEGMENT TYPE', SETTINGS.DARKGREEN, 'DUGAFONT.ttf', 20)
-            self.csegtypetxt = TEXT.Text(45, self.height-140, segtypes[self.segtype], SETTINGS.LIGHTGREEN, 'DUGAFONT.ttf', 20)
+            self.segtypetxt = TEXT.Text(20, self.height - 160, 'SEGMENT TYPE', consts.colours.DARKGREEN, 'DUGAFONT.ttf', 20)
+            self.csegtypetxt = TEXT.Text(45, self.height - 140, segtypes[self.segtype], consts.colours.LIGHTGREEN, 'DUGAFONT.ttf', 20)
 
             #typeright
             self.segtyperight = pygame.Surface((20,20))
             self.segtyperightrct = self.segtypeleft.get_rect()
             self.segtyperightrct.topleft = (130, self.height-140)
-            self.segtyperight.fill(SETTINGS.WHITE)
-            self.segtyperighttxt = TEXT.Text(135, self.height-140, '>', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+            self.segtyperight.fill(consts.colours.WHITE)
+            self.segtyperighttxt = TEXT.Text(135, self.height - 140, '>', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
 
     def load_items(self):
         print("Loading")
         self.item_names = []
         self.item_ids = []
-        for i in SETTINGS.item_types:
+        for i in gamedata.items.item_types:
             img = pygame.image.load(os.path.join(*i['filepath']))
             img = pygame.transform.scale(img, (64, 64))
             self.items.append(img)
@@ -269,19 +274,19 @@ class Canvas:
             self.item_ids.append(i['id'])
             self.item_names.append(i['type'])
             
-        self.nextitemtext = TEXT.Text(self.width-28, 165, '>', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+        self.nextitemtext = TEXT.Text(self.width - 28, 165, '>', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
         self.nextitem = pygame.Surface((30, 40))
         self.nextitemrct = self.nextitem.get_rect()
         self.nextitemrct.topleft = (self.width-40, 150)
-        self.nextitem.fill(SETTINGS.WHITE)
+        self.nextitem.fill(consts.colours.WHITE)
 
-        self.previtemtext = TEXT.Text(self.width-135, 165, '<', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+        self.previtemtext = TEXT.Text(self.width - 135, 165, '<', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
         self.previtem = pygame.Surface((30, 40))
         self.previtemrct = self.previtem.get_rect()
         self.previtemrct.topleft = (self.width-140, 150)
-        self.previtem.fill(SETTINGS.WHITE)
+        self.previtem.fill(consts.colours.WHITE)
 
-        self.itemtypetext = TEXT.Text(self.width-140, 110, 'ITEM TYPE', SETTINGS.WHITE, 'DUGAFONT.ttf', 20)
+        self.itemtypetext = TEXT.Text(self.width - 140, 110, 'ITEM TYPE', consts.colours.WHITE, 'DUGAFONT.ttf', 20)
         self.itemrect = self.items[current_item].get_rect()
         self.itemrect.topleft = (self.width-107, 110)
 
@@ -290,7 +295,7 @@ class Canvas:
         self.npc_stats = []
         self.npc_textures = []
 
-        for i in SETTINGS.npc_types:
+        for i in gamedata.npcs.npc_types:
             self.npc_stats.append(i)
             
             img = pygame.image.load(os.path.join(*i['filepath']))
@@ -300,41 +305,41 @@ class Canvas:
 
         self.npcrect = self.npc_textures[current_npc].get_rect()
         self.npcrect.topleft = (self.width-107, 210)
-        self.npctypetext = TEXT.Text(self.width-140, 195, self.npc_stats[current_npc]['name'], SETTINGS.WHITE, 'DUGAFONT.ttf', 20)
+        self.npctypetext = TEXT.Text(self.width - 140, 195, self.npc_stats[current_npc]['name'], consts.colours.WHITE, 'DUGAFONT.ttf', 20)
 
-        self.nextnpctext = TEXT.Text(self.width-28, 235, '>', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+        self.nextnpctext = TEXT.Text(self.width - 28, 235, '>', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
         self.nextnpc = pygame.Surface((30, 40))
         self.nextnpcrct = self.nextnpc.get_rect()
         self.nextnpcrct.topleft = (self.width-40, 230)
-        self.nextnpc.fill(SETTINGS.WHITE)
+        self.nextnpc.fill(consts.colours.WHITE)
 
-        self.prevnpctext = TEXT.Text(self.width-135, 235, '<', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+        self.prevnpctext = TEXT.Text(self.width - 135, 235, '<', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
         self.prevnpc = pygame.Surface((30, 40))
         self.prevnpcrct = self.prevnpc.get_rect()
         self.prevnpcrct.topleft = (self.width-135, 230)
-        self.prevnpc.fill(SETTINGS.WHITE)
+        self.prevnpc.fill(consts.colours.WHITE)
 
         #face
-        self.npcfacetext = TEXT.Text(self.width-100, 290, str(npc_face), SETTINGS.WHITE, 'DUGAFONT.ttf', 24)
+        self.npcfacetext = TEXT.Text(self.width - 100, 290, str(npc_face), consts.colours.WHITE, 'DUGAFONT.ttf', 24)
 
         self.npcfrect = pygame.Rect(self.width-100, 280, 64, 64)
         
-        self.nextnpcftext = TEXT.Text(self.width-28, 295, '>', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+        self.nextnpcftext = TEXT.Text(self.width - 28, 295, '>', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
         self.nextnpcf = pygame.Surface((30, 40))
         self.nextnpcfrct = self.nextnpcf.get_rect()
         self.nextnpcfrct.topleft = (self.width-40, 280)
-        self.nextnpcf.fill(SETTINGS.WHITE)
+        self.nextnpcf.fill(consts.colours.WHITE)
 
-        self.prevnpcftext = TEXT.Text(self.width-135, 295, '<', SETTINGS.BLACK, 'DUGAFONT.ttf', 20)
+        self.prevnpcftext = TEXT.Text(self.width - 135, 295, '<', consts.colours.BLACK, 'DUGAFONT.ttf', 20)
         self.prevnpcf = pygame.Surface((30, 40))
         self.prevnpcfrct = self.prevnpcf.get_rect()
         self.prevnpcfrct.topleft = (self.width-135, 280)
-        self.prevnpcf.fill(SETTINGS.WHITE)
+        self.prevnpcf.fill(consts.colours.WHITE)
             
           
     def draw(self):
         global current_id, current_item, mode, current_npc
-        self.canvas.fill(SETTINGS.BLACK)
+        self.canvas.fill(consts.colours.BLACK)
 
         #Author
         if self.showauthor:
@@ -452,7 +457,7 @@ class Canvas:
     def change_id(self):
         global current_id, mode
         if self.nexttilerct.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and not self.stop:
-            if current_id < len(TEXTURES.all_textures)-1:
+            if current_id < len(gamedata.textures.all_textures)-1:
                 current_id += 1
                 self.stop = True
                 mode = 'tile'
@@ -472,12 +477,12 @@ class Canvas:
         elif not pygame.mouse.get_pressed()[0]:
             self.stop = False
 
-        self.tiletypetext.update_string(SETTINGS.texture_type[current_id])
+        self.tiletypetext.update_string(gamedata.tiles.texture_type[current_id])
 
     def change_item(self):
         global current_item, mode
         if self.nextitemrct.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and not self.stop:
-            if current_item < len(SETTINGS.item_types)-1:
+            if current_item < len(gamedata.items.item_types)-1:
                 current_item += 1
                 self.stop = True
                 mode = 'item'
@@ -546,37 +551,37 @@ class Canvas:
         if self.dooruprct.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and not self.stop:
             if 90 not in doors:
                 doors.append(90)
-                self.doorup.fill(SETTINGS.RED)
+                self.doorup.fill(consts.colours.RED)
             else:
                 doors.remove(90)
-                self.doorup.fill(SETTINGS.WHITE)
+                self.doorup.fill(consts.colours.WHITE)
             self.stop = True
 
         elif self.doordownrct.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and not self.stop:
             if 270 not in doors:
                 doors.append(270)
-                self.doordown.fill(SETTINGS.RED)
+                self.doordown.fill(consts.colours.RED)
             else:
                 doors.remove(270)
-                self.doordown.fill(SETTINGS.WHITE)
+                self.doordown.fill(consts.colours.WHITE)
             self.stop = True
 
         elif self.doorleftrct.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and not self.stop:
             if 180 not in doors:
                 doors.append(180)
-                self.doorleft.fill(SETTINGS.RED)
+                self.doorleft.fill(consts.colours.RED)
             else:
                 doors.remove(180)
-                self.doorleft.fill(SETTINGS.WHITE)
+                self.doorleft.fill(consts.colours.WHITE)
             self.stop = True
 
         elif self.doorrightrct.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0] and not self.stop:
             if 360 not in doors:
                 doors.append(360)
-                self.doorright.fill(SETTINGS.RED)
+                self.doorright.fill(consts.colours.RED)
             else:
                 doors.remove(360)
-                self.doorright.fill(SETTINGS.WHITE)
+                self.doorright.fill(consts.colours.WHITE)
             self.stop = True
 
         elif not pygame.mouse.get_pressed()[0]:
@@ -634,7 +639,7 @@ class Map:
             if tile.npc:
                 canvas.blit(tile.npc, tile.rect)
             if tile.player_pos:
-                pygame.draw.rect(canvas, SETTINGS.DARKRED, tile.rect)
+                pygame.draw.rect(canvas, consts.colours.DARKRED, tile.rect)
 
     def add_tile(self):
         global current_id, mode
@@ -671,7 +676,7 @@ class Map:
         global mode, npc_face
         if pygame.mouse.get_pressed()[0] and mode == 'npc':
             for tile in self.tiles:
-                if tile.rect.collidepoint(pygame.mouse.get_pos()) and not SETTINGS.tile_solid[tile.ID]:
+                if tile.rect.collidepoint(pygame.mouse.get_pos()) and not gamedata.tiles.tile_solid[tile.ID]:
                     tile.npc = pygame.transform.scale(npc, (32,32))
                     tile.npc = pygame.transform.rotate(tile.npc, (npc_face)-90)
                     tile.npc_id = npc_id
@@ -681,7 +686,7 @@ class Map:
         global mode
         if pygame.mouse.get_pressed()[0] and mode == 'start pos':
             for tile in self.tiles:
-                if tile.rect.collidepoint(pygame.mouse.get_pos()) and not SETTINGS.tile_solid[tile.ID] and not self.player_pos_set:
+                if tile.rect.collidepoint(pygame.mouse.get_pos()) and not gamedata.tiles.tile_solid[tile.ID] and not self.player_pos_set:
                     tile.player_pos = list(tile.map_pos)
                     self.player_pos_set = True
         
@@ -691,8 +696,8 @@ class Tile:
         self.ID = ID
         self.pos = (pos[0]*32, pos[1]*32)
         self.map_pos = pos
-        self.texture = pygame.image.load(TEXTURES.all_textures[ID]).convert_alpha()
-        if SETTINGS.texture_type[ID] == 'vdoor':
+        self.texture = pygame.image.load(gamedata.textures.all_textures[ID]).convert_alpha()
+        if gamedata.tiles.texture_type[ID] == 'vdoor':
             self.texture = pygame.transform.rotate(self.texture, 90)
         self.texture = pygame.transform.scale(self.texture, (32, 32))
         self.rect = self.texture.get_rect()

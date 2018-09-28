@@ -6,6 +6,11 @@ import SEGMENTS
 import SETTINGS
 import TEXTURES
 import LEVELS
+import consts.colours
+import gamedata.items
+import gamedata.textures
+import gamedata.tiles
+
 
 class Generator:
 
@@ -88,8 +93,10 @@ class Generator:
                                 ]
 
         #Color list
-        self.ground_colors = [SETTINGS.GRAY, SETTINGS.LIGHTGRAY, SETTINGS.DARKGRAY, SETTINGS.DARKRED, SETTINGS.DARKGREEN]
-        self.sky_colors = [SETTINGS.GRAY, SETTINGS.LIGHTGRAY, SETTINGS.LIGHTBLUE, SETTINGS.BLUE, SETTINGS.LIGHTGREEN]
+        self.ground_colors = [consts.colours.GRAY, consts.colours.LIGHTGRAY, consts.colours.DARKGRAY,
+                              consts.colours.DARKRED, consts.colours.DARKGREEN]
+        self.sky_colors = [consts.colours.GRAY, consts.colours.LIGHTGRAY, consts.colours.LIGHTBLUE, consts.colours.BLUE,
+                           consts.colours.LIGHTGREEN]
         self.shade_colors = [(0,0,0,255), (255,255,255,255)]
         
 
@@ -243,10 +250,10 @@ class Generator:
 
             t = 0
             for tile in rotseg.array[i]:
-                if SETTINGS.texture_type[tile] == 'hdoor' or SETTINGS.texture_type[tile] == 'vdoor':
+                if gamedata.tiles.texture_type[tile] == 'hdoor' or gamedata.tiles.texture_type[tile] == 'vdoor':
                     
-                    for y in range(len(TEXTURES.all_textures)):
-                        if y != tile and os.path.samefile(TEXTURES.all_textures[y], TEXTURES.all_textures[tile]):
+                    for y in range(len(gamedata.textures.all_textures)):
+                        if y != tile and os.path.samefile(gamedata.textures.all_textures[y], gamedata.textures.all_textures[tile]):
                             rotseg.array[i][t] = y
                             
                 t += 1  
@@ -512,17 +519,17 @@ class Generator:
                         randomy = random.randint(0, len(seg.array)-1)
                         occupied = [x for x in seg.items if list(x[0]) == [randomx, randomy]]
                         
-                        if not SETTINGS.tile_solid[seg.array[randomy][randomx]] and not occupied:
+                        if not gamedata.tiles.tile_solid[seg.array[randomy][randomx]] and not occupied:
                             item = random.choice(self.item_probability)
                             self.segpath[i].items.append(((randomx, randomy), item))
 
                             #Higher chance of ammo spawning next to weapons
-                            if SETTINGS.item_types[item]['type'] in ['primary', 'secondary']:
-                                ammo = [x for x in SETTINGS.item_types if x['type'] == SETTINGS.item_types[item]['effect'].ammo_type][0]
+                            if gamedata.items.item_types[item]['type'] in ['primary', 'secondary']:
+                                ammo = [x for x in gamedata.items.item_types if x['type'] == gamedata.items.item_types[item]['effect'].ammo_type][0]
                                 adjacents = [[randomx+1, randomy], [randomx, randomy+1], [randomx-1, randomy], [randomx, randomy-1]]
                                 for pos in adjacents:
                                     occupied = [x for x in seg.items if x[0] == (max(0, min(pos[0], len(seg.array)-1)), max(0, min(pos[1], len(seg.array)-1)))]
-                                    if self.ammo_spawn_chance >= random.randint(0, 100) and not SETTINGS.tile_solid[self.segpath[i].array[max(0, min(pos[0], len(seg.array)-1))][max(0, min(pos[1], len(seg.array)-1))]] and not occupied:
+                                    if self.ammo_spawn_chance >= random.randint(0, 100) and not gamedata.tiles.tile_solid[self.segpath[i].array[max(0, min(pos[0], len(seg.array) - 1))][max(0, min(pos[1], len(seg.array) - 1))]] and not occupied:
                                         self.segpath[i].items.append(((pos[0], pos[1]), ammo['id']))
                                         
                             is_good = True
@@ -556,7 +563,7 @@ class Generator:
                             randomy = random.randint(0, len(seg.array)-1)
                             occupied = [x for x in seg.npcs if list(x[0]) == [randomx, randomy]]
 
-                            if not SETTINGS.tile_solid[seg.array[randomy][randomx]] and not occupied:
+                            if not gamedata.tiles.tile_solid[seg.array[randomy][randomx]] and not occupied:
                                 npc = random.choice(self.npc_probability)
                                 self.segpath[i].npcs.append(((randomx, randomy), random.choice(degrees), npc))
 
@@ -579,7 +586,7 @@ class Generator:
             randomy = random.randint(0, len(segment.array)-1)
             occupied = [x for x in segment.npcs if list(x[0]) == [randomx, randomy]]
 
-            if not SETTINGS.tile_solid[segment.array[randomy][randomx]] and not occupied:
+            if not gamedata.tiles.tile_solid[segment.array[randomy][randomx]] and not occupied:
                 npc = random.choice(self.npc_probability)
                 self.segpath[index].npcs.append(((randomx, randomy), random.choice(degrees), npc))
                 npc_amount += 1

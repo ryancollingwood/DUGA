@@ -8,6 +8,8 @@ import random
 #F = G + H
 #open/closedlist syntax = [G, H, F, parent]
 #Parent is from where the node is checked.
+import gamedata.tiles
+
 
 def pathfind(start, end):
     #print(start, end)
@@ -32,13 +34,13 @@ def pathfind(start, end):
         end_point = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
         
         #Report errors
-        if SETTINGS.tile_solid[start_point.ID] and (start_point.type != 'hdoor' and start_point.type != 'vdoor'):
+        if gamedata.tiles.tile_solid[start_point.ID] and (start_point.type != 'hdoor' and start_point.type != 'vdoor'):
             print("=== WARNING: ===")
             print("Error! Start point in pathfinding is a solid block!")
             print(start_point.map_pos, start_point.ID)
             print()
             error = True
-        if SETTINGS.tile_solid[end_point.ID] and (end_point.type != 'hdoor' and end_point.type != 'vdoor'):
+        if gamedata.tiles.tile_solid[end_point.ID] and (end_point.type != 'hdoor' and end_point.type != 'vdoor'):
             print("=== WARNING: ===")
             print("Error! End point in pathfinding is a solid block!")
             print(end_point.map_pos, end_point.ID)
@@ -89,7 +91,7 @@ def pathfind(start, end):
             #Add adjecent nodes to openlist if they are not in closedlist and are not solid
             for adj in adjacent:
                 
-                if (adj.type == 'hdoor' or adj.type == 'vdoor' or not SETTINGS.tile_solid[adj.ID]) and adj not in closedlist:
+                if (adj.type == 'hdoor' or adj.type == 'vdoor' or not gamedata.tiles.tile_solid[adj.ID]) and adj not in closedlist:
                     if (adj in openlist and openlist[adj][0] > closedlist[current_point][0]+1) or adj not in openlist:
                         openlist[adj] = [closedlist[current_point][0]+1, find_distance(adj, end_point), 0, current_point]
                         openlist[adj][2] = f_value(adj, openlist)
@@ -147,7 +149,7 @@ def random_point(start):
         ranadj = random.choice(adjacent)
         ranadj_tile = [x for x in SETTINGS.all_tiles if ranadj == x.map_pos]
         
-        if not SETTINGS.tile_solid[ranadj_tile[0].ID] and ranadj not in closedlist:
+        if not gamedata.tiles.tile_solid[ranadj_tile[0].ID] and ranadj not in closedlist:
             cpos = ranadj
             closedlist.append(cpos)
 

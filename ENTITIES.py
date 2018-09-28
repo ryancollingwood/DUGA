@@ -8,11 +8,15 @@ import pygame
 import copy
 import random
 
-#When creating guns, remember to create an item for the gun as well. 
+#When creating guns, remember to create an item for the gun as well.
+import gamedata.items
+import gamedata.npcs
+import gamestate.items
+
 
 def load_guns():
     #AK 47 - 0
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'ak_spritesheet.png'),
          'item': path.join('graphics', 'items', 'akitem.png')
          },{
@@ -35,7 +39,7 @@ def load_guns():
                 },(35,7)))
     
     #Double Barrel Shotgun - 1
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'shotgun_spritesheet.png'),
          'item': path.join('graphics', 'items', 'shotgun.png')
          },{
@@ -58,7 +62,7 @@ def load_guns():
                 }, (34,10)))
 
     #Hand gun - 2
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'pistol_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'gun.png')
          },{
@@ -81,7 +85,7 @@ def load_guns():
                 }, (37,6)))
 
     #Knife - 3
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'knife_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'knifeitem.png')
          },{
@@ -104,7 +108,7 @@ def load_guns():
                 }, (37,10)))
 
     #Brass Knuckles - 4
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'brass_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'brassitem.png')
          },{
@@ -127,7 +131,7 @@ def load_guns():
                 }, (37,10)))
     
    # Gauss - 5
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'gauss_spritesheet.png'),
          'item': path.join('graphics', 'items', 'gaussitem.png')
          },{
@@ -150,7 +154,7 @@ def load_guns():
                 },(35,7)))
 
     #Shotgun pistol - 6
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'sgp_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'shotpistol.png')
          },{
@@ -174,7 +178,7 @@ def load_guns():
     
     # ------ SPECIAL WEAPONS ----------
     #Fast Brass Knuckles - 7
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'brass_brass_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'brassbrassitem.png')
          },{
@@ -197,7 +201,7 @@ def load_guns():
                 }, (37,10)))
 
     #Bloody Brass Knuckles - 8
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'blood_brass_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'bloodbrassitem.png')
          },{
@@ -220,7 +224,7 @@ def load_guns():
                 }, (37,10)))
     
     #Sharp Knife - 9
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'shiny_knife_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'shinyknifeitem.png')
          },{
@@ -243,7 +247,7 @@ def load_guns():
                 }, (37,10)))
 
     #Fast Knife - 10
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'desert_knife_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'desertknifeitem.png')
          },{
@@ -266,7 +270,7 @@ def load_guns():
                 }, (37,10)))
     
     #Modded Double Barrel Shotgun - 11
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'modded_shotgun_spritesheet.png'),
          'item': path.join('graphics', 'items', 'moddedshotgun.png')
          },{
@@ -289,7 +293,7 @@ def load_guns():
                 }, (34,10)))
 
     #Impossible Double Barrel Shotgun - 12
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'shotgun_spritesheet.png'),
          'item': path.join('graphics', 'items', 'weirdshotgun.png')
          },{
@@ -312,7 +316,7 @@ def load_guns():
                 }, (34,10)))
 
     #AK 74 - 13
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'ak74_spritesheet.png'),
          'item': path.join('graphics', 'items', 'ak74item.png')
          },{
@@ -335,7 +339,7 @@ def load_guns():
                 },(35,7)))
 
     #Extended mag AK - 14
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'akext_spritesheet.png'),
          'item': path.join('graphics', 'items', 'akextitem.png')
          },{
@@ -358,7 +362,7 @@ def load_guns():
                 },(35,7)))
 
     #Camo AK-47 - 15
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'camo_ak_spritesheet.png'),
          'item': path.join('graphics', 'items', 'camoakitem.png')
          },{
@@ -381,7 +385,7 @@ def load_guns():
                 },(35,7)))
 
     #Light AK-47 - 16
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'ak_spritesheet.png'),
          'item': path.join('graphics', 'items', 'lightakitem.png')
          },{
@@ -404,7 +408,7 @@ def load_guns():
                 },(35,7)))
 
     #Gauss Hand gun - 17
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'gauss_pistol_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'gaussgun.png')
          },{
@@ -427,7 +431,7 @@ def load_guns():
                 }, (37,6)))
 
     #High power Hand gun - 18
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'pistol_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'hpgun.png')
          },{
@@ -450,7 +454,7 @@ def load_guns():
                 }, (37,6)))
 
     #Modded Gauss - 19
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'modded_gauss_spritesheet.png'),
          'item': path.join('graphics', 'items', 'moddedgaussitem.png')
          },{
@@ -473,7 +477,7 @@ def load_guns():
                 },(35,7)))
 
     #bump Gauss - 20
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet': path.join('graphics', 'weapon', 'bump_gauss_spritesheet.png'),
          'item': path.join('graphics', 'items', 'bumpgaussitem.png')
          },{
@@ -496,7 +500,7 @@ def load_guns():
                 },(35,7)))
 
     #Black Shotgun pistol - 21
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'black_sgp_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'blackshotpistol.png')
          },{
@@ -519,7 +523,7 @@ def load_guns():
                 }, (37,6)))
 
     #TWO Shotgun pistol - 22
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'wtf_sgp_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'wtfshotpistol.png')
          },{
@@ -542,7 +546,7 @@ def load_guns():
                 }, (37,6)))
 
     #Auto Hand gun - 23
-    SETTINGS.gun_list.append(GUNS.Gun(
+    gamedata.items.gun_list.append(GUNS.Gun(
         {'spritesheet' : path.join('graphics', 'weapon', 'auto_pistol_spritesheet.png'),
          'item' : path.join('graphics', 'items', 'autogun.png')
          },{
@@ -565,7 +569,7 @@ def load_guns():
                 }, (37,6)))
 
 def load_npc_types():
-    SETTINGS.npc_types = [
+    gamedata.npcs.npc_types = [
         #soldier idle
         {
             'pos': [0,0],
@@ -896,7 +900,7 @@ def load_npc_types():
     load_npc_sounds()
 
 def load_npc_sounds():
-    SETTINGS.npc_soundpacks = [
+    gamedata.npcs.npc_soundpacks = [
         #Soldier soundpack
         {
             'name' : 'soldier',
@@ -956,25 +960,25 @@ def load_npc_sounds():
 def spawn_npcs():
     seed = SETTINGS.current_level + SETTINGS.seed
     for npc in SETTINGS.levels_list[SETTINGS.current_level].npcs:
-        if [x for x in SETTINGS.npc_types if x['id'] == npc[2]][0]['name'] == 'random':
+        if [x for x in gamedata.npcs.npc_types if x['id'] == npc[2]][0]['name'] == 'random':
             random.seed(seed)
             seed += 0.001
-            stats = copy.deepcopy(random.choice([x for x in SETTINGS.npc_types if x['name'] != 'random']))
+            stats = copy.deepcopy(random.choice([x for x in gamedata.npcs.npc_types if x['name'] != 'random']))
             print(stats['name'])
         else: 
-            stats = copy.deepcopy([x for x in SETTINGS.npc_types if x['id'] == npc[2]][0])
+            stats = copy.deepcopy([x for x in gamedata.npcs.npc_types if x['id'] == npc[2]][0])
             
         try:
-            sounds = ([x for x in SETTINGS.npc_soundpacks if x['name'] == stats['soundpack']][0])
+            sounds = ([x for x in gamedata.npcs.npc_soundpacks if x['name'] == stats['soundpack']][0])
         except:
             print("Error loading NPC! No soundpack with name ", stats['soundpack'])
         stats['pos'] = npc[0]
         stats['face'] = npc[1]
-        SETTINGS.npc_list.append(NPC.Npc(stats, sounds, path.join(*stats['filepath'])))
+        gamedata.npcs.npc_list.append(NPC.Npc(stats, sounds, path.join(*stats['filepath'])))
 
 
 def load_item_types():
-    SETTINGS.item_types = [
+    gamedata.items.item_types = [
             #Health
             {
                 'filepath' : ('graphics', 'items', 'firstaid.png'),
@@ -1005,44 +1009,44 @@ def load_item_types():
                 },
             #Knife
             {
-                'filepath' : tuple(SETTINGS.gun_list[3].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[3].guntype,
-                'effect': SETTINGS.gun_list[3],
+                'filepath' : tuple(gamedata.items.gun_list[3].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[3].guntype,
+                'effect': gamedata.items.gun_list[3],
                 'id': 4
                 },
             #Pistol
             {
-                'filepath' : tuple(SETTINGS.gun_list[2].itemtexture.split('\\')),
-                'type': SETTINGS.gun_list[2].guntype,
-                'effect': SETTINGS.gun_list[2],
+                'filepath' : tuple(gamedata.items.gun_list[2].itemtexture.split('\\')),
+                'type': gamedata.items.gun_list[2].guntype,
+                'effect': gamedata.items.gun_list[2],
                 'id': 5
                 },
             #AK-47
             {
-                'filepath' : tuple(SETTINGS.gun_list[0].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[0].guntype,
-                'effect': SETTINGS.gun_list[0],
+                'filepath' : tuple(gamedata.items.gun_list[0].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[0].guntype,
+                'effect': gamedata.items.gun_list[0],
                 'id': 6
                 },
             #DB Shotgun
             {
-                'filepath' : tuple(SETTINGS.gun_list[1].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[1].guntype,
-                'effect': SETTINGS.gun_list[1],
+                'filepath' : tuple(gamedata.items.gun_list[1].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[1].guntype,
+                'effect': gamedata.items.gun_list[1],
                 'id': 7
                 },
             #Brass Knuckles
             {
-                'filepath' : tuple(SETTINGS.gun_list[4].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[4].guntype,
-                'effect': SETTINGS.gun_list[4],
+                'filepath' : tuple(gamedata.items.gun_list[4].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[4].guntype,
+                'effect': gamedata.items.gun_list[4],
                 'id': 8
                 },
             #Gauss rifle
             {
-                'filepath' : tuple(SETTINGS.gun_list[5].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[5].guntype,
-                'effect': SETTINGS.gun_list[5],
+                'filepath' : tuple(gamedata.items.gun_list[5].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[5].guntype,
+                'effect': gamedata.items.gun_list[5],
                 'id': 9,
                 },
             #ferromag ammo
@@ -1054,9 +1058,9 @@ def load_item_types():
                 },
             #Shotgun pistol
             {
-                'filepath' : tuple(SETTINGS.gun_list[6].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[6].guntype,
-                'effect': SETTINGS.gun_list[6],
+                'filepath' : tuple(gamedata.items.gun_list[6].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[6].guntype,
+                'effect': gamedata.items.gun_list[6],
                 'id': 11,
                 },
 
@@ -1089,137 +1093,137 @@ def load_item_types():
 
             #Light Brass Knuckles
             {
-                'filepath' : tuple(SETTINGS.gun_list[7].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[7].guntype,
-                'effect': SETTINGS.gun_list[7],
+                'filepath' : tuple(gamedata.items.gun_list[7].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[7].guntype,
+                'effect': gamedata.items.gun_list[7],
                 'id': 15
                 },
 
             #Bloody Brass Knuckles
             {
-                'filepath' : tuple(SETTINGS.gun_list[8].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[8].guntype,
-                'effect': SETTINGS.gun_list[8],
+                'filepath' : tuple(gamedata.items.gun_list[8].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[8].guntype,
+                'effect': gamedata.items.gun_list[8],
                 'id': 16
                 },
 
             #shiny knife
             {
-                'filepath' : tuple(SETTINGS.gun_list[9].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[9].guntype,
-                'effect': SETTINGS.gun_list[9],
+                'filepath' : tuple(gamedata.items.gun_list[9].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[9].guntype,
+                'effect': gamedata.items.gun_list[9],
                 'id': 17
                 },
 
             #desert knife
             {
-                'filepath' : tuple(SETTINGS.gun_list[10].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[10].guntype,
-                'effect': SETTINGS.gun_list[10],
+                'filepath' : tuple(gamedata.items.gun_list[10].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[10].guntype,
+                'effect': gamedata.items.gun_list[10],
                 'id': 18
                 },
 
             #modded shotgun
             {
-                'filepath' : tuple(SETTINGS.gun_list[11].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[11].guntype,
-                'effect': SETTINGS.gun_list[11],
+                'filepath' : tuple(gamedata.items.gun_list[11].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[11].guntype,
+                'effect': gamedata.items.gun_list[11],
                 'id': 19
                 },
 
             #Impossible Shotgun
             {
-                'filepath' : tuple(SETTINGS.gun_list[12].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[12].guntype,
-                'effect': SETTINGS.gun_list[12],
+                'filepath' : tuple(gamedata.items.gun_list[12].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[12].guntype,
+                'effect': gamedata.items.gun_list[12],
                 'id': 20
                 },
 
             #AK 74
             {
-                'filepath' : tuple(SETTINGS.gun_list[13].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[13].guntype,
-                'effect': SETTINGS.gun_list[13],
+                'filepath' : tuple(gamedata.items.gun_list[13].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[13].guntype,
+                'effect': gamedata.items.gun_list[13],
                 'id': 21
                 },
 
             #AK 47 extended magazine
             {
-                'filepath' : tuple(SETTINGS.gun_list[14].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[14].guntype,
-                'effect': SETTINGS.gun_list[14],
+                'filepath' : tuple(gamedata.items.gun_list[14].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[14].guntype,
+                'effect': gamedata.items.gun_list[14],
                 'id': 22
                 },
 
             #Camo AK-47
             {
-                'filepath' : tuple(SETTINGS.gun_list[15].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[15].guntype,
-                'effect': SETTINGS.gun_list[15],
+                'filepath' : tuple(gamedata.items.gun_list[15].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[15].guntype,
+                'effect': gamedata.items.gun_list[15],
                 'id': 23
                 },
 
             #Light AK-47
             {
-                'filepath' : tuple(SETTINGS.gun_list[16].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[16].guntype,
-                'effect': SETTINGS.gun_list[16],
+                'filepath' : tuple(gamedata.items.gun_list[16].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[16].guntype,
+                'effect': gamedata.items.gun_list[16],
                 'id': 24
                 },
 
             #Gauss pistol
             {
-                'filepath' : tuple(SETTINGS.gun_list[17].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[17].guntype,
-                'effect': SETTINGS.gun_list[17],
+                'filepath' : tuple(gamedata.items.gun_list[17].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[17].guntype,
+                'effect': gamedata.items.gun_list[17],
                 'id': 25
                 },
 
             #HP Pistol
             {
-                'filepath' : tuple(SETTINGS.gun_list[18].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[18].guntype,
-                'effect': SETTINGS.gun_list[18],
+                'filepath' : tuple(gamedata.items.gun_list[18].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[18].guntype,
+                'effect': gamedata.items.gun_list[18],
                 'id': 26
                 },
 
             #Modded Gauss
             {
-                'filepath' : tuple(SETTINGS.gun_list[19].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[19].guntype,
-                'effect': SETTINGS.gun_list[19],
+                'filepath' : tuple(gamedata.items.gun_list[19].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[19].guntype,
+                'effect': gamedata.items.gun_list[19],
                 'id': 27
                 },
 
             #Bump Gauss
             {
-                'filepath' : tuple(SETTINGS.gun_list[20].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[20].guntype,
-                'effect': SETTINGS.gun_list[20],
+                'filepath' : tuple(gamedata.items.gun_list[20].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[20].guntype,
+                'effect': gamedata.items.gun_list[20],
                 'id': 28
                 },
 
             #Black Shotgun Pistol
             {
-                'filepath' : tuple(SETTINGS.gun_list[21].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[21].guntype,
-                'effect': SETTINGS.gun_list[21],
+                'filepath' : tuple(gamedata.items.gun_list[21].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[21].guntype,
+                'effect': gamedata.items.gun_list[21],
                 'id': 29
                 },
 
             #wtf shotgun pistol
             {
-                'filepath' : tuple(SETTINGS.gun_list[22].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[22].guntype,
-                'effect': SETTINGS.gun_list[22],
+                'filepath' : tuple(gamedata.items.gun_list[22].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[22].guntype,
+                'effect': gamedata.items.gun_list[22],
                 'id': 30
                 },
 
             #auto pistol
             {
-                'filepath' : tuple(SETTINGS.gun_list[23].itemtexture.split('\\')),
-                'type' : SETTINGS.gun_list[23].guntype,
-                'effect': SETTINGS.gun_list[23],
+                'filepath' : tuple(gamedata.items.gun_list[23].itemtexture.split('\\')),
+                'type' : gamedata.items.gun_list[23].guntype,
+                'effect': gamedata.items.gun_list[23],
                 'id': 31
                 },
             ]
@@ -1227,17 +1231,17 @@ def load_item_types():
 def spawn_items():
     seed = SETTINGS.current_level + SETTINGS.seed
     for item in SETTINGS.levels_list[SETTINGS.current_level].items:
-        stats = [x for x in SETTINGS.item_types if x['id'] == item[1]][0]
+        stats = [x for x in gamedata.items.item_types if x['id'] == item[1]][0]
         if stats['type'] == 'random':
             random.seed(seed)
-            possible_items = [x for x in SETTINGS.item_types if x['type'] in stats['effect']]
+            possible_items = [x for x in gamedata.items.item_types if x['type'] in stats['effect']]
             stats = random.choice(possible_items)
             seed += 0.001
             
         elif stats['type'] not in ('primary', 'secondary', 'melee'):
-            stats = copy.deepcopy([x for x in SETTINGS.item_types if x['id'] == item[1]][0])
+            stats = copy.deepcopy([x for x in gamedata.items.item_types if x['id'] == item[1]][0])
         
-        SETTINGS.all_items.append(ITEMS.Item(item[0], path.join(*stats['filepath']), stats['type'], stats['effect']))
+        gamestate.items.all_items.append(ITEMS.Item(item[0], path.join(*stats['filepath']), stats['type'], stats['effect']))
 
 
 

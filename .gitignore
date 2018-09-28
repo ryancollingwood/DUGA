@@ -3,6 +3,7 @@ Andet/
 build/
 dist/
 .venv/
+venv/
 .vscode/
 .idea/
 pyinstaller.exe

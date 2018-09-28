@@ -4,11 +4,16 @@ import pygame
 import os
 import math
 
+import consts.colours
+import gamestate.inventory
+import gamestate.player
+
+
 class hud:
 
     def __init__(self):
-        self.health = SETTINGS.player_health
-        self.armor = SETTINGS.player_armor
+        self.health = gamestate.player.player_health
+        self.armor = gamestate.player.player_armor
         self.ammo = 0
         self.scale_width = 0
         self.scale_height = 0
@@ -27,9 +32,12 @@ class hud:
         SETTINGS.canvas_game_area_height = SETTINGS.canvas_target_height - self.rect.height
         self.rect.topleft = (0, SETTINGS.canvas_game_area_height)
 
-        self.text = [TEXT.Text(int(self.rect.width/35), self.rect.y + int(self.rect.height/2.5), 'PLAYER ARMOR', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 35),
-                     TEXT.Text(int(self.rect.width/3.4), self.rect.y + int(self.rect.height/2.5), 'PLAYER HEALTH', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 35),
-                     TEXT.Text(int(self.rect.width/1.8), self.rect.y + int(self.rect.height/2.5), 'AMMUNITION', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 35)]
+        self.text = [TEXT.Text(int(self.rect.width/35), self.rect.y + int(self.rect.height/2.5), 'PLAYER ARMOR',
+                               consts.colours.DARKGRAY, 'DUGAFONT.ttf', 35),
+                     TEXT.Text(int(self.rect.width/3.4), self.rect.y + int(self.rect.height/2.5), 'PLAYER HEALTH',
+                               consts.colours.DARKGRAY, 'DUGAFONT.ttf', 35),
+                     TEXT.Text(int(self.rect.width/1.8), self.rect.y + int(self.rect.height/2.5), 'AMMUNITION',
+                               consts.colours.DARKGRAY, 'DUGAFONT.ttf', 35)]
 
         self.arrow_spritesheet = pygame.image.load(os.path.join('graphics', 'arrows.png')).convert_alpha()
 
@@ -49,14 +57,14 @@ class hud:
         self.arrow3 = pygame.transform.scale(self.arrow3, (50,50))
         self.original_arrow3 = self.arrow3
 
-        
     def render(self, canvas):
         
         canvas.blit(self.sprite, self.rect)
-        self.text[0].update_string('%s / 100' % SETTINGS.player_armor)
-        self.text[1].update_string('%s / 100' % SETTINGS.player_health)
-        if SETTINGS.current_gun and SETTINGS.current_gun.ammo_type:
-            self.text[2].update_string('%s / %s' % (SETTINGS.current_gun.current_mag, SETTINGS.held_ammo[SETTINGS.current_gun.ammo_type]))
+        self.text[0].update_string('%s / 100' % gamestate.player.player_armor)
+        self.text[1].update_string('%s / 100' % gamestate.player.player_health)
+        if gamestate.inventory.current_gun and gamestate.inventory.current_gun.ammo_type:
+            self.text[2].update_string('%s / %s' % (gamestate.inventory.current_gun.current_mag, gamestate.inventory.held_ammo[
+                gamestate.inventory.current_gun.ammo_type]))
         else:
             self.text[2].update_string('-- / --')
         for string in self.text:
@@ -75,7 +83,3 @@ class hud:
         canvas.blit(self.arrow2, (self.arrow_rect[0], self.arrow_rect[1] - 4))
         canvas.blit(self.arrow3, (self.arrow_rect[0], self.arrow_rect[1] - 8))
 
-
-
-
-        

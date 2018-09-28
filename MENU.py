@@ -6,6 +6,12 @@ import random
 import SETTINGS
 import TEXT
 import SOUND
+import consts.colours
+import consts.player
+import consts.raycast
+import gamedata.items
+import gamestate.inventory
+import gamestate.player
 
 SETTINGS.menu_showing = True
 
@@ -157,7 +163,7 @@ class Controller:
 class Menu:
 
     def __init__(self, title):
-        self.title = TEXT.Text(0,0, title, SETTINGS.BLACK, "DUGAFONT.ttf", 120)
+        self.title = TEXT.Text(0, 0, title, consts.colours.BLACK, "DUGAFONT.ttf", 120)
         self.title.update_pos((SETTINGS.canvas_actual_width/2)-(self.title.layout.get_width()/2)+8, 20)
 
         self.background_image = None
@@ -246,10 +252,10 @@ class NewMenu(Menu):
         self.tutorial_button = Button((SETTINGS.canvas_actual_width/2, 325, 200, 30), "TUTORIAL")
         self.back_button = Button((SETTINGS.canvas_actual_width/2, 500, 200, 60), "BACK")
 
-        self.loading = TEXT.Text(0,0, "LOADING...", SETTINGS.BLACK, "DUGAFONT.ttf", 74)
+        self.loading = TEXT.Text(0, 0, "LOADING...", consts.colours.BLACK, "DUGAFONT.ttf", 74)
         self.loading.update_pos((SETTINGS.canvas_actual_width/2)-(self.loading.layout.get_width()/2)+8, (SETTINGS.canvas_target_height/2)-(self.loading.layout.get_height()/2))
 
-        self.nolevels = TEXT.Text(0,0, "NO  CUSTOM  LEVELS", SETTINGS.RED, "DUGAFONT.ttf", 50)
+        self.nolevels = TEXT.Text(0, 0, "NO  CUSTOM  LEVELS", consts.colours.RED, "DUGAFONT.ttf", 50)
         self.nolevels.update_pos((SETTINGS.canvas_actual_width/2)-(self.nolevels.layout.get_width()/2)+8, (SETTINGS.canvas_target_height/2)-(self.nolevels.layout.get_height()/2))
         self.timer = 0
         self.no_levels_on = False
@@ -268,27 +274,26 @@ class NewMenu(Menu):
             self.timer = 0
 
     def reset_inventory(self):
-        for i in SETTINGS.inventory:
-            SETTINGS.inventory[i] = None
+        for i in gamestate.inventory.held_weapons:
+            gamestate.inventory.held_weapons[i] = None
 
-        for i in SETTINGS.held_ammo:
-            SETTINGS.held_ammo[i] = 0
+        for i in gamestate.inventory.held_ammo:
+            gamestate.inventory.held_ammo[i] = 0
 
-        for i in SETTINGS.gun_list:
+        for i in gamedata.items.gun_list:
             i.current_mag = 0
 
-        
-        SETTINGS.current_gun = None
-        SETTINGS.next_gun = None
-        SETTINGS.player_health = SETTINGS.og_player_health
-        SETTINGS.player_armor = SETTINGS.og_player_armor
+        gamestate.inventory.current_gun = None
+        gamestate.inventory.next_gun = None
+        gamestate.player.player_health = consts.player.og_player_health
+        gamestate.player.player_armor = consts.player.og_player_armor
         SETTINGS.current_level = 0
 
-        SETTINGS.player_states['dead'] = False
-        SETTINGS.player_states['invopen'] = False
-        SETTINGS.player_states['heal'] = False
-        SETTINGS.player_states['armor'] = False
-        SETTINGS.player_states['cspeed'] = 0
+        gamestate.player.player_states['dead'] = False
+        gamestate.player.player_states['invopen'] = False
+        gamestate.player.player_states['heal'] = False
+        gamestate.player.player_states['armor'] = False
+        gamestate.player.player_states['cspeed'] = 0
 
         SETTINGS.statistics['last enemies'] = 0
         SETTINGS.statistics['last dtaken'] = 0
@@ -296,10 +301,10 @@ class NewMenu(Menu):
         SETTINGS.statistics['last shots'] = 0
         SETTINGS.statistics['last levels'] = 0
 
-        SETTINGS.fov = self.settings['fov']
-        SETTINGS.player_states['cspeed'] = SETTINGS.player_speed
-        SETTINGS.aiming = False
-        SETTINGS.player.update_collide_list = True
+        consts.raycast.fov = self.settings['fov']
+        gamestate.player.player_states['cspeed'] = consts.player.player_speed
+        gamestate.player.aiming = False
+        gamestate.player.player.update_collide_list = True
 
     def draw_no_levels(self, canvas):
         if self.timer <= 1.2:
@@ -350,7 +355,7 @@ class OptionsMenu(Menu):
         self.fullscreen_button = Button((SETTINGS.canvas_actual_width/2, 400, 300, 30), "FULLSCREEN: %s" % self.onoff[self.fs_index])
         self.back_button = Button((SETTINGS.canvas_actual_width/2, 500, 200, 60), "BACK")
 
-        self.restart = TEXT.Text(0,0, 'RESTART GAME TO APPLY CHANGES', SETTINGS.LIGHTGRAY, "DUGAFONT.ttf", 20)
+        self.restart = TEXT.Text(0, 0, 'RESTART GAME TO APPLY CHANGES', consts.colours.LIGHTGRAY, "DUGAFONT.ttf", 20)
         self.restart.update_pos((SETTINGS.canvas_actual_width/2)-(self.restart.layout.get_width()/2), 580)
 
         self.current_settings = {
@@ -452,9 +457,9 @@ class ScoreMenu(Menu):
 
         for i in range(len(self.best_scores)):
             if i == 0:
-                self.texts.append(TEXT.Text(0, 0, self.best_scores[i], SETTINGS.DARKGRAY, "DUGAFONT.ttf", 18))
+                self.texts.append(TEXT.Text(0, 0, self.best_scores[i], consts.colours.DARKGRAY, "DUGAFONT.ttf", 18))
             else:
-                self.texts.append(TEXT.Text(0, 0, self.best_scores[i], SETTINGS.WHITE, "DUGAFONT.ttf", 18))
+                self.texts.append(TEXT.Text(0, 0, self.best_scores[i], consts.colours.WHITE, "DUGAFONT.ttf", 18))
             self.texts[i].update_pos(10, self.pos)
             self.pos += 30
 
@@ -470,12 +475,12 @@ class ScoreMenu(Menu):
 
         for i in range(len(self.last_scores)):
             if i == 0:
-                self.last_texts.append(TEXT.Text(0, 0, self.last_scores[i], SETTINGS.DARKGRAY, "DUGAFONT.ttf", 18))
+                self.last_texts.append(TEXT.Text(0, 0, self.last_scores[i], consts.colours.DARKGRAY, "DUGAFONT.ttf", 18))
             else:
                 if self.last_scores[i] == self.best_scores[i] and self.last_scores[i].find(' 0') == -1:
                     self.last_texts.append(TEXT.Text(0, 0, self.last_scores[i], (100,100,200), "DUGAFONT.ttf", 18))
                 else:
-                    self.last_texts.append(TEXT.Text(0, 0, self.last_scores[i], SETTINGS.WHITE, "DUGAFONT.ttf", 18))
+                    self.last_texts.append(TEXT.Text(0, 0, self.last_scores[i], consts.colours.WHITE, "DUGAFONT.ttf", 18))
             self.last_texts[i].update_pos(210, self.pos)
             self.pos += 30
 
@@ -494,9 +499,9 @@ class ScoreMenu(Menu):
 
         for i in range(len(self.all_scores)):
             if i == 0:
-                self.all_texts.append(TEXT.Text(0, 0, self.all_scores[i], SETTINGS.DARKGRAY, "DUGAFONT.ttf", 18))
+                self.all_texts.append(TEXT.Text(0, 0, self.all_scores[i], consts.colours.DARKGRAY, "DUGAFONT.ttf", 18))
             else:
-                self.all_texts.append(TEXT.Text(0, 0, self.all_scores[i], SETTINGS.WHITE, "DUGAFONT.ttf", 18))
+                self.all_texts.append(TEXT.Text(0, 0, self.all_scores[i], consts.colours.WHITE, "DUGAFONT.ttf", 18))
             self.all_texts[i].update_pos(410, self.pos)
             self.pos += 30
 
@@ -535,32 +540,34 @@ class CreditsMenu(Menu):
         self.back_button = Button((SETTINGS.canvas_actual_width/2, 500, 200, 60), "BACK")
 
         #Created by
-        self.createdby = TEXT.Text(0,0, 'CREATED  BY', SETTINGS.LIGHTGRAY, "DUGAFONT.ttf", 24)
+        self.createdby = TEXT.Text(0, 0, 'CREATED  BY', consts.colours.LIGHTGRAY, "DUGAFONT.ttf", 24)
         self.createdby.update_pos((SETTINGS.canvas_actual_width/2)-(self.createdby.layout.get_width()/2)+8, 130)
 
-        self.maxwellsalmon = TEXT.Text(0,0, 'MAXWELLSALMON', SETTINGS.DARKGRAY, "DUGAFONT.ttf", 38)
+        self.maxwellsalmon = TEXT.Text(0, 0, 'MAXWELLSALMON', consts.colours.DARKGRAY, "DUGAFONT.ttf", 38)
         self.maxwellsalmon.update_pos((SETTINGS.canvas_actual_width/2)-(self.maxwellsalmon.layout.get_width()/2)+8, 160)
 
         #Music
-        self.musicby = TEXT.Text(0,0, 'MUSIC  BY', SETTINGS.LIGHTGRAY, "DUGAFONT.ttf", 20)
+        self.musicby = TEXT.Text(0, 0, 'MUSIC  BY', consts.colours.LIGHTGRAY, "DUGAFONT.ttf", 20)
         self.musicby.update_pos((SETTINGS.canvas_actual_width/2)-(self.musicby.layout.get_width()/2)+8, 210)
         
-        self.eli = TEXT.Text(0,0, 'HUD-LUM @ SOUNDCLOUD', SETTINGS.DARKGRAY, "DUGAFONT.ttf", 30)
+        self.eli = TEXT.Text(0, 0, 'HUD-LUM @ SOUNDCLOUD', consts.colours.DARKGRAY, "DUGAFONT.ttf", 30)
         self.eli.update_pos((SETTINGS.canvas_actual_width/2)-(self.eli.layout.get_width()/2)+8, 240)
 
         #Maps
-        self.contributions = TEXT.Text(0,0, 'THANKS  TO', SETTINGS.LIGHTGRAY, "DUGAFONT.ttf", 20)
+        self.contributions = TEXT.Text(0, 0, 'THANKS  TO', consts.colours.LIGHTGRAY, "DUGAFONT.ttf", 20)
         self.contributions.update_pos((SETTINGS.canvas_actual_width/2)-(self.contributions.layout.get_width()/2)+8, 290)
 
-        self.contributors = TEXT.Text(0,0, 'POELE,  OLE,  ROCKETTHEMINIFIG,  ANDY BOY,  J4CKINS' , SETTINGS.DARKGRAY, "DUGAFONT.ttf", 20)
+        self.contributors = TEXT.Text(0, 0, 'POELE,  OLE,  ROCKETTHEMINIFIG,  ANDY BOY,  J4CKINS',
+                                      consts.colours.DARKGRAY, "DUGAFONT.ttf", 20)
         self.contributors.update_pos((SETTINGS.canvas_actual_width/2)-(self.contributors.layout.get_width()/2)+8, 320)
-        self.contributors2 =  TEXT.Text(0,0, 'THEFATHOBBITS,  STARLITEPONY' , SETTINGS.DARKGRAY, "DUGAFONT.ttf", 20)
+        self.contributors2 =  TEXT.Text(0, 0, 'THEFATHOBBITS,  STARLITEPONY', consts.colours.DARKGRAY, "DUGAFONT.ttf", 20)
         self.contributors2.update_pos((SETTINGS.canvas_actual_width/2)-(self.contributors2.layout.get_width()/2)+8, 345)
 
-        self.specialthanks = TEXT.Text(0,0, 'THANKS  TO  THE  PYGAME  COMMUNITY  FOR  HELP  AND  MOTIVATION', SETTINGS.DARKGRAY, "DUGAFONT.ttf", 15)
+        self.specialthanks = TEXT.Text(0, 0, 'THANKS  TO  THE  PYGAME  COMMUNITY  FOR  HELP  AND  MOTIVATION',
+                                       consts.colours.DARKGRAY, "DUGAFONT.ttf", 15)
         self.specialthanks.update_pos((SETTINGS.canvas_actual_width/2)-(self.specialthanks.layout.get_width()/2)+8, 380)
 
-        self.and_you = TEXT.Text(0,0, 'THANKS  TO  YOU  FOR  PLAYING!' , SETTINGS.GREEN, "DUGAFONT.ttf", 22)
+        self.and_you = TEXT.Text(0, 0, 'THANKS  TO  YOU  FOR  PLAYING!', consts.colours.GREEN, "DUGAFONT.ttf", 22)
         self.and_you.update_pos((SETTINGS.canvas_actual_width/2)-(self.and_you.layout.get_width()/2)+8, 410)
 
 
@@ -588,7 +595,7 @@ class SupportSplash:
         self.rect.topleft = SETTINGS.canvas_actual_width - 220, SETTINGS.canvas_target_height - 280
         self.area.fill((200,200,200))
 
-        self.title = TEXT.Text(0,0, 'THANKS   FOR   PLAYING', SETTINGS.DARKGRAY, "DUGAFONT.ttf", 19)
+        self.title = TEXT.Text(0, 0, 'THANKS   FOR   PLAYING', consts.colours.DARKGRAY, "DUGAFONT.ttf", 19)
         self.title.update_pos((self.rect.width/2) - (self.title.layout.get_width()/2)+2, 5)
 
         self.pleas = ['You  have  been  playing  DUGA', 'for  over  two  hours  now.  I', 'really  hope  you  enjoy  it.',
@@ -602,7 +609,7 @@ class SupportSplash:
         self.button = Button((SETTINGS.canvas_actual_width - 120, SETTINGS.canvas_target_height - 15, 192, 40), "LEAVE ME ALONE!")
 
         for i in range(len(self.pleas)):
-            self.texts.append(TEXT.Text(0, 0, self.pleas[i], SETTINGS.WHITE, "DUGAFONT.ttf", 15))
+            self.texts.append(TEXT.Text(0, 0, self.pleas[i], consts.colours.WHITE, "DUGAFONT.ttf", 15))
             self.texts[i].update_pos((self.rect.width/2) - (self.texts[i].layout.get_width()/2)+2, self.pos)
             self.pos += 17
         
@@ -650,10 +657,10 @@ class Button:
         self.rect.center = (xywh[0], xywh[1])
         self.clicked = False
 
-        self.text = TEXT.Text(0,0, text, SETTINGS.WHITE, "DUGAFONT.ttf", 24)
+        self.text = TEXT.Text(0, 0, text, consts.colours.WHITE, "DUGAFONT.ttf", 24)
         self.text.update_pos(xywh[0] - self.text.layout.get_width()/2, xywh[1] - (self.text.layout.get_height() / 2)+2)
 
-        self.filling = SETTINGS.LIGHTGRAY
+        self.filling = consts.colours.LIGHTGRAY
         self.sound = pygame.mixer.Sound(os.path.join('sounds', 'other', 'button.ogg'))
         
 
@@ -663,9 +670,9 @@ class Button:
         self.text.draw(canvas)
 
         if self.rect.collidepoint(pygame.mouse.get_pos()):
-            self.filling = SETTINGS.DARKGRAY
+            self.filling = consts.colours.DARKGRAY
         else:
-            self.filling = SETTINGS.LIGHTGRAY
+            self.filling = consts.colours.LIGHTGRAY
 
     def get_clicked(self):
         if self.rect.collidepoint(pygame.mouse.get_pos()):

@@ -1,7 +1,9 @@
 import pygame
 import os
 import SETTINGS
-import SOUND
+import gamedata.npcs
+import gamestate.player
+
 
 class Music:
 
@@ -22,7 +24,7 @@ class Music:
 
     def control_music(self):
         if SETTINGS.music_volume > 0:
-            if [x for x in SETTINGS.npc_list if x.state == 'attacking' and not x.dead] and not SETTINGS.menu_showing or SETTINGS.player_states['dead']:
+            if [x for x in gamedata.npcs.npc_list if x.state == 'attacking' and not x.dead] and not SETTINGS.menu_showing or gamestate.player.player_states['dead']:
                 if self.hard_volume < self.settings_volume:
                     self.hard_volume += 0.05
                     pygame.mixer.Sound.set_volume(self.hard_track, max(0, (self.hard_volume - self.menu_volume) * SETTINGS.music_volume))
@@ -42,7 +44,3 @@ class Music:
                     self.menu_volume -= 0.05
                     pygame.mixer.Sound.set_volume(self.base_track, max(0, (self.settings_volume - self.menu_volume) * SETTINGS.music_volume))
                     pygame.mixer.Sound.set_volume(self.hard_track, max(0, (self.hard_volume - self.menu_volume) * SETTINGS.music_volume))
-                
-
-
-        

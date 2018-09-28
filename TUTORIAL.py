@@ -1,11 +1,14 @@
 import pygame
 import TEXT
 import SETTINGS
+import consts.colours
+import gamestate.player
+
 
 class Controller:
 
     def __init__(self): 
-        self.text = TEXT.Text(0,0, "INTET!", SETTINGS.BLACK, "DUGAFONT.ttf", 26)
+        self.text = TEXT.Text(0, 0, "INTET!", consts.colours.BLACK, "DUGAFONT.ttf", 26)
 
         #Strings
         self.welcome = {
@@ -97,36 +100,36 @@ class Controller:
 
     def control(self, canvas):
         if SETTINGS.current_level == 0:
-            if SETTINGS.player_map_pos in self.welcome['tiles']:
+            if gamestate.player.player_map_pos in self.welcome['tiles']:
                 self.draw(self.welcome, canvas)
-            elif SETTINGS.player_map_pos in self.items1['tiles']:
+            elif gamestate.player.player_map_pos in self.items1['tiles']:
                 self.draw(self.items1, canvas)
-            elif SETTINGS.player_map_pos in self.arrow['tiles']:
+            elif gamestate.player.player_map_pos in self.arrow['tiles']:
                 self.draw(self.arrow, canvas)
-            elif SETTINGS.player_map_pos in self.exits['tiles']:
+            elif gamestate.player.player_map_pos in self.exits['tiles']:
                 self.draw(self.exits, canvas)
                 
 
         elif SETTINGS.current_level == 1:
-            if SETTINGS.player_map_pos in self.second['tiles']:
+            if gamestate.player.player_map_pos in self.second['tiles']:
                 self.draw(self.second, canvas)
-            elif SETTINGS.player_map_pos in self.weapons['tiles']:
+            elif gamestate.player.player_map_pos in self.weapons['tiles']:
                 self.draw(self.weapons, canvas)
-            elif SETTINGS.player_map_pos in self.ammo['tiles']:
+            elif gamestate.player.player_map_pos in self.ammo['tiles']:
                 self.draw(self.ammo, canvas)
-            elif SETTINGS.player_map_pos in self.compare['tiles']:
+            elif gamestate.player.player_map_pos in self.compare['tiles']:
                 self.draw(self.compare, canvas)
-            elif SETTINGS.player_map_pos in self.gauss['tiles']:
+            elif gamestate.player.player_map_pos in self.gauss['tiles']:
                 self.draw(self.gauss, canvas)
 
         elif SETTINGS.current_level == 2:
-            if SETTINGS.player_map_pos in self.combat['tiles']:
+            if gamestate.player.player_map_pos in self.combat['tiles']:
                 self.draw(self.combat, canvas)
-            elif SETTINGS.player_map_pos in self.items['tiles']:
+            elif gamestate.player.player_map_pos in self.items['tiles']:
                 self.draw(self.items, canvas)
-            elif SETTINGS.player_map_pos in self.enemy['tiles']:
+            elif gamestate.player.player_map_pos in self.enemy['tiles']:
                 self.draw(self.enemy, canvas)
-            elif SETTINGS.player_map_pos in self.done['tiles']:
+            elif gamestate.player.player_map_pos in self.done['tiles']:
                 self.draw(self.done, canvas)
 
 

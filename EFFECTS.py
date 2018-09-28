@@ -4,8 +4,11 @@ import ITEMS
 import TEXT
 import random
 
-title = TEXT.Text(0,0, "None :-)", SETTINGS.BLACK, "DUGAFONT.ttf", 60)
-author = TEXT.Text(0,0, "None :-)", SETTINGS.BLACK, "DUGAFONT.ttf", 40)
+import consts.colours
+import gamestate.player
+
+title = TEXT.Text(0, 0, "None :-)", consts.colours.BLACK, "DUGAFONT.ttf", 60)
+author = TEXT.Text(0, 0, "None :-)", consts.colours.BLACK, "DUGAFONT.ttf", 40)
 
 hurt_intensity = 128
 dead_intensity = 0
@@ -40,15 +43,15 @@ int_to_string = {
 def render(canvas):
     if SETTINGS.screen_shake > 0:
         screen_shake()
-    if SETTINGS.player_states['hurt'] or SETTINGS.player_states['dead']:
+    if gamestate.player.player_states['hurt'] or gamestate.player.player_states['dead']:
         player_hurt(canvas)
-    if SETTINGS.player_states['heal']:
+    if gamestate.player.player_states['heal']:
         player_heal(canvas)
-    if SETTINGS.player_states['armor']:
+    if gamestate.player.player_states['armor']:
         player_armor(canvas)
-    if SETTINGS.player_states['fade'] or SETTINGS.player_states['black']:
+    if gamestate.player.player_states['fade'] or gamestate.player.player_states['black']:
         fade_black(canvas)
-    if SETTINGS.player_states['title']:
+    if gamestate.player.player_states['title']:
         show_title(canvas)
         
 
@@ -67,14 +70,14 @@ def player_hurt(canvas):
 
     blood = pygame.Surface((SETTINGS.canvas_actual_width, SETTINGS.canvas_target_height)).convert_alpha()
 
-    if SETTINGS.player_states['hurt']:
+    if gamestate.player.player_states['hurt']:
         blood.fill((255, 0, 0, max(min(hurt_intensity, 255), 0)))
         hurt_intensity = int(hurt_intensity / (2-SETTINGS.dt))
         if hurt_intensity == 0:
-            SETTINGS.player_states['hurt'] = False
+            gamestate.player.player_states['hurt'] = False
             hurt_intensity = 128
 
-    elif SETTINGS.player_states['dead']:
+    elif gamestate.player.player_states['dead']:
         blood.fill((255, 0, 0, dead_intensity))
         if dead_intensity <= 120:
             dead_intensity += 10
@@ -89,7 +92,7 @@ def player_heal(canvas):
     heal_intensity = int(heal_intensity / (2-SETTINGS.dt))
     
     if heal_intensity == 0:
-        SETTINGS.player_states['heal'] = False
+        gamestate.player.player_states['heal'] = False
         heal_intensity = 85
     canvas.blit(heal, (0,0))
 
@@ -101,7 +104,7 @@ def player_armor(canvas):
     armor.fill((0, 0, 225, armor_intensity))
     armor_intensity = int(armor_intensity / (2-SETTINGS.dt))
     if armor_intensity == 0:
-        SETTINGS.player_states['armor'] = False
+        gamestate.player.player_states['armor'] = False
         armor_intensity = 85
     canvas.blit(armor, (0,0))
 
@@ -110,20 +113,20 @@ def fade_black(canvas):
 
     black = pygame.Surface((SETTINGS.canvas_actual_width, SETTINGS.canvas_target_height)).convert_alpha()
     black.fill((0, 0, 0, max(0, min(fade_value, 255))))
-    if SETTINGS.player_states['fade'] and not SETTINGS.player_states['black']:
+    if gamestate.player.player_states['fade'] and not gamestate.player.player_states['black']:
         if fade_value < 400:
             fade_value += 15
         else:
-            SETTINGS.player_states['black'] = True
-            SETTINGS.player_states['fade'] = False
+            gamestate.player.player_states['black'] = True
+            gamestate.player.player_states['fade'] = False
             
-    elif SETTINGS.player_states['fade'] and SETTINGS.player_states['black']:
+    elif gamestate.player.player_states['fade'] and gamestate.player.player_states['black']:
         if fade_value > 0:
             fade_value -= 20
         elif fade_value <= 0:
             fade_value = 0
-            SETTINGS.player_states['black'] = False
-            SETTINGS.player_states['fade'] = False
+            gamestate.player.player_states['black'] = False
+            gamestate.player.player_states['fade'] = False
             
     canvas.blit(black, (0,0))
 
@@ -161,7 +164,7 @@ def show_title(canvas):
         title.draw(canvas)
         title_timer += SETTINGS.dt
     else:
-        SETTINGS.player_states['title'] = False
+        gamestate.player.player_states['title'] = False
         title_timer = 0
         
 

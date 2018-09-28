@@ -8,11 +8,18 @@ import math
 import random
 import os
 
+import consts.geom
+import gamedata.npcs
+import gamedata.tiles
+import gamestate.player
+import gamestate.sprites
+
+
 class Map:
     '''== Create the map ==\narray -> Level to be loaded'''
     def __init__(self, array):
         self.array = array
-        self.tile_size = SETTINGS.tile_size
+        self.tile_size = consts.geom.tile_size
         self.width = len(self.array[0])-1
         self.height = len(self.array)-1
         SETTINGS.current_level_size = (self.width, self.height)
@@ -22,7 +29,7 @@ class Map:
                 SETTINGS.all_tiles.append(Tile(self.array[row][column], [column*self.tile_size, row*self.tile_size], [column, row]))
             
         for tile in SETTINGS.all_tiles:
-            if SETTINGS.tile_solid[tile.ID]:
+            if gamedata.tiles.tile_solid[tile.ID]:
                 SETTINGS.all_solid_tiles.append(tile)
             if tile.type == 'trigger':
                 SETTINGS.trigger_tiles.append(tile)
@@ -32,7 +39,7 @@ class Map:
                 
     def draw(self, canvas):
         for tile in SETTINGS.all_solid_tiles:
-            if SETTINGS.tile_visible[tile.ID]:
+            if gamedata.tiles.tile_visible[tile.ID]:
                 tile.draw(canvas)
 
     def move_inaccessible_entities(self):      
@@ -52,8 +59,8 @@ class Map:
         possible_npc_positions = []
         #Remove npc positions too close to the player
         for pos in temp_possible_npc_positions:
-            x = abs(SETTINGS.player_map_pos[0] - pos[0])
-            y = abs(SETTINGS.player_map_pos[1] - pos[1])
+            x = abs(gamestate.player.player_map_pos[0] - pos[0])
+            y = abs(gamestate.player.player_map_pos[1] - pos[1])
             
             if math.sqrt(x**2 + y**2) >= 8: #Length of vector between player and NPC
                 possible_npc_positions.append(pos)            
@@ -80,26 +87,27 @@ class Tile:
         self.ID = ID
         #position in pixels
         self.pos = pos
-        self.type = SETTINGS.texture_type[self.ID]
+        self.type = gamedata.tiles.texture_type[self.ID]
         #position in tiles
         self.map_pos = map_pos
         self.distance = None
-        self.solid = SETTINGS.tile_solid[self.ID]
+        self.solid = gamedata.tiles.tile_solid[self.ID]
         #For doors opening
         self.state = None
         self.timer = 0
         
         if self.type == 'sprite':
-            current_number = len(SETTINGS.all_sprites)
+            current_number = len(gamestate.sprites.all_sprites)
             #Need some weird coordinates to make it centered.
-            self.texture = SPRITES.Sprite(SETTINGS.tile_texture[self.ID], self.ID, (self.pos[0]+SETTINGS.tile_size/3, self.pos[1]+SETTINGS.tile_size/3), 'sprite')
+            self.texture = SPRITES.Sprite(gamedata.tiles.tile_texture[self.ID], self.ID, (self.pos[0] + consts.geom.tile_size / 3, self.pos[1] + consts.geom.tile_size / 3), 'sprite')
             
-            self.rect = pygame.Rect(pos[0], pos[1], SETTINGS.tile_size/2, SETTINGS.tile_size/2)
+            self.rect = pygame.Rect(pos[0], pos[1], consts.geom.tile_size / 2, consts.geom.tile_size / 2)
 
         else:
-            self.texture = SETTINGS.tile_texture[self.ID].texture
+            self.texture = gamedata.tiles.tile_texture[self.ID].texture
             self.icon = pygame.transform.scale(self.texture, (16,16)).convert()
-            self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size, SETTINGS.tile_size)).convert()
+            self.texture = pygame.transform.scale(self.texture, (
+            consts.geom.tile_size, consts.geom.tile_size)).convert()
             self.rect = self.texture.get_rect()
             self.rect.x = pos[0]
             self.rect.y = pos[1]
@@ -129,8 +137,8 @@ class Tile:
         return self.distance
 
     def sesam_luk_dig_op(self):
-        if self.open > SETTINGS.tile_size:
-            self.open = SETTINGS.tile_size
+        if self.open > consts.geom.tile_size:
+            self.open = consts.geom.tile_size
         elif self.open < 0:
             self.open = 0
             
@@ -141,18 +149,18 @@ class Tile:
             if self.open == 0:
                 SOUND.play_sound(self.open_sound, self.distance)
                 
-            if self.open < SETTINGS.tile_size:
-                self.open += SETTINGS.tile_size * SETTINGS.dt
+            if self.open < consts.geom.tile_size:
+                self.open += consts.geom.tile_size * SETTINGS.dt
             else:
                 self.state = 'open'
                 self.solid = False
-            if self.open > SETTINGS.tile_size/1.4:
+            if self.open > consts.geom.tile_size /1.4:
                 self.solid = False
 
         elif self.state == 'open':
             self.timer += SETTINGS.dt
-            if self.timer > 5 and not self.rect.colliderect(SETTINGS.player_rect):
-                for i in SETTINGS.npc_list:
+            if self.timer > 5 and not self.rect.colliderect(gamestate.player.player_rect):
+                for i in gamedata.npcs.npc_list:
                     if self.rect.colliderect(i.rect):
                         break
                 else:   
@@ -161,10 +169,10 @@ class Tile:
                     self.timer = 0
 
         elif self.state == 'closing':
-            if self.open >= SETTINGS.tile_size:
+            if self.open >= consts.geom.tile_size:
                 SOUND.play_sound(self.close_sound, self.distance)
             if self.open > 0:
-                self.open -= SETTINGS.tile_size * SETTINGS.dt
+                self.open -= consts.geom.tile_size * SETTINGS.dt
             else:
                 self.state = 'closed'
 

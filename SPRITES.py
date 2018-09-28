@@ -1,6 +1,12 @@
 import pygame
 import math
 import SETTINGS
+import consts.geom
+import consts.player
+import consts.raycast
+import gamestate.player
+import gamestate.rendering
+import gamestate.sprites
 from consts.geom import DEGREES_360, DEGREES_270, DEGREES_180, DEGREES_90
  # I noticed, that the sprites are not projected correctly. However, I do not have the guts to fix it. Feel free to take a look.
 
@@ -13,7 +19,8 @@ class Sprite:
         self.texture = texture
         #These constant values should be determined rather than hard coded
         #self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*2, SETTINGS.tile_size*4)).convert_alpha()
-        self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*4, SETTINGS.tile_size*8)).convert_alpha()
+        self.texture = pygame.transform.scale(self.texture, (
+        consts.geom.tile_size * 4, consts.geom.tile_size * 8)).convert_alpha()
         self.texture_type = texture_type
         self.type = texture_type
         self.ID = ID
@@ -36,14 +43,14 @@ class Sprite:
         else:
             self.parent = None
 
-        SETTINGS.all_sprites.append(self)
+        gamestate.sprites.all_sprites.append(self)
 
     def get_pos(self, canvas):
-        angle = SETTINGS.player_angle
-        fov = SETTINGS.fov
+        angle = consts.player.player_angle
+        fov = consts.raycast.fov
 
-        xpos = self.rect.centerx - SETTINGS.player_rect[0]
-        ypos = SETTINGS.player_rect[1] - self.rect.centery
+        xpos = self.rect.centerx - gamestate.player.player_rect[0]
+        ypos = gamestate.player.player_rect[1] - self.rect.centery
 
         dist = math.sqrt(xpos*xpos + ypos*ypos)
         if dist == 0:
@@ -75,7 +82,7 @@ class Sprite:
         sprite_width = int(self.rect.width / self.rect.height * sprite_height)
         
         if xTmp > (0 - sprite_width) and xTmp < (SETTINGS.canvas_actual_width + sprite_width):
-            SETTINGS.zbuffer.append(self)
+            gamestate.rendering.zbuffer.append(self)
             
             if self.parent:
                 self.parent.in_canvas = True

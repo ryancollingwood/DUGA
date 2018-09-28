@@ -7,6 +7,14 @@ import random
 import math
 import os
 
+import consts.geom
+import consts.raycast
+import gamedata.npcs
+import gamestate.inventory
+import gamestate.player
+import gamestate.rendering
+
+
 class Gun:
     '''== Create a weapon ==\nspritesheet -> .png | stats -> explained in GUNS.py\nsounds -> explained in GUNS.py | aim_pos = Sight pos in px'''
     
@@ -50,10 +58,9 @@ class Gun:
         self.stats = stats
         
         if self.guntype != 'melee':
-            self.range = stats['range']*SETTINGS.tile_size
+            self.range = stats['range'] * consts.geom.tile_size
         else:
-            self.range = SETTINGS.tile_size * 0.9
-        
+            self.range = consts.geom.tile_size * 0.9
 
         self.hit_rect = pygame.Rect((SETTINGS.canvas_actual_width/2)-(self.accuracy/2), 0, self.accuracy, 600)
 
@@ -81,9 +88,11 @@ class Gun:
         else:
             self.shoottime = 0.1
 
+
     def update_rect(self, accuracy_added):
         self.hit_rect.width = self.hit_rect.width * accuracy_added
         self.hit_rect.centerx = SETTINGS.canvas_actual_width / 2
+
 
     def aim_animation(self):
         if self.guntype != 'melee':
@@ -93,14 +102,14 @@ class Gun:
                 if self.current_img != self.aim[-1] and self.timer >= 0.08:
                     x = self.aim.index(self.current_img)+1
                     self.current_img = self.aim[x]
-                    SETTINGS.fov -= self.zoom
+                    consts.raycast.fov -= self.zoom
                     self.timer = 0
                 elif self.current_img == self.aim[-1]:
                     self.aim_busy = False
                     self.aim_is_up = True
                     self.update_rect(0.5)
                     self.hit_percent += 20
-                    SETTINGS.aiming = True
+                    gamestate.player.aiming = True
                     
             elif self.aim_is_up:
                 #Lower the gun
@@ -108,16 +117,17 @@ class Gun:
                 if self.current_img != self.aim[0] and self.timer >= 0.10:
                     x = self.aim.index(self.current_img)-1
                     self.current_img = self.aim[x]
-                    SETTINGS.fov += self.zoom
+                    consts.raycast.fov += self.zoom
                     self.timer = 0
                 elif self.current_img == self.aim[0]:
                     self.aim_busy = False
                     self.aim_is_up = False
                     self.update_rect(2)
                     self.hit_percent -= 20
-                    SETTINGS.aiming = False
+                    gamestate.player.aiming = False
         else:
-            SETTINGS.aiming = False
+            gamestate.player.aiming = False
+
 
     def shoot_animation(self):
         if self.current_mag > 0 or self.guntype == 'melee':
@@ -194,17 +204,17 @@ class Gun:
                            
 
     def damage(self):
-        if SETTINGS.middle_slice_len:
-            target_npcs = [x for x in SETTINGS.npc_list if x.hit_rect.colliderect(self.hit_rect) and x.dist < SETTINGS.middle_slice_len]
+        if gamestate.rendering.middle_slice_len:
+            target_npcs = [x for x in gamedata.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect) and x.dist < gamestate.rendering.middle_slice_len]
         else:
-            target_npcs = [x for x in SETTINGS.npc_list if x.hit_rect.colliderect(self.hit_rect)]
+            target_npcs = [x for x in gamedata.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect)]
 
         if len(target_npcs) > 3:
             target_npcs = sorted(target_npcs, key=lambda x: x.sprite.theta)[:3]
             
         for npc in target_npcs:
             if npc.dist <= self.range and not npc.dead:
-                if npc.dist <= SETTINGS.tile_size*2:
+                if npc.dist <= consts.geom.tile_size *2:
                     cap = 100
                 else:
                     cap = (self.hit_percent * 0.96 ** (npc.dist*((100-self.hit_percent)/100)))
@@ -232,10 +242,10 @@ class Gun:
                     npc.timer = 0
                     npc.hurting = True
                     if npc.health <= 0:
-                        npc.knockback = self.dmg * (SETTINGS.tile_size/2)
+                        npc.knockback = self.dmg * (consts.geom.tile_size / 2)
 
     def reload_animation(self):
-        if SETTINGS.held_ammo[self.ammo_type] > 0 or SETTINGS.unlimited_ammo:
+        if gamestate.inventory.held_ammo[self.ammo_type] > 0 or SETTINGS.unlimited_ammo:
             #Change sprite list to reload.
             if self.current_img not in self.reload:
                 self.current_img = self.reload[0]
@@ -256,12 +266,12 @@ class Gun:
                 #Change actual ammo
                 if not SETTINGS.unlimited_ammo:
                     taken_ammo = self.mag_size - self.current_mag
-                    if SETTINGS.held_ammo[self.ammo_type] >= taken_ammo:
+                    if gamestate.inventory.held_ammo[self.ammo_type] >= taken_ammo:
                         self.current_mag = self.mag_size
-                        SETTINGS.held_ammo[self.ammo_type] -= taken_ammo
-                    elif SETTINGS.held_ammo[self.ammo_type] < taken_ammo:
-                        self.current_mag = SETTINGS.held_ammo[self.ammo_type] + self.current_mag
-                        SETTINGS.held_ammo[self.ammo_type] = 0
+                        gamestate.inventory.held_ammo[self.ammo_type] -= taken_ammo
+                    elif gamestate.inventory.held_ammo[self.ammo_type] < taken_ammo:
+                        self.current_mag = gamestate.inventory.held_ammo[self.ammo_type] + self.current_mag
+                        gamestate.inventory.held_ammo[self.ammo_type] = 0
                 else:
                     self.current_mag = self.mag_size
 
@@ -269,27 +279,27 @@ class Gun:
         swing = self.swing
         wobble = self.wobble
         
-        if not SETTINGS.player_states['dead']:
+        if not gamestate.player.player_states['dead']:
             self.timer += SETTINGS.dt
             self.firetimer += SETTINGS.dt
             
             #Reload gun if aimed
-            if SETTINGS.reload_key_active and self.aim_is_up and (self.current_mag < self.mag_size or SETTINGS.unlimited_ammo):
+            if gamestate.player.reload_key_active and self.aim_is_up and (self.current_mag < self.mag_size or SETTINGS.unlimited_ammo):
                 self.aim_animation()
                 self.go_reload_next_my_gun = True
 
             #Aim gun
-            elif (SETTINGS.mouse2_btn_active or self.aim_busy) and (not self.shoot_busy and not self.reload_busy):
+            elif (gamestate.player.mouse2_btn_active or self.aim_busy) and (not self.shoot_busy and not self.reload_busy):
                 self.aim_animation()
 
             #Shoot gun
-            elif (SETTINGS.mouse_btn_active or self.shoot_busy) and (not self.aim_busy and not self.reload_busy):
+            elif (gamestate.player.mouse_btn_active or self.shoot_busy) and (not self.aim_busy and not self.reload_busy):
                 self.shoot_animation()
                 swing *= 2
                 wobble /= 2
 
             #Reload gun
-            elif ((SETTINGS.reload_key_active or self.reload_busy) and (not self.aim_busy and not self.shoot_busy)) or self.go_reload_next_my_gun:
+            elif ((gamestate.player.reload_key_active or self.reload_busy) and (not self.aim_busy and not self.shoot_busy)) or self.go_reload_next_my_gun:
                 if not self.aim_is_up and self.current_mag < self.mag_size:
                     self.reload_animation()
                 self.go_reload_next_my_gun = False
@@ -301,13 +311,13 @@ class Gun:
                 wobble /= 20
 
             #Move gun from side to side when walking
-            if SETTINGS.player_states['cspeed'] > 0 and SETTINGS.next_gun == SETTINGS.current_gun:
+            if gamestate.player.player_states['cspeed'] > 0 and gamestate.inventory.next_gun == gamestate.inventory.current_gun:
                 self.sintemp += math.pi/14 * (25 * SETTINGS.dt)
                 self.aim_pos[0] = math.sin(self.sintemp)*(SETTINGS.canvas_actual_width/swing) + self.OG_aim_pos[0]
                 self.aim_pos[1] = math.sin(self.sintemp*2) * wobble + (self.OG_aim_pos[1]+10)
             
             #Return gun to default pos
-            elif SETTINGS.player_states['cspeed'] == 0:
+            elif gamestate.player.player_states['cspeed'] == 0:
                 if self.aim_pos[0] > self.OG_aim_pos[0]:
                     self.aim_pos[0] -= int((self.aim_pos[0] - self.OG_aim_pos[0])/2)
                     if int((self.aim_pos[0] - self.OG_aim_pos[0])/2) == 0:
@@ -321,7 +331,7 @@ class Gun:
                 if self.sintemp != 0 or self.sintemp!= -math.pi:
                     self.sintemp = random.choice([0, -math.pi])
 
-                if self.aim_pos[1] > self.OG_aim_pos[1] and SETTINGS.next_gun == SETTINGS.current_gun:
+                if self.aim_pos[1] > self.OG_aim_pos[1] and gamestate.inventory.next_gun == gamestate.inventory.current_gun:
                     self.aim_pos[1] -= int((self.aim_pos[1] - self.OG_aim_pos[1])/2)
                     if int((self.aim_pos[1] - self.OG_aim_pos[1])/2) == 0:
                         self.aim_pos[1] = self.OG_aim_pos[1]
@@ -329,31 +339,31 @@ class Gun:
             
 
         #Move gun down when player is dead
-        if SETTINGS.player_states['dead'] and self.aim_pos[1] <= SETTINGS.canvas_target_height:
+        if gamestate.player.player_states['dead'] and self.aim_pos[1] <= SETTINGS.canvas_target_height:
             self.aim_pos[1] += 10 
 
-        if not SETTINGS.current_gun:
-            SETTINGS.current_gun = self
-            SETTINGS.prev_gun = self
+        if not gamestate.inventory.current_gun:
+            gamestate.inventory.current_gun = self
+            gamestate.inventory.prev_gun = self
 
         #Change gun
-        elif SETTINGS.next_gun != SETTINGS.current_gun:
+        elif gamestate.inventory.next_gun != gamestate.inventory.current_gun:
             if not self.aim_is_up and not self.reload_busy and not self.shoot_busy:
                 if self.aim_pos[1] <= SETTINGS.canvas_target_height:
                     self.aim_pos[1] += 80
                 else:
-                    SETTINGS.prev_gun = SETTINGS.current_gun
-                    SETTINGS.current_gun = SETTINGS.next_gun
+                    gamestate.inventory.prev_gun = gamestate.inventory.current_gun
+                    gamestate.inventory.current_gun = gamestate.inventory.next_gun
             elif self.aim_is_up:
                 self.aim_animation()
                 
-        elif SETTINGS.prev_gun != SETTINGS.current_gun and self.aim_pos[1] != self.OG_aim_pos[1]: #Gennemse
+        elif gamestate.inventory.prev_gun != gamestate.inventory.current_gun and self.aim_pos[1] != self.OG_aim_pos[1]: #Gennemse
             if self.aim_pos[1] > self.OG_aim_pos[1]:
                 self.aim_pos[1] -= 80
                 if self.aim_pos[1] < self.OG_aim_pos[1]:
                     self.aim_pos[1] = self.OG_aim_pos[1]
             else:
-                SETTINGS.prev_gun = SETTINGS.current_gun
+                gamestate.inventory.prev_gun = gamestate.inventory.current_gun
 
         canvas.blit(self.current_img, self.aim_pos)
 

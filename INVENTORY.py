@@ -6,6 +6,14 @@ import ITEMS
 import pygame
 import os
 
+import consts.colours
+import gamedata.items
+import gamedata.tiles
+import gamestate.inventory
+import gamestate.items
+import gamestate.player
+
+
 class inventory:
     
     #ammo_dict is dict with the max amout of each type of ammo.
@@ -18,8 +26,8 @@ class inventory:
         for x in ammo_dict:
             self.held_ammo[x] = 0
 
-        SETTINGS.held_ammo = self.held_ammo
-        SETTINGS.max_ammo = ammo_dict
+        gamestate.inventory.held_ammo = self.held_ammo
+        gamestate.inventory.max_ammo = ammo_dict
 
         #Menu
         self.menu = pygame.Surface((160, 220)).convert()
@@ -68,9 +76,9 @@ class inventory:
         self.meleeslot.fill((100,100,100,100))
 
         #Ammo textures
-        self.ammotexture1 = pygame.image.load(os.path.join(*[x for x in SETTINGS.item_types if x['type'] == 'bullet'][0]['filepath'])).subsurface(0,112,64,16).convert_alpha()
-        self.ammotexture2 = pygame.image.load(os.path.join(*[x for x in SETTINGS.item_types if x['type'] == 'shell'][0]['filepath'])).subsurface(0,112,64,16).convert_alpha()
-        self.ammotexture3 = pygame.image.load(os.path.join(*[x for x in SETTINGS.item_types if x['type'] == 'ferromag'][0]['filepath'])).subsurface(0,112,64,16).convert_alpha()
+        self.ammotexture1 = pygame.image.load(os.path.join(*[x for x in gamedata.items.item_types if x['type'] == 'bullet'][0]['filepath'])).subsurface(0, 112, 64, 16).convert_alpha()
+        self.ammotexture2 = pygame.image.load(os.path.join(*[x for x in gamedata.items.item_types if x['type'] == 'shell'][0]['filepath'])).subsurface(0, 112, 64, 16).convert_alpha()
+        self.ammotexture3 = pygame.image.load(os.path.join(*[x for x in gamedata.items.item_types if x['type'] == 'ferromag'][0]['filepath'])).subsurface(0, 112, 64, 16).convert_alpha()
 
         self.ammotexture1 = pygame.transform.scale(self.ammotexture1, (128, 32))
         self.ammotexture2 = pygame.transform.scale(self.ammotexture2, (128, 32))
@@ -105,35 +113,38 @@ class inventory:
         self.mousepos = pygame.mouse.get_pos()
         self.timer = 0
         self.closing = False
-        self.text = [TEXT.Text(0, 0, 'NAME', SETTINGS.WHITE, 'DUGAFONT.ttf', 18),
-                     TEXT.Text(0, 0, 'DAMAGE: --', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 15),
-                     TEXT.Text(0, 0, 'SPREAD: --', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 15),
-                     TEXT.Text(0, 0, 'ACCURACY: --', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 15),
-                     TEXT.Text(0, 0, 'RANGE: --', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 15),
-                     TEXT.Text(0, 0, 'MAGAZINE SIZE: --', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 15),
-                     TEXT.Text(0, 0, 'RELOAD TIME: --', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 15),
-                     TEXT.Text(0, 0, 'FIRE RATE: --', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 15),
-                     TEXT.Text(0, 0, 'AMMO TYPE: --', SETTINGS.LIGHTGRAY, 'DUGAFONT.ttf', 15),
-                     TEXT.Text(0, 0, 'DROP', SETTINGS.WHITE, 'DUGAFONT.ttf', 18)]
+        self.text = [TEXT.Text(0, 0, 'NAME', consts.colours.WHITE, 'DUGAFONT.ttf', 18),
+                     TEXT.Text(0, 0, 'DAMAGE: --', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 15),
+                     TEXT.Text(0, 0, 'SPREAD: --', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 15),
+                     TEXT.Text(0, 0, 'ACCURACY: --', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 15),
+                     TEXT.Text(0, 0, 'RANGE: --', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 15),
+                     TEXT.Text(0, 0, 'MAGAZINE SIZE: --', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 15),
+                     TEXT.Text(0, 0, 'RELOAD TIME: --', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 15),
+                     TEXT.Text(0, 0, 'FIRE RATE: --', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 15),
+                     TEXT.Text(0, 0, 'AMMO TYPE: --', consts.colours.LIGHTGRAY, 'DUGAFONT.ttf', 15),
+                     TEXT.Text(0, 0, 'DROP', consts.colours.WHITE, 'DUGAFONT.ttf', 18)]
         
-        self.ammotext = [TEXT.Text(480, 116, '-- / --', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 24),
-                         TEXT.Text(480, 212, '-- / --', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 24),
-                         TEXT.Text(480, 308, '-- / --', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 24)]
+        self.ammotext = [TEXT.Text(480, 116, '-- / --', consts.colours.DARKGRAY, 'DUGAFONT.ttf', 24),
+                         TEXT.Text(480, 212, '-- / --', consts.colours.DARKGRAY, 'DUGAFONT.ttf', 24),
+                         TEXT.Text(480, 308, '-- / --', consts.colours.DARKGRAY, 'DUGAFONT.ttf', 24)]
 
     def draw(self, canvas):
         canvas.blit(self.bg, self.rect)
         self.timer += SETTINGS.dt
 
         #Ammo text
-        if SETTINGS.held_ammo['bullet'] and not SETTINGS.inv_strings_updated:
-            self.ammotext[0].update_string('%s / %s' % (SETTINGS.held_ammo['bullet'], SETTINGS.max_ammo['bullet']))
-        if SETTINGS.held_ammo['shell'] and not SETTINGS.inv_strings_updated:
-            self.ammotext[1].update_string('%s / %s' % (SETTINGS.held_ammo['shell'], SETTINGS.max_ammo['shell']))
-        if SETTINGS.held_ammo['ferromag'] and not SETTINGS.inv_strings_updated:
-            self.ammotext[2].update_string('%s / %s' % (SETTINGS.held_ammo['ferromag'], SETTINGS.max_ammo['ferromag']))
+        if gamestate.inventory.held_ammo['bullet'] and not gamestate.inventory.inv_strings_updated:
+            self.ammotext[0].update_string('%s / %s' % (
+            gamestate.inventory.held_ammo['bullet'], gamestate.inventory.max_ammo['bullet']))
+        if gamestate.inventory.held_ammo['shell'] and not gamestate.inventory.inv_strings_updated:
+            self.ammotext[1].update_string('%s / %s' % (
+            gamestate.inventory.held_ammo['shell'], gamestate.inventory.max_ammo['shell']))
+        if gamestate.inventory.held_ammo['ferromag'] and not gamestate.inventory.inv_strings_updated:
+            self.ammotext[2].update_string('%s / %s' % (
+            gamestate.inventory.held_ammo['ferromag'], gamestate.inventory.max_ammo['ferromag']))
         for string in self.ammotext:
             string.draw(canvas)
-        SETTINGS.inv_strings_updated = True
+        gamestate.inventory.inv_strings_updated = True
         
 
         #Mouse on close button
@@ -147,7 +158,7 @@ class inventory:
         elif self.primaryslot_rect.collidepoint(pygame.mouse.get_pos()) and (not self.menudraw or self.selected == 'primary'):
             canvas.blit(self.primaryslot, self.primaryslot_rect)
             self.selected = 'primary'
-            if pygame.mouse.get_pressed()[0] and SETTINGS.inventory['primary']:
+            if pygame.mouse.get_pressed()[0] and gamestate.inventory.held_weapons['primary']:
                 self.menudraw = True
                 self.mousepos = pygame.mouse.get_pos()
                 
@@ -155,7 +166,7 @@ class inventory:
         elif self.secondslot_rect.collidepoint(pygame.mouse.get_pos()) and (not self.menudraw or self.selected == 'secondary'):
             canvas.blit(self.secondslot, self.secondslot_rect)
             self.selected = 'secondary'
-            if pygame.mouse.get_pressed()[0] and SETTINGS.inventory['secondary']:
+            if pygame.mouse.get_pressed()[0] and gamestate.inventory.held_weapons['secondary']:
                 self.menudraw = True
                 self.mousepos = pygame.mouse.get_pos()
             
@@ -163,7 +174,7 @@ class inventory:
         elif self.meleeslot_rect.collidepoint(pygame.mouse.get_pos()) and (not self.menudraw or self.selected == 'melee'):
             canvas.blit(self.meleeslot, self.meleeslot_rect)
             self.selected = 'melee'
-            if pygame.mouse.get_pressed()[0] and SETTINGS.inventory['melee']:
+            if pygame.mouse.get_pressed()[0] and gamestate.inventory.held_weapons['melee']:
                 self.menudraw = True
                 self.mousepos = pygame.mouse.get_pos()
 
@@ -171,7 +182,7 @@ class inventory:
         elif self.groundslot_rect.collidepoint(pygame.mouse.get_pos()) and (not self.menudraw or self.selected == 'ground') and not (self.submenu_rects[-1].collidepoint(pygame.mouse.get_pos()) and self.menudraw):
             canvas.blit(self.groundslot, self.groundslot_rect)
             self.selected = 'ground'
-            if pygame.mouse.get_pressed()[0] and SETTINGS.ground_weapon:
+            if pygame.mouse.get_pressed()[0] and gamestate.inventory.ground_weapon:
                 self.menudraw = True
                 self.mousepos = pygame.mouse.get_pos()
             
@@ -197,32 +208,32 @@ class inventory:
             self.selected = None
 
         #Draw items - high layer
-        if SETTINGS.inventory['primary']:
-            canvas.blit(SETTINGS.inventory['primary'].subitemtexture, (self.primaryslot_rect.x, self.primaryslot_rect.y + 5))
-        if SETTINGS.inventory['secondary']:
-            canvas.blit(SETTINGS.inventory['secondary'].subitemtexture, (self.secondslot_rect.x - self.secondslot_rect.width/4, self.secondslot_rect.y))
-        if SETTINGS.inventory['melee']:
-            canvas.blit(SETTINGS.inventory['melee'].subitemtexture, (self.meleeslot_rect.x - self.secondslot_rect.width/4, self.meleeslot_rect.y))
-        if SETTINGS.ground_weapon:
-            canvas.blit(SETTINGS.ground_weapon.subitemtexture, (self.groundslot_rect.x, self.groundslot_rect.y + 5))
+        if gamestate.inventory.held_weapons['primary']:
+            canvas.blit(gamestate.inventory.held_weapons['primary'].subitemtexture, (self.primaryslot_rect.x, self.primaryslot_rect.y + 5))
+        if gamestate.inventory.held_weapons['secondary']:
+            canvas.blit(gamestate.inventory.held_weapons['secondary'].subitemtexture, (self.secondslot_rect.x - self.secondslot_rect.width / 4, self.secondslot_rect.y))
+        if gamestate.inventory.held_weapons['melee']:
+            canvas.blit(gamestate.inventory.held_weapons['melee'].subitemtexture, (self.meleeslot_rect.x - self.secondslot_rect.width / 4, self.meleeslot_rect.y))
+        if gamestate.inventory.ground_weapon:
+            canvas.blit(gamestate.inventory.ground_weapon.subitemtexture, (self.groundslot_rect.x, self.groundslot_rect.y + 5))
         #Ammo
-        if SETTINGS.held_ammo['bullet']:
+        if gamestate.inventory.held_ammo['bullet']:
             canvas.blit(self.ammotexture1, (self.ammoslot1_rect.x - self.ammoslot1_rect.width/8, self.ammoslot1_rect.y + 20))
-        if SETTINGS.held_ammo['shell']:
+        if gamestate.inventory.held_ammo['shell']:
             canvas.blit(self.ammotexture2, (self.ammoslot2_rect.x - self.ammoslot2_rect.width/8, self.ammoslot2_rect.y + 20))
-        if SETTINGS.held_ammo['ferromag']:
+        if gamestate.inventory.held_ammo['ferromag']:
             canvas.blit(self.ammotexture3, (self.ammoslot3_rect.x - self.ammoslot3_rect.width/8, self.ammoslot3_rect.y + 20))
 
         #Draw menu top layer
-        if (self.menudraw and SETTINGS.ground_weapon) or (self.menudraw and SETTINGS.inventory[self.selected]):
+        if (self.menudraw and gamestate.inventory.ground_weapon) or (self.menudraw and gamestate.inventory.held_weapons[self.selected]):
             self.draw_menu(canvas)
 
         #Close menu without shooting
         if self.closing and self.timer >= 0.2:
-            SETTINGS.player_states['invopen'] = False
+            gamestate.player.player_states['invopen'] = False
             self.closing = False
             self.timer = 0
-            SETTINGS.inv_strings_updated = False
+            gamestate.inventory.inv_strings_updated = False
 
 
     def draw_menu(self, canvas):
@@ -240,16 +251,16 @@ class inventory:
                 i += 1
 
             #Update weapon stats  -  updates strings, even though it is not needed. Might want to change later, if needed.
-            if SETTINGS.inventory[self.selected]:
-                self.text[0].update_string('%s' % SETTINGS.inventory[self.selected].name)
-                self.text[1].update_string('DAMAGE            : %s' % SETTINGS.inventory[self.selected].dmg)
-                self.text[2].update_string('SPREAD              : %s' % SETTINGS.inventory[self.selected].accuracy)
-                self.text[3].update_string('ACCURACY    : %s / 100' % SETTINGS.inventory[self.selected].hit_percent)
-                self.text[4].update_string('RANGE                 : %s' % SETTINGS.inventory[self.selected].range)
-                self.text[5].update_string('MAG SIZE      : %s' % SETTINGS.inventory[self.selected].mag_size)
-                self.text[6].update_string('REL TIME      : %s' % SETTINGS.inventory[self.selected].rlspeed)
-                self.text[7].update_string('FIR RATE      : %s' % SETTINGS.inventory[self.selected].firerate)
-                self.text[8].update_string('AMMO TYP  : %s' % SETTINGS.inventory[self.selected].ammo_type)
+            if gamestate.inventory.held_weapons[self.selected]:
+                self.text[0].update_string('%s' % gamestate.inventory.held_weapons[self.selected].name)
+                self.text[1].update_string('DAMAGE            : %s' % gamestate.inventory.held_weapons[self.selected].dmg)
+                self.text[2].update_string('SPREAD              : %s' % gamestate.inventory.held_weapons[self.selected].accuracy)
+                self.text[3].update_string('ACCURACY    : %s / 100' % gamestate.inventory.held_weapons[self.selected].hit_percent)
+                self.text[4].update_string('RANGE                 : %s' % gamestate.inventory.held_weapons[self.selected].range)
+                self.text[5].update_string('MAG SIZE      : %s' % gamestate.inventory.held_weapons[self.selected].mag_size)
+                self.text[6].update_string('REL TIME      : %s' % gamestate.inventory.held_weapons[self.selected].rlspeed)
+                self.text[7].update_string('FIR RATE      : %s' % gamestate.inventory.held_weapons[self.selected].firerate)
+                self.text[8].update_string('AMMO TYP  : %s' % gamestate.inventory.held_weapons[self.selected].ammo_type)
                 self.text[9].update_string('DROP')            
 
             #Update text
@@ -277,15 +288,22 @@ class inventory:
                 canvas.blit(menu, self.submenu_rects[i])            
                 i += 1
                 
-            self.text[0].update_string('%s' % SETTINGS.ground_weapon.name)
-            self.text[1].update_string('DAMAGE            : %s   %s' % (SETTINGS.ground_weapon.dmg, self.compare_weapons('dmg')))
-            self.text[2].update_string('SPREAD              : %s   %s' % (SETTINGS.ground_weapon.accuracy, self.compare_weapons('spr')))
-            self.text[3].update_string('ACCURACY    : %s / 100   %s' % (SETTINGS.ground_weapon.hit_percent, self.compare_weapons('acc')))
-            self.text[4].update_string('RANGE                 : %s   %s' % (SETTINGS.ground_weapon.range, self.compare_weapons('ran')))
-            self.text[5].update_string('MAG SIZE      : %s   %s' % (SETTINGS.ground_weapon.mag_size, self.compare_weapons('mag')))
-            self.text[6].update_string('REL TIME      : %s   %s' % (SETTINGS.ground_weapon.rlspeed, self.compare_weapons('rel')))
-            self.text[7].update_string('FIR RATE      : %s   %s' % (SETTINGS.ground_weapon.firerate, self.compare_weapons('fir')))
-            self.text[8].update_string('AMMO TYP  : %s' % SETTINGS.ground_weapon.ammo_type)
+            self.text[0].update_string('%s' % gamestate.inventory.ground_weapon.name)
+            self.text[1].update_string('DAMAGE            : %s   %s' % (
+            gamestate.inventory.ground_weapon.dmg, self.compare_weapons('dmg')))
+            self.text[2].update_string('SPREAD              : %s   %s' % (
+            gamestate.inventory.ground_weapon.accuracy, self.compare_weapons('spr')))
+            self.text[3].update_string('ACCURACY    : %s / 100   %s' % (
+            gamestate.inventory.ground_weapon.hit_percent, self.compare_weapons('acc')))
+            self.text[4].update_string('RANGE                 : %s   %s' % (
+            gamestate.inventory.ground_weapon.range, self.compare_weapons('ran')))
+            self.text[5].update_string('MAG SIZE      : %s   %s' % (
+            gamestate.inventory.ground_weapon.mag_size, self.compare_weapons('mag')))
+            self.text[6].update_string('REL TIME      : %s   %s' % (
+            gamestate.inventory.ground_weapon.rlspeed, self.compare_weapons('rel')))
+            self.text[7].update_string('FIR RATE      : %s   %s' % (
+            gamestate.inventory.ground_weapon.firerate, self.compare_weapons('fir')))
+            self.text[8].update_string('AMMO TYP  : %s' % gamestate.inventory.ground_weapon.ammo_type)
             self.text[9].update_string('SWAP')
 
             #Update text
@@ -306,29 +324,41 @@ class inventory:
             if pygame.mouse.get_pressed()[0] and self.timer >= 0.5:
                 self.timer = 0
                 #Find a place to drop item
-                if [x for x in SETTINGS.all_tiles if x.map_pos == [SETTINGS.player_map_pos[0]+1, SETTINGS.player_map_pos[1]] and not SETTINGS.tile_solid[x.ID]] and not [x for x in SETTINGS.all_items if x.map_pos == [SETTINGS.player_map_pos[0]+1, SETTINGS.player_map_pos[1]]]:
-                    itempos = [SETTINGS.player_map_pos[0]+1, SETTINGS.player_map_pos[1]]
-                elif [x for x in SETTINGS.all_tiles if x.map_pos == [SETTINGS.player_map_pos[0]-1, SETTINGS.player_map_pos[1]] and not SETTINGS.tile_solid[x.ID]] and not [x for x in SETTINGS.all_items if x.map_pos == [SETTINGS.player_map_pos[0]-1, SETTINGS.player_map_pos[1]]]:
-                    itempos = [SETTINGS.player_map_pos[0]-1, SETTINGS.player_map_pos[1]]
-                elif [x for x in SETTINGS.all_tiles if x.map_pos == [SETTINGS.player_map_pos[0], SETTINGS.player_map_pos[1]+1] and not SETTINGS.tile_solid[x.ID]] and not [x for x in SETTINGS.all_items if x.map_pos == [SETTINGS.player_map_pos[0], SETTINGS.player_map_pos[1]+1]]:
-                    itempos = [SETTINGS.player_map_pos[0], SETTINGS.player_map_pos[1]+1]
-                elif [x for x in SETTINGS.all_tiles if x.map_pos == [SETTINGS.player_map_pos[0], SETTINGS.player_map_pos[1]-1] and not SETTINGS.tile_solid[x.ID]] and not [x for x in SETTINGS.all_items if x.map_pos == [SETTINGS.player_map_pos[0], SETTINGS.player_map_pos[1]-1]]:
-                    itempos = [SETTINGS.player_map_pos[0], SETTINGS.player_map_pos[1]-1]
+                if [x for x in SETTINGS.all_tiles if x.map_pos == [gamestate.player.player_map_pos[0] + 1, gamestate.player.player_map_pos[1]] and not gamedata.tiles.tile_solid[x.ID]] and not [x for x in
+                                                                                                                                                                                                 gamestate.items.all_items
+                                                                                                                                                                                                 if x.map_pos == [
+                        gamestate.player.player_map_pos[0] + 1, gamestate.player.player_map_pos[1]]]:
+                    itempos = [gamestate.player.player_map_pos[0] + 1, gamestate.player.player_map_pos[1]]
+                elif [x for x in SETTINGS.all_tiles if x.map_pos == [gamestate.player.player_map_pos[0] - 1, gamestate.player.player_map_pos[1]] and not gamedata.tiles.tile_solid[x.ID]] and not [x for x in
+                                                                                                                                                                                                   gamestate.items.all_items
+                                                                                                                                                                                                   if x.map_pos == [
+                        gamestate.player.player_map_pos[0] - 1, gamestate.player.player_map_pos[1]]]:
+                    itempos = [gamestate.player.player_map_pos[0] - 1, gamestate.player.player_map_pos[1]]
+                elif [x for x in SETTINGS.all_tiles if x.map_pos == [gamestate.player.player_map_pos[0], gamestate.player.player_map_pos[1] + 1] and not gamedata.tiles.tile_solid[x.ID]] and not [x for x in
+                                                                                                                                                                                                   gamestate.items.all_items
+                                                                                                                                                                                                   if x.map_pos == [
+                        gamestate.player.player_map_pos[0], gamestate.player.player_map_pos[1] + 1]]:
+                    itempos = [gamestate.player.player_map_pos[0], gamestate.player.player_map_pos[1] + 1]
+                elif [x for x in SETTINGS.all_tiles if x.map_pos == [gamestate.player.player_map_pos[0], gamestate.player.player_map_pos[1] - 1] and not gamedata.tiles.tile_solid[x.ID]] and not [x for x in
+                                                                                                                                                                                                   gamestate.items.all_items
+                                                                                                                                                                                                   if x.map_pos == [
+                        gamestate.player.player_map_pos[0], gamestate.player.player_map_pos[1] - 1]]:
+                    itempos = [gamestate.player.player_map_pos[0], gamestate.player.player_map_pos[1] - 1]
                 else:
-                    itempos = SETTINGS.player_map_pos
+                    itempos = gamestate.player.player_map_pos
                 if self.selected == 'ground':
-                    self.selected = SETTINGS.ground_weapon.guntype
-                SETTINGS.all_items.append(ITEMS.Item(itempos, SETTINGS.inventory[self.selected].itemtexture, SETTINGS.inventory[self.selected].guntype, SETTINGS.inventory[self.selected]))
+                    self.selected = gamestate.inventory.ground_weapon.guntype
+                gamestate.items.all_items.append(ITEMS.Item(itempos, gamestate.inventory.held_weapons[self.selected].itemtexture, gamestate.inventory.held_weapons[self.selected].guntype, gamestate.inventory.held_weapons[self.selected]))
 
-                if SETTINGS.inventory[self.selected].ammo_type:
-                    SETTINGS.held_ammo[SETTINGS.inventory[self.selected].ammo_type] += SETTINGS.current_gun.current_mag
-                    SETTINGS.inventory[self.selected].current_mag = 0
-                if self.selected == SETTINGS.current_gun or SETTINGS.next_gun:
-                    SETTINGS.current_gun = None
-                    SETTINGS.next_gun = None
+                if gamestate.inventory.held_weapons[self.selected].ammo_type:
+                    gamestate.inventory.held_ammo[gamestate.inventory.held_weapons[self.selected].ammo_type] += gamestate.inventory.current_gun.current_mag
+                    gamestate.inventory.held_weapons[self.selected].current_mag = 0
+                if self.selected == gamestate.inventory.current_gun or gamestate.inventory.next_gun:
+                    gamestate.inventory.current_gun = None
+                    gamestate.inventory.next_gun = None
                     
-                SETTINGS.inventory[self.selected] = None
-                SETTINGS.inv_strings_updated = False
+                gamestate.inventory.held_weapons[self.selected] = None
+                gamestate.inventory.inv_strings_updated = False
 
         else:
             self.submenus[-1].fill((55,55,55))
@@ -337,37 +367,37 @@ class inventory:
     def ammo_selection(self, slot, canvas):
         bulletlist, shelllist, ferrolist = [], [], []
         
-        if SETTINGS.inventory['primary']:
-            if SETTINGS.inventory['primary'].ammo_type == 'bullet':
+        if gamestate.inventory.held_weapons['primary']:
+            if gamestate.inventory.held_weapons['primary'].ammo_type == 'bullet':
                 bulletlist.append([self.primaryslot, self.primaryslot_rect])
-            elif SETTINGS.inventory['primary'].ammo_type == 'shell':
+            elif gamestate.inventory.held_weapons['primary'].ammo_type == 'shell':
                 shelllist.append([self.primaryslot, self.primaryslot_rect])
-            elif SETTINGS.inventory['primary'].ammo_type == 'ferromag':
+            elif gamestate.inventory.held_weapons['primary'].ammo_type == 'ferromag':
                 ferrolist.append([self.primaryslot, self.primaryslot_rect])
 
-        if SETTINGS.inventory['secondary']:
-            if SETTINGS.inventory['secondary'].ammo_type == 'bullet':
+        if gamestate.inventory.held_weapons['secondary']:
+            if gamestate.inventory.held_weapons['secondary'].ammo_type == 'bullet':
                 bulletlist.append([self.secondslot, self.secondslot_rect])
-            elif SETTINGS.inventory['secondary'].ammo_type == 'shell':
+            elif gamestate.inventory.held_weapons['secondary'].ammo_type == 'shell':
                 shelllist.append([self.secondslot, self.secondslot_rect])
-            elif SETTINGS.inventory['secondary'].ammo_type == 'ferromag':
+            elif gamestate.inventory.held_weapons['secondary'].ammo_type == 'ferromag':
                 ferrolist.append([self.secondslot, self.secondslot_rect])
                 
         if slot == 1:
             canvas.blit(self.ammoslot1, self.ammoslot1_rect)
-            if SETTINGS.held_ammo['bullet']:
+            if gamestate.inventory.held_ammo['bullet']:
                 for i in bulletlist:
                     canvas.blit(i[0], i[1])
 
         elif slot == 2:
             canvas.blit(self.ammoslot2, self.ammoslot2_rect)
-            if SETTINGS.held_ammo['shell']:
+            if gamestate.inventory.held_ammo['shell']:
                 for i in shelllist:
                     canvas.blit(i[0], i[1])
 
         elif slot == 3:
             canvas.blit(self.ammoslot3, self.ammoslot3_rect)
-            if SETTINGS.held_ammo['ferromag']:
+            if gamestate.inventory.held_ammo['ferromag']:
                 for i in ferrolist:
                     canvas.blit(i[0], i[1])
                     
@@ -389,12 +419,14 @@ class inventory:
         elif comp == 'fir':
             stat = 'firerate'
 
-        if SETTINGS.ground_weapon.stats[stat] > SETTINGS.inventory[SETTINGS.ground_weapon.guntype].stats[stat]:
+        if gamestate.inventory.ground_weapon.stats[stat] > gamestate.inventory.held_weapons[
+            gamestate.inventory.ground_weapon.guntype].stats[stat]:
             if stat != 'rlspeed' and stat != 'firerate':
                 return '+'
             else:
                 return '-'
-        elif SETTINGS.ground_weapon.stats[stat] < SETTINGS.inventory[SETTINGS.ground_weapon.guntype].stats[stat]:
+        elif gamestate.inventory.ground_weapon.stats[stat] < gamestate.inventory.held_weapons[
+            gamestate.inventory.ground_weapon.guntype].stats[stat]:
             if stat != 'rlspeed' and stat != 'firerate':
                 return '-'
             else:
