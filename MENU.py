@@ -54,7 +54,8 @@ class Controller:
             pickle.dump(current_settings, file2)
             
 
-    def check_mouse(self):
+    @staticmethod
+    def check_mouse():
         pygame.event.set_grab(False)
         pygame.mouse.set_visible(True)
 

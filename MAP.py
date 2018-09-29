@@ -33,18 +33,20 @@ class Map:
         for tile in SETTINGS.all_tiles:
             if gamedata.tiles.tile_solid[tile.ID]:
                 SETTINGS.all_solid_tiles.append(tile)
-            if tile.type == 'trigger':
+            if tile.type == consts.tile.TRIGGER:
                 SETTINGS.trigger_tiles.append(tile)
 
         #Add a tile that is always outside the walkable area (air)
         SETTINGS.all_tiles.append(Tile(0, [column+1 * self.tile_size, row+1 * self.tile_size],[column+1, row+1]))
-                
-    def draw(self, canvas):
+
+    @staticmethod
+    def draw(canvas):
         for tile in SETTINGS.all_solid_tiles:
             if gamedata.tiles.tile_visible[tile.ID]:
                 tile.draw(canvas)
 
-    def move_inaccessible_entities(self):      
+    @staticmethod
+    def move_inaccessible_entities():
         wa = []
         for i in SETTINGS.walkable_area:
             if i.type != consts.tile.HORIZONTAL_DOOR and i.type != consts.tile.VERTICAL_DOOR:

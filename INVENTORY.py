@@ -402,7 +402,8 @@ class inventory:
                     canvas.blit(i[0], i[1])
                     
 
-    def compare_weapons(self, comp):
+    @staticmethod
+    def compare_weapons(comp):
         stat = None
         if comp == 'dmg':
             stat = 'dmg'

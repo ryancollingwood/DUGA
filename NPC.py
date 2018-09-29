@@ -9,9 +9,9 @@ import math
 import pygame
 #stats format in bottom of script
 #pos is in tiles, face in degrees, frame_interval is seconds between frames, speed is pixels/second
-import consts.geom
 import consts.raycast
 from consts import npc_state
+from consts import geom
 import consts.tile
 import gamedata.npcs
 import gamedata.tiles
@@ -47,7 +47,7 @@ class Npc:
         self.die_animation = False
         self.running_animation = None
         self.add = 0
-        self.dist = None
+        self.dist_from_player = None
         self.collide_list = SETTINGS.all_solid_tiles + gamestate.npcs.npc_list
         self.solid = True
         self.side = None
@@ -61,6 +61,7 @@ class Npc:
         self.postheta = 0
         self.mein_leben = False
         self.type = 'npc'
+        self.player_touched = False
 
         #NPC Characteristics
         self.health = stats['health']    
@@ -156,71 +157,52 @@ class Npc:
         if not self.dead and self.health > 0 and not gamestate.player.player_states['dead']:
             self.render()
 
-            if self.dist and self.dist <= consts.raycast.render * consts.tile.TILE_SIZE * 1.2:
+            if self.dist_from_player and self.dist_from_player <= consts.raycast.render * consts.tile.TILE_SIZE * 1.2:
 
                 #PASSIVE
                 if self.mind == 'passive':
-                    if self.state == npc_state.IDLE:
-                        self.idle()
-                        
-                    elif self.state == npc_state.PATROLLING:
-                        self.move()
+                    # TODO alternate between idle and patroll
+                    pass
 
                 #HOSTILE
                 elif self.mind == 'hostile':
-                    if self.state == npc_state.IDLE:
-                        self.idle()
-                        if not SETTINGS.ignore_player:
-                            if self.player_in_view:
-                                if self.detect_player():
-                                    self.path = []
-                                    SOUND.play_sound(self.sounds['spot'], self.dist)
-                                    self.state = npc_state.ATTACKING
-                    
-                    elif self.state == npc_state.PATROLLING:
-                        if self.player_in_view and not SETTINGS.ignore_player and self.detect_player():
-                            self.path = []
-                            SOUND.play_sound(self.sounds['spot'], self.dist)
-                            self.state = npc_state.ATTACKING
-                        elif self.dist <= consts.tile.TILE_SIZE / 2 and not SETTINGS.ignore_player:
-                            self.state = npc_state.ATTACKING
-                        else:
-                            self.move()
+                    if self.state != npc_state.ATTACKING and self.touched_by_player():
+                        self.react_to_player(npc_state.ATTACKING)
+                    else:
+                        self.look_for_player(npc_state.ATTACKING)
 
                 #SHY
                 elif self.mind == 'shy':
                     if self.state == npc_state.IDLE:
-                        self.idle()
-                        if not SETTINGS.ignore_player:
-                            if self.player_in_view:
-                                if self.detect_player():
-                                    self.path = []
-                                    SOUND.play_sound(self.sounds['spot'], self.dist)
-                                    self.state = npc_state.FLEEING
-                            elif self.dist <= consts.tile.TILE_SIZE / 2:
-                                self.state = npc_state.ATTACKING
-                        
+                        self.look_for_player(npc_state.FLEEING)
                     elif self.state == npc_state.PATROLLING:
-                        if self.player_in_view:
-                            if not SETTINGS.ignore_player:
-                                if self.detect_player():
-                                    self.path = []
-                                    SOUND.play_sound(self.sounds['spot'], self.dist)
-                                    self.state = npc_state.FLEEING
-                        elif self.dist <= consts.tile.TILE_SIZE / 2:
-                            if not SETTINGS.ignore_player:
-                                self.state = npc_state.ATTACKING
+                        if self.state != npc_state.ATTACKING and self.touched_by_player():
+                            self.react_to_player(npc_state.ATTACKING)
                         else:
-                            self.move()
+                            self.look_for_player(npc_state.FLEEING)
+                    else:
+                        if self.state != npc_state.FLEEING and self.touched_by_player():
+                            self.react_to_player(npc_state.FLEEING)
 
+            # Act upon state
             if self.state == npc_state.ATTACKING:
                 self.attack()
+            elif self.state == npc_state.PATROLLING:
+                self.move()
             elif self.state == npc_state.FLEEING:
                 self.move()
+            elif self.state == npc_state.IDLE:
+                self.idle()
 
             #Run animations
             if self.hurting:
                 self.animate('hurting')
+
+                # if npc takes damage and is not fleeing
+                # retaliate and fight back
+                if self.state != npc_state.FLEEING:
+                    self.state = npc_state.ATTACKING
+
             elif self.moving:
                 self.animate('walking')
 
@@ -234,6 +216,67 @@ class Npc:
             self.animate('dying')
             self.render()
 
+    def look_for_player(self, state_if_spotted):
+        if self.dead:
+            return False
+
+        if self.attacking:
+            return True
+
+        if not SETTINGS.ignore_player:
+            if self.player_in_view:
+                if self.detect_player():
+                    self.react_to_player(state_if_spotted)
+                    return True
+                else:
+                    print("player_in_view but didn't detect", self.mind, self.state)
+        return False
+
+    def react_to_player(self, new_state):
+        self.path = []
+        SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
+        self.state = new_state
+
+        # TODO wake up friends, again perception checks needed
+        max_allies = 3
+        woken_allies = 0
+        for npc in gamestate.npcs.npc_list:
+            if npc.mind == "hostile":
+                if npc.dist_from_player <= consts.tile.TILE_SIZE * 3:
+                    # move to a method hunt_for_player
+                    npc.path = PATHFINDING.pathfind(npc.map_pos, gamestate.player.player_map_pos)
+                    npc.state = npc_state.ATTACKING
+                    woken_allies += 1
+                    if woken_allies >= max_allies:
+                        break
+
+
+    def touched_by_player(self):
+        # TODO perhaps some perception modifier
+        # depending on the state/mind?
+        perception_distance = consts.tile.TILE_SIZE
+
+        # using sides as render has calculated this for us
+        if self.side == 'backright' or self.side == 'backleft':
+            perception_distance = (consts.tile.TILE_SIZE / 2)
+        elif self.side == 'back':
+            # if npc back is shown to player can sneak right up
+            perception_distance = (consts.tile.TILE_SIZE / 3)
+
+        something_touched_me = self.dist_from_player <= perception_distance and not SETTINGS.ignore_player
+        if something_touched_me:
+            print("something_touched_me!", self.state, self.mind)
+            pass
+        else:
+            # debug purposes
+            if self.dist_from_player <= (consts.tile.TILE_SIZE * 2):
+                print("nothing touched_me!", self.state, self.mind)
+                pass
+
+        self.player_touched = something_touched_me
+
+        return something_touched_me
+
     def render(self):
         '''== Draw the NPC =='''
         if self.dead:
@@ -242,9 +285,9 @@ class Npc:
         xpos = gamestate.player.player_rect.centerx - self.rect.centerx
         ypos = gamestate.player.player_rect.centery - self.rect.centery
         
-        self.dist = math.sqrt(xpos*xpos + ypos*ypos)
+        self.dist_from_player = math.sqrt(xpos * xpos + ypos * ypos)
         
-        if self.dist <= consts.raycast.render * consts.tile.TILE_SIZE:
+        if self.dist_from_player <= consts.raycast.render * consts.tile.TILE_SIZE:
             theta = math.atan2(-ypos, xpos) % (2*math.pi)
             theta = math.degrees(theta)
             self.postheta = theta
@@ -335,13 +378,13 @@ class Npc:
             gamestate.sprites.all_sprites[self.num] = self.sprite
 
         #Find out what x and y coordinates would change
-        if self.face == 90:
+        if self.face == geom.DEGREES_90:
             self.front_tile = (0, -1)
-        elif self.face == 180:
+        elif self.face == geom.DEGREES_180:
             self.front_tile = (-1, 0)
-        elif self.face == 270:
+        elif self.face == geom.DEGREES_270:
             self.front_tile = (0, 1)
-        elif self.face == 0 or self.face == 360:
+        elif self.face == geom.DEGREES_0 or self.face == geom.DEGREES_360:
             self.front_tile = (1, 0)
 
     @staticmethod
@@ -349,6 +392,15 @@ class Npc:
         return int(a + 0.5)            
 
     def detect_player(self):
+
+        # if the player touched us we've detected
+        if self.player_touched:
+            self.player_touched = False
+            return True
+
+        if self.attacking:
+            return True
+
         '''== Is player visible from NPC position? ==\ndetect_player(self) -> boolean'''
         own_tile = self.map_pos
         #front_tile = [own_tile[0] + self.front_tile[0], own_tile[1] + self.front_tile[1]]
@@ -403,8 +455,12 @@ class Npc:
             #if player is spotted
             if mapx == x2 and mapy == y2:
                 return True
-        if self.dist <= consts.tile.TILE_SIZE / 3:
+
+        # TODO this should also hook into some notion of NPC perception
+        if self.dist_from_player <= consts.tile.TILE_SIZE * 2:
             return True
+
+        return False
 
     def collide_update(self, x, y):
         #make sure the NPC doesn't walk inside stuff
@@ -497,25 +553,25 @@ class Npc:
 
                 if moving_up:
                     if not moving_right and not moving_left:
-                        self.face = 90
+                        self.face = geom.DEGREES_90
                     elif moving_right:
-                        self.face = 45
+                        self.face = geom.DEGREES_45
                     elif moving_left:
-                        self.face = 135
+                        self.face = geom.DEGREES_135
                         
                 elif moving_down:
                     if not moving_right and not moving_left:
-                        self.face = 270
+                        self.face = geom.DEGREES_270
                     elif moving_right:
-                        self.face = 315
+                        self.face = geom.DEGREES_315
                     elif moving_left:
-                        self.face = 225
+                        self.face = geom.DEGREES_225
 
                 elif moving_left:
-                    self.face = 180
+                    self.face = geom.DEGREES_180
                     
                 elif moving_right:
-                    self.face = 0
+                    self.face = geom.DEGREES_0
                 
         else:
             self.moving = False
@@ -535,7 +591,7 @@ class Npc:
                     self.path = PATHFINDING.pathfind(self.map_pos, random.choice(available_pos).map_pos)
 
         elif self.state == npc_state.FLEEING:
-            if self.dist <= consts.tile.TILE_SIZE * 4:
+            if self.dist_from_player <= consts.tile.TILE_SIZE * 4:
                 flee_pos = random.choice(SETTINGS.walkable_area)
                 player_tile = [x for x in SETTINGS.walkable_area if x.map_pos == gamestate.player.player_map_pos]
                 if player_tile:
@@ -554,11 +610,12 @@ class Npc:
         self.idle_timer += SETTINGS.dt
         if self.idle_timer >= 3:
             if random.randint(0,2) == 2:
-                self.face += 45
+                self.face += geom.DEGREES_45
             elif random.randint(0,2) == 2:
-                self.face -= 45
-            if self.face >= 360:
-                self.face -= 360
+                self.face -= geom.DEGREES_45
+            if self.face >= geom.DEGREES_360:
+                self.face -= geom.DEGREES_360
+
             self.idle_timer = 0
 
             #Do only change to patrouling if it was that in the first place.
@@ -567,11 +624,8 @@ class Npc:
                     self.state = npc_state.PATROLLING
 
         #Make NPC react to gunshot if close. Or just if the player is too close.
-        if (self.dist <= consts.tile.TILE_SIZE * 4 and gamestate.player.mouse_btn_active and gamestate.inventory.current_gun) or self.dist <= self.rect.width:
-            self.face = self.face + self.theta
-            if self.face >= 360:
-                self.face -= 360
-            self.face = min([0,90,180,270,359], key=lambda x:abs(x-self.face))
+        if (self.dist_from_player <= consts.tile.TILE_SIZE * 4 and gamestate.player.mouse_btn_active and gamestate.inventory.current_gun) or self.dist_from_player <= self.rect.width:
+            self.change_facing_direction()
 
     def attack(self):
         if self.attack_move:
@@ -579,7 +633,7 @@ class Npc:
         else:
             if self.atcktype == 'melee':
                 #Move close to player and keep attacking
-                if self.dist <= consts.tile.TILE_SIZE *0.7:
+                if self.dist_from_player <= consts.tile.TILE_SIZE *0.7:
                     self.path = []
                     self.moving = False
                     if not self.attacking:
@@ -593,19 +647,19 @@ class Npc:
                                 self.animate(npc_state.ATTACKING)
                                 self.hurting = False
                                 if random.randint(0,2) == 2:
-                                    SOUND.play_sound(random.choice(self.sounds['damage']), self.dist)
+                                    SOUND.play_sound(random.choice(self.sounds['damage']), self.dist_from_player)
                         else:
                             self.animate(npc_state.ATTACKING)
 
                 else:
-                    if self.dist > consts.tile.TILE_SIZE *0.7 and self.path == []:
+                    if self.dist_from_player > consts.tile.TILE_SIZE *0.7 and self.path == []:
                         self.path_progress = 0
                         self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
                         
                     elif self.path != []:
                         try:
                             if self.path[-1].map_pos != gamestate.player.player_map_pos:
-                                if self.dist <= (consts.raycast.render / 2) * consts.tile.TILE_SIZE and random.randint(0, 5) == 5:
+                                if self.dist_from_player <= (consts.raycast.render / 2) * consts.tile.TILE_SIZE and random.randint(0, 5) == 5:
                                     self.path_progress = 0
                                     self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
                                 elif random.randint(0,10) >= 8:
@@ -618,7 +672,7 @@ class Npc:
                 
             elif self.atcktype == 'hitscan':
                 #Move somewhat close to player and change position after attacking
-                if self.dist <= consts.tile.TILE_SIZE * self.range and (self.dist >= consts.tile.TILE_SIZE * 1.5 or (
+                if self.dist_from_player <= consts.tile.TILE_SIZE * self.range and (self.dist_from_player >= consts.tile.TILE_SIZE * 1.5 or (
                         gamestate.inventory.current_gun and gamestate.inventory.current_gun.guntype == 'melee')) and not self.attack_move:
                     self.path = []
                     self.moving = False
@@ -645,12 +699,12 @@ class Npc:
                                 self.animate(npc_state.ATTACKING)
                                 self.hurting = False
                                 if random.randint(0,2) == 2:
-                                    SOUND.play_sound(random.choice(self.sounds['damage']), self.dist)
+                                    SOUND.play_sound(random.choice(self.sounds['damage']), self.dist_from_player)
                         else:
                             self.animate(npc_state.ATTACKING)
                             
                 #Move away from player if too close            
-                elif self.dist < consts.tile.TILE_SIZE * 1.5 and self.health <= 6:
+                elif self.dist_from_player < consts.tile.TILE_SIZE * 1.5 and self.health <= 6:
                     if self.rect.centerx > gamestate.player.player_rect.centerx:
                         self.collide_update(self.speed, 0)
                         self.animate('walking')
@@ -667,14 +721,14 @@ class Npc:
                         
                 else:
                     if not self.attack_move:
-                        if self.dist >= consts.tile.TILE_SIZE * 2.5 and self.path == []:
+                        if self.dist_from_player >= consts.tile.TILE_SIZE * 2.5 and self.path == []:
                             self.path_progress = 0
                             self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
 
                         elif self.path != []:
                             try:
                                 if self.path[-1].map_pos != gamestate.player.player_map_pos:
-                                    if self.dist <= (consts.raycast.render / 2) * consts.tile.TILE_SIZE and random.randint(0, 5) == 5:
+                                    if self.dist_from_player <= (consts.raycast.render / 2) * consts.tile.TILE_SIZE and random.randint(0, 5) == 5:
                                         self.path_progress = 0
                                         self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
                                     elif random.randint(0,10) == 10:
@@ -721,7 +775,7 @@ class Npc:
             self.sprite.texture = self.die_texture[self.current_frame]
             if self.current_frame == 0 and not self.mein_leben:
                 self.mein_leben = True
-                SOUND.play_sound(random.choice(self.sounds['die']), self.dist)
+                SOUND.play_sound(random.choice(self.sounds['die']), self.dist_from_player)
             if self.timer >= self.frame_interval and self.current_frame < len(self.die_texture)-1:
                 self.current_frame += 1
                 self.timer = 0
@@ -742,12 +796,10 @@ class Npc:
                 self.side = None
                 self.hurting = False
                 self.timer = 0
-                SOUND.play_sound(random.choice(self.sounds['damage']), self.dist)
+                SOUND.play_sound(random.choice(self.sounds['damage']), self.dist_from_player)
+
                 if self.state == npc_state.IDLE or self.state == npc_state.PATROLLING or self.state == npc_state.FLEEING:
-                    self.face = self.face + self.theta
-                    if self.face >= 360:
-                        self.face -= 360
-                    self.face = min([0,90,180,270,359], key=lambda x:abs(x-self.face))
+                    self.change_facing_direction()
         
         #attack animation
         elif animation == npc_state.ATTACKING:
@@ -757,7 +809,7 @@ class Npc:
                 self.current_frame += 1
                 self.timer = 0
                 if self.current_frame == len(self.hit_texture):
-                    SOUND.play_sound(self.sounds['attack'], self.dist)
+                    SOUND.play_sound(self.sounds['attack'], self.dist_from_player)
                     self.sprite.texture = self.stand_texture[0]
                     self.current_frame = 0
                     self.attacking = False
@@ -770,6 +822,19 @@ class Npc:
                                 gamestate.player.player_armor = 0
                         else:
                             gamestate.player.player_health -= self.dmg
+
+    def change_facing_direction(self):
+        self.face = self.face + self.theta
+        if self.face >= geom.DEGREES_360:
+            self.face -= geom.DEGREES_360
+        self.face = min(
+            [
+                geom.DEGREES_0, geom.DEGREES_90,
+                geom.DEGREES_180, geom.DEGREES_270,
+                geom.DEGREES_359
+            ],
+            key=lambda x: abs(x - self.face)
+        )
 
     @staticmethod
     def drop_item(map_pos):

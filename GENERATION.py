@@ -241,7 +241,8 @@ class Generator:
             
         self.translate_map(self.kill_dead_ends(array), size)
 
-    def rotate_segment(self, segment):
+    @staticmethod
+    def rotate_segment(segment):
         #Rotate array
         rotseg = copy.deepcopy(segment)
         rotseg.array = list(zip(*reversed(rotseg.array)))

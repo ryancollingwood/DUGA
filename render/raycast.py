@@ -71,7 +71,8 @@ class Raycast:
             ray += step
 
 
-    def find_offset(self, position, ray_number, angle, tile, hv):
+    @staticmethod
+    def find_offset(position, ray_number, angle, tile, hv):
         #position is H_x or V_y
         if hv == 'v':
             if tile.type == 'vdoor':
@@ -90,7 +91,8 @@ class Raycast:
             offset = consts.tile.TILE_SIZE - 1
         return(offset)
 
-    def check_hit(self, V_hit, H_hit, H_distance, V_distance, full_check):
+    @staticmethod
+    def check_hit(V_hit, H_hit, H_distance, V_distance, full_check):
         #Break loop if any ray has hit a wall
         if H_hit and V_hit:
             return True
@@ -310,6 +312,6 @@ class Raycast:
             gamestate.rendering.middle_slice = current_tile
             gamestate.rendering.middle_ray_pos = end_pos
 
-
-    def draw_line(self, player_rect, end_pos):
+    @staticmethod
+    def draw_line(player_rect, end_pos):
         gamestate.rendering.raylines.append((player_rect.center, end_pos))

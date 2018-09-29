@@ -206,7 +206,7 @@ class Gun:
 
     def damage(self):
         if gamestate.rendering.middle_slice_len:
-            target_npcs = [x for x in gamestate.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect) and x.dist < gamestate.rendering.middle_slice_len]
+            target_npcs = [x for x in gamestate.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect) and x.dist_from_player < gamestate.rendering.middle_slice_len]
         else:
             target_npcs = [x for x in gamestate.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect)]
 
@@ -214,13 +214,13 @@ class Gun:
             target_npcs = sorted(target_npcs, key=lambda x: x.sprite.theta)[:3]
             
         for npc in target_npcs:
-            if npc.dist <= self.range and not npc.dead:
-                if npc.dist <= consts.tile.TILE_SIZE *2:
+            if npc.dist_from_player <= self.range and not npc.dead:
+                if npc.dist_from_player <= consts.tile.TILE_SIZE *2:
                     cap = 100
                 else:
-                    cap = (self.hit_percent * 0.96 ** (npc.dist*((100-self.hit_percent)/100)))
+                    cap = (self.hit_percent * 0.96 ** (npc.dist_from_player*((100-self.hit_percent)/100)))
                         
-                if cap >= random.randint(0,int(npc.dist*(1/self.range))):
+                if cap >= random.randint(0,int(npc.dist_from_player*(1/self.range))):
                     SOUND.play_sound(self.hit_marker, 0)
 
                     #Damage less if NPC is far away from center.

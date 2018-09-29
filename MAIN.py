@@ -91,7 +91,8 @@ class Load:
 
         SETTINGS.statistics = stats
 
-    def get_canvas_size(self):
+    @staticmethod
+    def get_canvas_size():
         SETTINGS.canvas_map_width = len(SETTINGS.levels_list[SETTINGS.current_level].array[0]) * consts.tile.TILE_SIZE
         SETTINGS.canvas_map_height = len(SETTINGS.levels_list[SETTINGS.current_level].array) * consts.tile.TILE_SIZE
         SETTINGS.canvas_actual_width = SETTINGS.canvas_target_width
@@ -104,12 +105,14 @@ class Load:
             for gun in gamedata.items.gun_list:
                 gun.re_init()
 
-    def load_entities(self):
+    @staticmethod
+    def load_entities():
         ENTITIES.load_guns()
         ENTITIES.load_npc_types()
         ENTITIES.load_item_types()
 
-    def load_custom_levels(self):
+    @staticmethod
+    def load_custom_levels():
         if not os.stat(os.path.join('data', 'customLevels.dat')).st_size == 0:
             with open(os.path.join('data', 'customLevels.dat'), 'rb') as file:
                 custom_levels = pickle.load(file)
