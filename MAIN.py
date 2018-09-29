@@ -28,12 +28,14 @@ import consts.colours
 import consts.geom
 import consts.player
 import consts.raycast
+import consts.tile
 import gamedata.items
 import gamedata.npcs
 import gamedata.textures
 import gamedata.tiles
 import gamestate.inventory
 import gamestate.items
+import gamestate.npcs
 import gamestate.player
 import gamestate.rendering
 import gamestate.sprites
@@ -90,14 +92,14 @@ class Load:
         SETTINGS.statistics = stats
 
     def get_canvas_size(self):
-        SETTINGS.canvas_map_width = len(SETTINGS.levels_list[SETTINGS.current_level].array[0]) * consts.geom.tile_size
-        SETTINGS.canvas_map_height = len(SETTINGS.levels_list[SETTINGS.current_level].array) * consts.geom.tile_size
+        SETTINGS.canvas_map_width = len(SETTINGS.levels_list[SETTINGS.current_level].array[0]) * consts.tile.TILE_SIZE
+        SETTINGS.canvas_map_height = len(SETTINGS.levels_list[SETTINGS.current_level].array) * consts.tile.TILE_SIZE
         SETTINGS.canvas_actual_width = SETTINGS.canvas_target_width
         SETTINGS.canvas_actual_height = SETTINGS.canvas_target_height
         SETTINGS.canvas_aspect_ratio = SETTINGS.canvas_actual_width / SETTINGS.canvas_actual_height
         gamestate.player.player_map_pos = SETTINGS.levels_list[SETTINGS.current_level].player_pos
-        gamestate.player.player_pos[0] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * consts.geom.tile_size) + consts.geom.tile_size / 2)
-        gamestate.player.player_pos[1] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * consts.geom.tile_size) + consts.geom.tile_size / 2)
+        gamestate.player.player_pos[0] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * consts.tile.TILE_SIZE) + consts.tile.TILE_SIZE / 2)
+        gamestate.player.player_pos[1] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * consts.tile.TILE_SIZE) + consts.tile.TILE_SIZE / 2)
         if len(gamedata.items.gun_list) != 0:
             for gun in gamedata.items.gun_list:
                 gun.re_init()
@@ -123,7 +125,7 @@ class Load:
 
     def load_new_level(self):    
         #Remove old level info
-        gamedata.npcs.npc_list = []
+        gamestate.npcs.npc_list = []
         gamestate.items.all_items = []
         SETTINGS.walkable_area = []
         SETTINGS.all_tiles = []
@@ -134,9 +136,9 @@ class Load:
         #Retrieve new level info
         self.get_canvas_size()
         gameMap.__init__(SETTINGS.levels_list[SETTINGS.current_level].array)
-        gamestate.player.player_rect.center = (SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * consts.geom.tile_size, SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * consts.geom.tile_size)
-        gamestate.player.player_rect.centerx += consts.geom.tile_size / 2
-        gamestate.player.player_rect.centery += consts.geom.tile_size / 2
+        gamestate.player.player_rect.center = (SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * consts.tile.TILE_SIZE, SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * consts.tile.TILE_SIZE)
+        gamestate.player.player_rect.centerx += consts.tile.TILE_SIZE / 2
+        gamestate.player.player_rect.centery += consts.tile.TILE_SIZE / 2
         gamePlayer.real_x = gamestate.player.player_rect.centerx
         gamePlayer.real_y = gamestate.player.player_rect.centery
 
@@ -224,10 +226,10 @@ def render_screen(canvas):
     for tile in SETTINGS.all_solid_tiles:
         if tile.distance and gamedata.tiles.tile_visible[tile.ID]:
             if sort_atan(tile) <= consts.raycast.fov:
-                if tile.distance < consts.raycast.render * consts.geom.tile_size:
+                if tile.distance < consts.raycast.render * consts.tile.TILE_SIZE:
                     SETTINGS.rendered_tiles.append(tile)
                             
-            elif tile.distance <= consts.geom.tile_size * 1.5:
+            elif tile.distance <= consts.tile.TILE_SIZE * 1.5:
                 SETTINGS.rendered_tiles.append(tile)
                 
 
@@ -245,7 +247,7 @@ def render_screen(canvas):
                 
         else:
             if item.new_rect.right > 0 and item.new_rect.x < SETTINGS.canvas_actual_width and item.distance < (
-                    consts.raycast.render * consts.geom.tile_size):
+                    consts.raycast.render * consts.tile.TILE_SIZE):
                 item.draw(canvas)
                 
     #Draw weapon if it is there
@@ -270,8 +272,8 @@ def render_screen(canvas):
             tutorialController.control(gameCanvas.window)
 
 def update_game():
-    if gamedata.npcs.npc_list:
-        for npc in gamedata.npcs.npc_list:
+    if gamestate.npcs.npc_list:
+        for npc in gamestate.npcs.npc_list:
             if not npc.dead:
                 npc.think()
 
@@ -422,8 +424,8 @@ def main_loop():
                         pygame.draw.line(gameCanvas.window, consts.colours.RED, (x[0][0] / 4, x[0][1] / 4), (x[1][0] / 4, x[1][1] / 4))
                     gamestate.rendering.raylines = []
 
-                    for i in gamedata.npcs.npc_list:
-                        if i.rect and i.dist <= consts.raycast.render * consts.geom.tile_size * 1.2:
+                    for i in gamestate.npcs.npc_list:
+                        if i.rect and i.dist <= consts.raycast.render * consts.tile.TILE_SIZE * 1.2:
                             pygame.draw.rect(gameCanvas.window, consts.colours.RED, (i.rect[0] / 4, i.rect[1] / 4, i.rect[2] / 4, i.rect[3] / 4))
                         elif i.rect:
                             pygame.draw.rect(gameCanvas.window, consts.colours.DARKGREEN, (i.rect[0] / 4, i.rect[1] / 4, i.rect[2] / 4, i.rect[3] / 4))

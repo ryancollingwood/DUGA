@@ -12,6 +12,7 @@ import random
 import gamedata.items
 import gamedata.npcs
 import gamestate.items
+import gamestate.npcs
 
 
 def load_guns():
@@ -974,7 +975,7 @@ def spawn_npcs():
             print("Error loading NPC! No soundpack with name ", stats['soundpack'])
         stats['pos'] = npc[0]
         stats['face'] = npc[1]
-        gamedata.npcs.npc_list.append(NPC.Npc(stats, sounds, path.join(*stats['filepath'])))
+        gamestate.npcs.npc_list.append(NPC.Npc(stats, sounds, path.join(*stats['filepath'])))
 
 
 def load_item_types():

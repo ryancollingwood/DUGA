@@ -1,18 +1,17 @@
- #This is the player script. This is where the movement and collision detection of the player is.
+# This is the player script. This is where the movement and collision detection of the player is.
 
 import SETTINGS
-import EFFECTS
-import INVENTORY
 import SOUND
 import pygame
 import math
 import os
 
 import consts.colours
+import consts.tile
+import gamestate.npcs
 import gamestate.rendering
 import consts.player
 import consts.geom
-import gamedata.npcs
 import gamestate.inventory
 import gamestate.player
 
@@ -29,7 +28,7 @@ class Player:
         self.real_y = pos[1]
 
         self.color = consts.colours.BLUE
-        self.sprite = pygame.Surface([consts.geom.tile_size / 12, consts.geom.tile_size / 12])
+        self.sprite = pygame.Surface([consts.tile.TILE_SIZE / 12, consts.tile.TILE_SIZE / 12])
         self.sprite.fill(self.color)
         self.rect = self.sprite.get_rect()
         self.rect.x = self.real_x
@@ -44,7 +43,7 @@ class Player:
         self.gunsprites_shoot = []
 
         gamestate.player.player = self
-        self.collide_list = SETTINGS.all_solid_tiles + gamedata.npcs.npc_list
+        self.collide_list = SETTINGS.all_solid_tiles + gamestate.npcs.npc_list
         self.update_collide_list = False
         self.solid = True
         self.dead = False
@@ -55,40 +54,40 @@ class Player:
 
         self.current_level = SETTINGS.current_level
 
-        #input variables
+        # input variables
         self.mouse2 = 0
         self.inventory = 0
         self.esc_pressed = False
         self.dont_open_menu = False
 
-
     def direction(self, offset, distance):
         if distance == 0:
             direction = [math.cos(math.radians(self.angle + offset)), -math.sin(math.radians(self.angle + offset))]
         else:
-            direction = [(math.cos(math.radians(self.angle + offset))) * distance, (-math.sin(math.radians(self.angle + offset))) * distance]
+            direction = [(math.cos(math.radians(self.angle + offset))) * distance,
+                         (-math.sin(math.radians(self.angle + offset))) * distance]
         return direction
 
     def control(self, canvas):
-        #Make sure the collide list is complete
-        if len(self.collide_list) != len(SETTINGS.all_solid_tiles + gamedata.npcs.npc_list):
-            self.collide_list = SETTINGS.all_solid_tiles + gamedata.npcs.npc_list
+        # Make sure the collide list is complete
+        if len(self.collide_list) != len(SETTINGS.all_solid_tiles + gamestate.npcs.npc_list):
+            self.collide_list = SETTINGS.all_solid_tiles + gamestate.npcs.npc_list
         elif self.current_level != SETTINGS.current_level:
-            self.collide_list = SETTINGS.all_solid_tiles + gamedata.npcs.npc_list
+            self.collide_list = SETTINGS.all_solid_tiles + gamestate.npcs.npc_list
             self.current_level = SETTINGS.current_level
         elif self.update_collide_list:
-            self.collide_list = SETTINGS.all_solid_tiles + gamedata.npcs.npc_list
+            self.collide_list = SETTINGS.all_solid_tiles + gamestate.npcs.npc_list
             self.update_collide_list = False
 
-        #Update health
+        # Update health
         if self.health != gamestate.player.player_health and gamestate.player.player_states['heal']:
             self.health = gamestate.player.player_health
 
         key = pygame.key.get_pressed()
 
-        #Movement controls (WASD)
+        # Movement controls (WASD)
         if not gamestate.player.player_states['dead']:
-            #Inventory open
+            # Inventory open
             if not gamestate.player.player_states['invopen']:
 
                 if gamestate.player.aiming:
@@ -137,8 +136,7 @@ class Player:
 
                 gamestate.player.player_states['cspeed'] = self.speed
 
-
-        #Shoot gun (Mouse input)
+                # Shoot gun (Mouse input)
                 if pygame.mouse.get_pressed()[2] and self.mouse2 < 1:
                     gamestate.player.mouse2_btn_active = True
                     self.mouse2 += 1
@@ -157,7 +155,7 @@ class Player:
                 else:
                     gamestate.player.reload_key_active = False
 
-        #Change gun
+                # Change gun
                 if key[pygame.K_1] and gamestate.inventory.held_weapons['primary']:
                     gamestate.inventory.next_gun = gamestate.inventory.held_weapons['primary']
                 elif key[pygame.K_2] and gamestate.inventory.held_weapons['secondary']:
@@ -165,24 +163,23 @@ class Player:
                 elif key[pygame.K_3] and gamestate.inventory.held_weapons['melee']:
                     gamestate.inventory.next_gun = gamestate.inventory.held_weapons['melee']
 
-        #Keep angle in place
+                # Keep angle in place
                 if self.angle >= 360:
                     self.angle = 0
                 elif self.angle < 0:
                     self.angle = 359
 
-        #Interact
+                # Interact
                 if key[pygame.K_e]:
                     if gamestate.rendering.middle_slice:
-                        if gamestate.rendering.middle_slice_len <= consts.geom.tile_size *1.5 and (
+                        if gamestate.rendering.middle_slice_len <= consts.tile.TILE_SIZE * 1.5 and (
                                 gamestate.rendering.middle_slice.type == 'vdoor' or gamestate.rendering.middle_slice.type == 'hdoor'):
                             gamestate.rendering.middle_slice.sesam_luk_dig_op()
-                        elif gamestate.rendering.middle_slice_len <= consts.geom.tile_size and gamestate.rendering.middle_slice.type == 'end' and not gamestate.player.player_states['fade']:
+                        elif gamestate.rendering.middle_slice_len <= consts.tile.TILE_SIZE and gamestate.rendering.middle_slice.type == 'end' and not \
+                        gamestate.player.player_states['fade']:
                             gamestate.player.player_states['fade'] = True
                             SETTINGS.changing_level = True
                             SOUND.play_sound(self.change_level, 0)
-
-
 
                 madd = self.mouse.get_rel()[0] * self.sensitivity
                 if madd > 38:
@@ -192,7 +189,7 @@ class Player:
                 self.angle -= madd
                 consts.player.player_angle = self.angle
 
-        #Open inventory
+            # Open inventory
             if key[pygame.K_i] and self.inventory < 1:
                 if gamestate.player.player_states['invopen']:
                     gamestate.player.player_states['invopen'] = False
@@ -204,7 +201,7 @@ class Player:
             elif not key[pygame.K_i]:
                 self.inventory = 0
 
-        #Use escape to close inventory
+            # Use escape to close inventory
             if key[pygame.K_ESCAPE] and gamestate.player.player_states['invopen']:
                 gamestate.player.player_states['invopen'] = False
                 gamestate.inventory.inv_strings_updated = False
@@ -213,7 +210,7 @@ class Player:
             elif not key[pygame.K_ESCAPE] and not gamestate.player.player_states['invopen']:
                 self.dont_open_menu = False
 
-        #Show menu
+            # Show menu
             if key[pygame.K_ESCAPE] and not self.dont_open_menu:
                 self.esc_pressed = True
 
@@ -221,7 +218,7 @@ class Player:
                 SETTINGS.menu_showing = True
                 self.esc_pressed = False
 
-        #Is the player dead or taking damage?
+        # Is the player dead or taking damage?
         if self.health > gamestate.player.player_health:
             SETTINGS.statistics['last dtaken'] += (self.health - gamestate.player.player_health)
             self.health = gamestate.player.player_health
@@ -233,13 +230,12 @@ class Player:
         if gamestate.player.player_health < 0:
             gamestate.player.player_health = 0
 
-
         if SETTINGS.menu_showing or gamestate.player.player_states['invopen']:
             pygame.event.set_grab(False)
             self.mouse.set_visible(True)
-    #     elif key[pygame.K_q]:
-    #         pygame.event.set_grab(True)
-    #         self.mouse.set_visible(False)
+        #     elif key[pygame.K_q]:
+        #         pygame.event.set_grab(True)
+        #         self.mouse.set_visible(False)
         else:
             pygame.event.set_grab(True)
             self.mouse.set_visible(False)
@@ -260,7 +256,7 @@ class Player:
     ##            SETTINGS.screen_shake = 20
     ##            SETTINGS.player_hurt = True
 
-    #======================================================
+    # ======================================================
 
     def move(self, pos):
         if SETTINGS.cfps > 5:
@@ -277,7 +273,7 @@ class Player:
         gamestate.player.player_rect = self.rect
         tile_hit_list = pygame.sprite.spritecollide(self, self.collide_list, False)
 
-        #Actually there are not only tiles in the list. NPCs as well.
+        # Actually there are not only tiles in the list. NPCs as well.
         for tile in tile_hit_list:
             if tile.solid:
                 if x > 0:
@@ -293,9 +289,10 @@ class Player:
                     self.rect.top = tile.rect.bottom
                     self.real_y = self.rect.y
 
-        gamestate.player.player_map_pos = [int(self.rect.centerx / consts.geom.tile_size), int(self.rect.centery / consts.geom.tile_size)]
+        gamestate.player.player_map_pos = [int(self.rect.centerx / consts.tile.TILE_SIZE),
+                                           int(self.rect.centery / consts.tile.TILE_SIZE)]
 
-        #check if player is out of bounds and teleport them back.
+        # check if player is out of bounds and teleport them back.
         generator_check_list = [x for x in SETTINGS.walkable_area if x.map_pos == gamestate.player.player_map_pos]
         if generator_check_list:
             pos = generator_check_list[0].map_pos
@@ -309,7 +306,6 @@ class Player:
         else:
             pos2 = []
 
-
         if gamestate.player.player_map_pos == pos:
             gamestate.player.last_player_map_pos = gamestate.player.player_map_pos
             self.last_pos_tile = generator_check_list[0]
@@ -322,11 +318,9 @@ class Player:
                 self.real_x = self.rect.x
                 self.real_y = self.rect.y
 
-
     def draw(self, canvas):
         pointer = self.direction(0, 10)
         p1 = pointer[0] + self.rect.center[0]
         p2 = pointer[1] + self.rect.center[1]
-        canvas.blit(self.sprite, (self.rect.x/4, self.rect.y/4))
-        pygame.draw.line(canvas, self.color, (self.rect.center[0]/4, self.rect.center[1]/4), (p1/4, p2/4))
-
+        canvas.blit(self.sprite, (self.rect.x / 4, self.rect.y / 4))
+        pygame.draw.line(canvas, self.color, (self.rect.center[0] / 4, self.rect.center[1] / 4), (p1 / 4, p2 / 4))

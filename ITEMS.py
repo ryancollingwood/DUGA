@@ -1,10 +1,10 @@
-import SETTINGS
 import SPRITES
 import SOUND
 import pygame
 import os
 
 import consts.geom
+import consts.tile
 import gamestate.inventory
 import gamestate.player
 import gamestate.sprites
@@ -14,11 +14,11 @@ class Item:
 
     def __init__(self, pos, sprite, item_type, effect):
         '''Item that can be picked up by the player\npos -> tile pos | sprite -> texture path | item_type -> health, armor, *ammo*, gun\neffect -> relative'''
-        self.pos = (pos[0] * consts.geom.tile_size, pos[1] * consts.geom.tile_size)
+        self.pos = (pos[0] * consts.tile.TILE_SIZE, pos[1] * consts.tile.TILE_SIZE)
         self.map_pos = pos
         self.item_type = item_type
-        self.rect = pygame.Rect(self.pos[0], self.pos[1], int(consts.geom.tile_size), int(consts.geom.tile_size))
-        self.rect.center = (self.pos[0] + consts.geom.tile_size / 2, self.pos[1] + consts.geom.tile_size / 2)
+        self.rect = pygame.Rect(self.pos[0], self.pos[1], int(consts.tile.TILE_SIZE), int(consts.tile.TILE_SIZE))
+        self.rect.center = (self.pos[0] + consts.tile.TILE_SIZE / 2, self.pos[1] + consts.tile.TILE_SIZE / 2)
         self.sprite = SPRITES.Sprite(pygame.image.load(sprite), hash(item_type), self.rect.center, 'sprite')
         self.effect = effect
         self.sound = pygame.mixer.Sound(os.path.join('sounds', 'other', 'blub.ogg'))

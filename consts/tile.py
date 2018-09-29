@@ -1,0 +1,3 @@
+TILE_SIZE = 64
+HORIZONTAL_DOOR = "hdoor"
+VERTICAL_DOOR = "vdoor"

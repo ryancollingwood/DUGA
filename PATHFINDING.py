@@ -9,6 +9,7 @@ import random
 #open/closedlist syntax = [G, H, F, parent]
 #Parent is from where the node is checked.
 import gamedata.tiles
+import consts.tile
 
 
 def pathfind(start, end):
@@ -17,30 +18,21 @@ def pathfind(start, end):
     openlist = {}
     closedlist = {}
     path = []
-    error = False
 
-    #Reports if a node is outside the map
-    if start[0] > max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[0] or start[1] > max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[1]:
-        print("=== WARNING: ===")
-        print("Start point in pathfinding is outiside map!")
-        error = True
-    elif end[0] > max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[0] or end[1] > max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[1]:
-        print("=== WARNING: ===")
-        print("End point in pathfinding is outside map!")
-        error = True
-              
+    error = check_path_points_inside_map(start, end)
+
     if not error:
         start_point = [x for x in SETTINGS.all_tiles if x.map_pos == start][0]
         end_point = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
         
         #Report errors
-        if gamedata.tiles.tile_solid[start_point.ID] and (start_point.type != 'hdoor' and start_point.type != 'vdoor'):
+        if gamedata.tiles.tile_solid[start_point.ID] and (start_point.type != consts.tile.HORIZONTAL_DOOR and start_point.type != consts.tile.VERTICAL_DOOR):
             print("=== WARNING: ===")
             print("Error! Start point in pathfinding is a solid block!")
             print(start_point.map_pos, start_point.ID)
             print()
             error = True
-        if gamedata.tiles.tile_solid[end_point.ID] and (end_point.type != 'hdoor' and end_point.type != 'vdoor'):
+        if gamedata.tiles.tile_solid[end_point.ID] and (end_point.type != consts.tile.HORIZONTAL_DOOR and end_point.type != consts.tile.VERTICAL_DOOR):
             print("=== WARNING: ===")
             print("Error! End point in pathfinding is a solid block!")
             print(end_point.map_pos, end_point.ID)
@@ -88,16 +80,16 @@ def pathfind(start, end):
             if adj_left:
                 adjacent.append(adj_left[0])
 
-            #Add adjecent nodes to openlist if they are not in closedlist and are not solid
+            # Add adjacent nodes to `openlist` if they are not in `closedlist` and are not solid
             for adj in adjacent:
                 
-                if (adj.type == 'hdoor' or adj.type == 'vdoor' or not gamedata.tiles.tile_solid[adj.ID]) and adj not in closedlist:
+                if (adj.type == consts.tile.HORIZONTAL_DOOR or adj.type == consts.tile.VERTICAL_DOOR or not gamedata.tiles.tile_solid[adj.ID]) and adj not in closedlist:
                     if (adj in openlist and openlist[adj][0] > closedlist[current_point][0]+1) or adj not in openlist:
                         openlist[adj] = [closedlist[current_point][0]+1, find_distance(adj, end_point), 0, current_point]
                         openlist[adj][2] = f_value(adj, openlist)
         
         try:
-            while closedlist[current_point][3] != None:
+            while closedlist[current_point][3] is not None:
                 path.append(current_point)
                 current_point = closedlist[current_point][3]
         except:
@@ -110,6 +102,23 @@ def pathfind(start, end):
             return closedlist
         else:
             return path
+
+
+def check_path_points_inside_map(start, end):
+    error = False
+    # Reports if a node is outside the map
+    if start[0] > max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[0] or start[1] > \
+            max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[1]:
+        print("=== WARNING: ===")
+        print("Start point in path finding is outside map!")
+        error = True
+    elif end[0] > max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[0] or end[1] > \
+            max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[1]:
+        print("=== WARNING: ===")
+        print("End point in path finding is outside map!")
+        error = True
+    return error
+
 
 def find_near_position(position):
     adjacent_tiles = [x for x in SETTINGS.walkable_area if (x.map_pos[0] == position[0] + 1 or x.map_pos[0] == position[0] -1 or x.map_pos[0] == position[0])
@@ -154,11 +163,4 @@ def random_point(start):
             closedlist.append(cpos)
 
     return cpos
-        
-        
-        
-
-
-
-
 

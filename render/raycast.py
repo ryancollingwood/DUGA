@@ -6,6 +6,7 @@ import SETTINGS
 import consts.geom
 import consts.player
 import consts.raycast
+import consts.tile
 import gamedata.tiles
 import gamestate.player
 import gamestate.rendering
@@ -26,7 +27,7 @@ class Raycast:
         self.res = consts.raycast.resolution
         self.fov = consts.raycast.fov
         self.render = consts.raycast.render
-        self.tile_size = consts.geom.tile_size
+        self.tile_size = consts.tile.TILE_SIZE
         self.door_size = self.tile_size / 2
         # rounding up `wall_width` so that we don't clip the walls
         # on the right hand side of the screen
@@ -85,8 +86,8 @@ class Raycast:
                 offset = abs(int(position - tile.rect.x))
 
         #Fuck it. Catch all the crashes.
-        if offset >= consts.geom.tile_size:
-            offset = consts.geom.tile_size - 1
+        if offset >= consts.tile.TILE_SIZE:
+            offset = consts.tile.TILE_SIZE - 1
         return(offset)
 
     def check_hit(self, V_hit, H_hit, H_distance, V_distance, full_check):
@@ -291,7 +292,7 @@ class Raycast:
 
     def render_screen(self, ray_number, wall_dist, texture, offset, current_tile, vh, end_pos):
         if wall_dist:
-            #wall_height = int((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))))
+            #wall_height = int((self.TILE_SIZE / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))))
 
             wall_height = int((self.tile_size / wall_dist) * self.wall_height_mod)
             gamestate.rendering.zbuffer.append(Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh))

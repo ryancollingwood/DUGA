@@ -1,0 +1,5 @@
+ATTACKING = "attacking"
+FLEEING = "fleeing"
+IDLE = "idle"
+PATROLLING = "patrolling"
+DYING = "dying"

@@ -9,8 +9,9 @@ import os
 
 import consts.geom
 import consts.raycast
-import gamedata.npcs
+import consts.tile
 import gamestate.inventory
+import gamestate.npcs
 import gamestate.player
 import gamestate.rendering
 
@@ -58,9 +59,9 @@ class Gun:
         self.stats = stats
         
         if self.guntype != 'melee':
-            self.range = stats['range'] * consts.geom.tile_size
+            self.range = stats['range'] * consts.tile.TILE_SIZE
         else:
-            self.range = consts.geom.tile_size * 0.9
+            self.range = consts.tile.TILE_SIZE * 0.9
 
         self.hit_rect = pygame.Rect((SETTINGS.canvas_actual_width/2)-(self.accuracy/2), 0, self.accuracy, 600)
 
@@ -205,16 +206,16 @@ class Gun:
 
     def damage(self):
         if gamestate.rendering.middle_slice_len:
-            target_npcs = [x for x in gamedata.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect) and x.dist < gamestate.rendering.middle_slice_len]
+            target_npcs = [x for x in gamestate.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect) and x.dist < gamestate.rendering.middle_slice_len]
         else:
-            target_npcs = [x for x in gamedata.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect)]
+            target_npcs = [x for x in gamestate.npcs.npc_list if x.hit_rect.colliderect(self.hit_rect)]
 
         if len(target_npcs) > 3:
             target_npcs = sorted(target_npcs, key=lambda x: x.sprite.theta)[:3]
             
         for npc in target_npcs:
             if npc.dist <= self.range and not npc.dead:
-                if npc.dist <= consts.geom.tile_size *2:
+                if npc.dist <= consts.tile.TILE_SIZE *2:
                     cap = 100
                 else:
                     cap = (self.hit_percent * 0.96 ** (npc.dist*((100-self.hit_percent)/100)))
@@ -242,7 +243,7 @@ class Gun:
                     npc.timer = 0
                     npc.hurting = True
                     if npc.health <= 0:
-                        npc.knockback = self.dmg * (consts.geom.tile_size / 2)
+                        npc.knockback = self.dmg * (consts.tile.TILE_SIZE / 2)
 
     def reload_animation(self):
         if gamestate.inventory.held_ammo[self.ammo_type] > 0 or SETTINGS.unlimited_ammo:

@@ -9,8 +9,10 @@ import random
 import os
 
 import consts.geom
+import consts.tile
 import gamedata.npcs
 import gamedata.tiles
+import gamestate.npcs
 import gamestate.player
 import gamestate.sprites
 
@@ -19,7 +21,7 @@ class Map:
     '''== Create the map ==\narray -> Level to be loaded'''
     def __init__(self, array):
         self.array = array
-        self.tile_size = consts.geom.tile_size
+        self.tile_size = consts.tile.TILE_SIZE
         self.width = len(self.array[0])-1
         self.height = len(self.array)-1
         SETTINGS.current_level_size = (self.width, self.height)
@@ -45,7 +47,7 @@ class Map:
     def move_inaccessible_entities(self):      
         wa = []
         for i in SETTINGS.walkable_area:
-            if i.type != 'hdoor' and i.type != 'vdoor':
+            if i.type != consts.tile.HORIZONTAL_DOOR and i.type != consts.tile.VERTICAL_DOOR:
                 wa.append(i.map_pos)
             
         move_items = [x for x in SETTINGS.levels_list[SETTINGS.current_level].items if list(x[0]) not in wa]
@@ -99,20 +101,20 @@ class Tile:
         if self.type == 'sprite':
             current_number = len(gamestate.sprites.all_sprites)
             #Need some weird coordinates to make it centered.
-            self.texture = SPRITES.Sprite(gamedata.tiles.tile_texture[self.ID], self.ID, (self.pos[0] + consts.geom.tile_size / 3, self.pos[1] + consts.geom.tile_size / 3), 'sprite')
+            self.texture = SPRITES.Sprite(gamedata.tiles.tile_texture[self.ID], self.ID, (self.pos[0] + consts.tile.TILE_SIZE / 3, self.pos[1] + consts.tile.TILE_SIZE / 3), 'sprite')
             
-            self.rect = pygame.Rect(pos[0], pos[1], consts.geom.tile_size / 2, consts.geom.tile_size / 2)
+            self.rect = pygame.Rect(pos[0], pos[1], consts.tile.TILE_SIZE / 2, consts.tile.TILE_SIZE / 2)
 
         else:
             self.texture = gamedata.tiles.tile_texture[self.ID].texture
             self.icon = pygame.transform.scale(self.texture, (16,16)).convert()
             self.texture = pygame.transform.scale(self.texture, (
-            consts.geom.tile_size, consts.geom.tile_size)).convert()
+                consts.tile.TILE_SIZE, consts.tile.TILE_SIZE)).convert()
             self.rect = self.texture.get_rect()
             self.rect.x = pos[0]
             self.rect.y = pos[1]
             
-            if self.type == 'vdoor' or self.type == 'hdoor':
+            if self.type == consts.tile.VERTICAL_DOOR or self.type == consts.tile.HORIZONTAL_DOOR:
                 self.open = 0
                 self.state = 'closed'
                 #states: closed, opening, open, closing
@@ -137,8 +139,8 @@ class Tile:
         return self.distance
 
     def sesam_luk_dig_op(self):
-        if self.open > consts.geom.tile_size:
-            self.open = consts.geom.tile_size
+        if self.open > consts.tile.TILE_SIZE:
+            self.open = consts.tile.TILE_SIZE
         elif self.open < 0:
             self.open = 0
             
@@ -149,18 +151,18 @@ class Tile:
             if self.open == 0:
                 SOUND.play_sound(self.open_sound, self.distance)
                 
-            if self.open < consts.geom.tile_size:
-                self.open += consts.geom.tile_size * SETTINGS.dt
+            if self.open < consts.tile.TILE_SIZE:
+                self.open += consts.tile.TILE_SIZE * SETTINGS.dt
             else:
                 self.state = 'open'
                 self.solid = False
-            if self.open > consts.geom.tile_size /1.4:
+            if self.open > consts.tile.TILE_SIZE /1.4:
                 self.solid = False
 
         elif self.state == 'open':
             self.timer += SETTINGS.dt
             if self.timer > 5 and not self.rect.colliderect(gamestate.player.player_rect):
-                for i in gamedata.npcs.npc_list:
+                for i in gamestate.npcs.npc_list:
                     if self.rect.colliderect(i.rect):
                         break
                 else:   
@@ -169,10 +171,10 @@ class Tile:
                     self.timer = 0
 
         elif self.state == 'closing':
-            if self.open >= consts.geom.tile_size:
+            if self.open >= consts.tile.TILE_SIZE:
                 SOUND.play_sound(self.close_sound, self.distance)
             if self.open > 0:
-                self.open -= consts.geom.tile_size * SETTINGS.dt
+                self.open -= consts.tile.TILE_SIZE * SETTINGS.dt
             else:
                 self.state = 'closed'
 
