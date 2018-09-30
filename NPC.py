@@ -62,6 +62,11 @@ class Npc:
         self.mein_leben = False
         self.type = 'npc'
         self.player_touched = False
+        self.last_seen_player_timer = 0
+        # debug maybe later messaging system?
+        self.messages = []
+
+
 
         #NPC Characteristics
         self.health = stats['health']    
@@ -143,8 +148,25 @@ class Npc:
         #The position in SETTINGS.all_sprites of this NPC
         self.num = len(gamestate.sprites.all_sprites) - 1
 
+    def add_message(self, *args):
+        message = [*args]
+        if message not in self.messages:
+            self.messages.append(message)
+
+    def print_messages(self):
+        if len(self.messages) > 0:
+            print(id(self), self.name, self.mind, self.state)
+            for item in self.messages:
+                print(id(self), item)
+            self.messages = []
+
     def think(self):
-        self.map_pos = [int(self.rect.centerx / consts.tile.TILE_SIZE), int(self.rect.centery / consts.tile.TILE_SIZE)]
+
+        self.map_pos = [
+            int(self.rect.centerx / consts.tile.TILE_SIZE),
+            int(self.rect.centery / consts.tile.TILE_SIZE)
+        ]
+
         if self.state == npc_state.ATTACKING or self.state == npc_state.FLEEING:
             self.speed = self.OG_speed * 2
 
@@ -153,6 +175,7 @@ class Npc:
             self.update_timer += SETTINGS.dt
             if self.update_timer >= 2:
                 self.update_timer = 0
+                self.print_messages()
             
         if not self.dead and self.health > 0 and not gamestate.player.player_states['dead']:
             self.render()
@@ -161,7 +184,7 @@ class Npc:
 
                 #PASSIVE
                 if self.mind == 'passive':
-                    # TODO alternate between idle and patroll
+                    # TODO alternate between idle and patrol
                     pass
 
                 #HOSTILE
@@ -207,9 +230,9 @@ class Npc:
                 self.animate('walking')
 
         if gamestate.player.player_states['dead']:
-            self.face += 10
-            if self.face >= 360:
-                self.face -= 360
+            self.face += geom.DEGREES_10
+            if self.face >= geom.DEGREES_360:
+                self.face -= geom.DEGREES_360
             self.render()
             
         elif self.health <= 0 and not self.dead:
@@ -229,27 +252,36 @@ class Npc:
                     self.react_to_player(state_if_spotted)
                     return True
                 else:
-                    print("player_in_view but didn't detect", self.mind, self.state)
+                    self.add_message("player_in_view but didn't detect", self.mind, self.state)
         return False
 
     def react_to_player(self, new_state):
-        self.path = []
-        SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
-        self.state = new_state
 
-        # TODO wake up friends, again perception checks needed
-        max_allies = 3
+        # if we have not changed state
+        # then our current path is possibly
+        # not what we want to be
+        if self.state != new_state:
+            self.set_path([])
+            self.state = new_state
+
+        if (self.last_seen_player_timer == 0) or (SETTINGS.dt - self.last_seen_player_timer > 10):
+            SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
+            self.call_allies(3, "hostile", npc_state.ATTACKING, gamestate.player.player_map_pos)
+
+        self.last_seen_player_timer = SETTINGS.dt
+
+    @staticmethod
+    def call_allies(max_allies, mind_filter, new_state, target_pos):
         woken_allies = 0
         for npc in gamestate.npcs.npc_list:
-            if npc.mind == "hostile":
+            if npc.mind == mind_filter:
                 if npc.dist_from_player <= consts.tile.TILE_SIZE * 3:
                     # move to a method hunt_for_player
-                    npc.path = PATHFINDING.pathfind(npc.map_pos, gamestate.player.player_map_pos)
-                    npc.state = npc_state.ATTACKING
+                    npc.state = new_state
+                    npc.set_path(target_pos)
                     woken_allies += 1
                     if woken_allies >= max_allies:
                         break
-
 
     def touched_by_player(self):
         # TODO perhaps some perception modifier
@@ -265,12 +297,12 @@ class Npc:
 
         something_touched_me = self.dist_from_player <= perception_distance and not SETTINGS.ignore_player
         if something_touched_me:
-            print("something_touched_me!", self.state, self.mind)
+            self.add_message("something_touched_me!", self.state, self.mind)
             pass
         else:
             # debug purposes
             if self.dist_from_player <= (consts.tile.TILE_SIZE * 2):
-                print("nothing touched_me!", self.state, self.mind)
+                self.add_message("nothing touched_me!", self.state, self.mind, perception_distance, self.dist_from_player)
                 pass
 
         self.player_touched = something_touched_me
@@ -407,16 +439,16 @@ class Npc:
         player_tile = gamestate.player.player_map_pos
 
         #DDA Algorithm
-        x1,y1 = own_tile[0], own_tile[1]
-        x2,y2 = player_tile[0], player_tile[1]
+        x1, y1 = own_tile[0], own_tile[1]
+        x2, y2 = player_tile[0], player_tile[1]
 
         #If the coords are negative, start from player instead of NPC
         if x1 > x2 or (x1 == x2 and y1 > y2):
-            temp1,temp2 = x1,y1
-            x1,y1 = x2,y2
-            x2,y2 = temp1,temp2
+            temp1, temp2 = x1, y1
+            x1, y1 = x2, y2
+            x2, y2 = temp1, temp2
 
-        x,y = x1, y1
+        x, y = x1, y1
         dx = abs(x2-x1)
         dy = abs(y2-y1)
         length = dx if dx > dy else dy
@@ -496,6 +528,14 @@ class Npc:
                 door.sesam_luk_dig_op()
                 break
 
+    def set_path(self, destination):
+        if len(destination) > 0:
+            self.path = PATHFINDING.pathfind(self.map_pos, destination)
+        else:
+            self.path = []
+
+        self.path_progress = 0
+
     def move(self):
         #Make the NPC move according to current state.
         moving_up = False
@@ -511,8 +551,7 @@ class Npc:
                 for npc in gamestate.npcs.npc_list:
                     if npc.map_pos == self.path[-1].map_pos:
                         available_pos = [x for x in SETTINGS.walkable_area if abs(x.map_pos[0]-self.map_pos[0]) <= 3 and abs(x.map_pos[1]-self.map_pos[1]) <= 3]
-                        self.path = PATHFINDING.pathfind(self.map_pos, random.choice(available_pos).map_pos)
-                        self.path_progress = 0
+                        self.set_path(random.choice(available_pos).map_pos)
                         break
 
             if self.rect.colliderect(self.path[self.path_progress].rect) and self.path[self.path_progress] != self.path[-1]:
@@ -577,8 +616,8 @@ class Npc:
             self.moving = False
             self.attack_move = False
             if self.timer >= self.frame_interval:
-                self.path = []
-                self.path_progress = 0
+                # TODO make a reset_path method
+                self.set_path([])
 
         if self.state == npc_state.PATROLLING:
             if self.path == []:
@@ -588,7 +627,7 @@ class Npc:
                 else:
                     #Make the NPC not walk too far.
                     available_pos = [x for x in SETTINGS.walkable_area if abs(x.map_pos[0]-self.map_pos[0]) <= 3 and abs(x.map_pos[1]-self.map_pos[1]) <= 3]
-                    self.path = PATHFINDING.pathfind(self.map_pos, random.choice(available_pos).map_pos)
+                    self.set_path(random.choice(available_pos).map_pos)
 
         elif self.state == npc_state.FLEEING:
             if self.dist_from_player <= consts.tile.TILE_SIZE * 4:
@@ -602,8 +641,7 @@ class Npc:
                 if self.player_in_view:
                     if self.detect_player() and player_tile:
                         if ((SETTINGS.walkable_area.index(flee_pos) < SETTINGS.walkable_area.index(player_tile) + int(SETTINGS.current_level_size[0] / 5)) or (SETTINGS.walkable_area.index(flee_pos) > SETTINGS.walkable_area.index(player_tile) - int(SETTINGS.current_level_size[0] / 5))) and self.path == []:
-                            self.path_progress = 0
-                            self.path = PATHFINDING.pathfind(self.map_pos, flee_pos.map_pos)
+                            self.set_path(flee_pos.map_pos)
 
     def idle(self):
         #Make the NPC rotate randomly as it stands still.

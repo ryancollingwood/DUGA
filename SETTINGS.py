@@ -36,8 +36,8 @@ playing_tutorial = False
 
 
 '''Canvas settings'''
-canvas_target_width = 700    #700
-canvas_target_height = 550    #600
+canvas_target_width = 700    #700 #700
+canvas_target_height = 550    #600 #550
 # Below this point are the non-configurable canvas variables.
 canvas_actual_width = 0
 canvas_actual_height = 0

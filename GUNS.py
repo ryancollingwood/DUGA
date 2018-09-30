@@ -223,27 +223,37 @@ class Gun:
                 if cap >= random.randint(0,int(npc.dist_from_player*(1/self.range))):
                     SOUND.play_sound(self.hit_marker, 0)
 
+                    print(npc.theta)
+                    damage_to_be_done = self.dmg
+
                     #Damage less if NPC is far away from center.
-                    if self.hit_rect.width < 120 or (npc.hit_rect.centerx > self.hit_rect.left + self.hit_rect.width/3 and npc.hit_rect.centerx < self.hit_rect.right - self.hit_rect.width/3):
+                    if self.hit_rect.width < 120 or (
+                                    npc.hit_rect.centerx > self.hit_rect.left + self.hit_rect.width / 3 and
+                                    npc.hit_rect.centerx < self.hit_rect.right - self.hit_rect.width/3
+                    ):
                         #Critical hit
-            
+
                         if (npc.state == 'idle' or npc.state == 'patrouling') and not npc.player_in_view:
-                            npc.health -= self.dmg * 2
-                            SETTINGS.statistics['last ddealt'] += self.dmg*2
+                            damage_to_be_done = damage_to_be_done * 2
                         else:
-                            npc.health -= self.dmg
-                            SETTINGS.statistics['last ddealt'] += self.dmg
+                            pass
                     else:
                         if (npc.state == 'idle' or npc.state == 'patrouling') and not npc.player_in_view:
-                            npc.health -= self.dmg
-                            SETTINGS.statistics['last ddealt'] += self.dmg*2
+                            pass
                         else:
-                            npc.health -= self.dmg / 2
-                            SETTINGS.statistics['last ddealt'] += self.dmg
+                            damage_to_be_done = damage_to_be_done / 2
+
+                    if (npc.theta >= 330 and npc.theta <= 360) or (npc.theta >= 0 and npc.theta <= 30):
+                        damage_to_be_done = npc.health
+
+                    SETTINGS.statistics['last ddealt'] += damage_to_be_done
+                    npc.health -= damage_to_be_done
+
+
                     npc.timer = 0
                     npc.hurting = True
                     if npc.health <= 0:
-                        npc.knockback = self.dmg * (consts.tile.TILE_SIZE / 2)
+                        npc.knockback = damage_to_be_done * (consts.tile.TILE_SIZE / 2)
 
     def reload_animation(self):
         if gamestate.inventory.held_ammo[self.ammo_type] > 0 or SETTINGS.unlimited_ammo:
