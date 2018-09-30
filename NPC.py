@@ -11,6 +11,9 @@ import pygame
 #pos is in tiles, face in degrees, frame_interval is seconds between frames, speed is pixels/second
 import consts.raycast
 from consts import npc_state
+from consts.npc_side import SIDE_RIGHT, SIDE_LEFT
+from consts.npc_side import SIDE_FRONT, SIDE_FRONT_LEFT, SIDE_FRONT_RIGHT
+from consts.npc_side import SIDE_BACK, SIDE_BACK_LEFT, SIDE_BACK_RIGHT
 from consts import geom
 import consts.tile
 import gamedata.npcs
@@ -69,7 +72,7 @@ class Npc:
 
 
         #NPC Characteristics
-        self.health = stats['health']    
+        self.health = stats['health']
         self.speed = stats['speed']
         self.OG_speed = self.speed
         self.mind = stats['mind']
@@ -77,7 +80,8 @@ class Npc:
         self.OG_state = self.state
         self.atcktype = stats['atcktype']
         self.name = stats['name']
-        
+        self.perception_range = consts.tile.TILE_SIZE
+
         if stats['dmg'] != 3.1415:
             self.dmg = stats['dmg']
         else:
@@ -90,7 +94,7 @@ class Npc:
         if SETTINGS.current_level == 0 and SETTINGS.levels_list == SETTINGS.glevels_list:
             self.health = int(self.health * 0.8)
             self.dmg = int(self.dmg * 0.8)
-            
+
         #Make late levels harder >:)
         elif SETTINGS.current_level > 4 and SETTINGS.levels_list == SETTINGS.glevels_list:
             self.health += int(SETTINGS.current_level / 3)
@@ -116,14 +120,14 @@ class Npc:
         self.texture_path = texture # Used for creating new NPCS
         self.texture = pygame.image.load(texture).convert_alpha()
         self.texturerect = self.texture.get_rect()
-        
+
         self.stand_texture = [self.texture.subsurface(0,0,64,128).convert_alpha(), self.texture.subsurface(64,0,64,128).convert_alpha(), self.texture.subsurface(128,0,64,128).convert_alpha(), self.texture.subsurface(192,0,64,128).convert_alpha(), self.texture.subsurface(256,0,64,128).convert_alpha(), self.texture.subsurface(320,0,64,128).convert_alpha(), self.texture.subsurface(384,0,64,128).convert_alpha(), self.texture.subsurface(448,0,64,128).convert_alpha()]
         self.front_texture = [self.texture.subsurface(0,128,64,128).convert_alpha(), self.texture.subsurface(64,128,64,128).convert_alpha(), self.texture.subsurface(128,128,64,128).convert_alpha(), self.texture.subsurface(192,128,64,128).convert_alpha(), self.texture.subsurface(256,128,64,128).convert_alpha(), self.texture.subsurface(320,128,64,128).convert_alpha(), self.texture.subsurface(384,128,64,128).convert_alpha(), self.texture.subsurface(448,128,64,128).convert_alpha(), self.texture.subsurface(512,128,64,128).convert_alpha(), self.texture.subsurface(576,128,64,128).convert_alpha()]
         self.frontright_texture = [self.texture.subsurface(0,256,64,128).convert_alpha(), self.texture.subsurface(64,256,64,128).convert_alpha(), self.texture.subsurface(128,256,64,128).convert_alpha(), self.texture.subsurface(192,256,64,128).convert_alpha(), self.texture.subsurface(256,256,64,128).convert_alpha(), self.texture.subsurface(320,256,64,128).convert_alpha(), self.texture.subsurface(384,256,64,128).convert_alpha(), self.texture.subsurface(448,256,64,128).convert_alpha(), self.texture.subsurface(512,256,64,128).convert_alpha(), self.texture.subsurface(576,256,64,128).convert_alpha()]
         self.right_texture = [self.texture.subsurface(0,384,64,128).convert_alpha(), self.texture.subsurface(64,384,64,128).convert_alpha(), self.texture.subsurface(128,384,64,128).convert_alpha(), self.texture.subsurface(192,384,64,128).convert_alpha(), self.texture.subsurface(256,384,64,128).convert_alpha(), self.texture.subsurface(320,384,64,128).convert_alpha(), self.texture.subsurface(384,384,64,128).convert_alpha(), self.texture.subsurface(448,384,64,128).convert_alpha(), self.texture.subsurface(512,384,64,128).convert_alpha(), self.texture.subsurface(576,384,64,128).convert_alpha()]
         self.backright_texture = [self.texture.subsurface(0,512,64,128).convert_alpha(), self.texture.subsurface(64,512,64,128).convert_alpha(), self.texture.subsurface(128,512,64,128).convert_alpha(), self.texture.subsurface(192,512,64,128).convert_alpha(), self.texture.subsurface(256,512,64,128).convert_alpha(), self.texture.subsurface(320,512,64,128).convert_alpha(), self.texture.subsurface(384,512,64,128).convert_alpha(), self.texture.subsurface(448,512,64,128).convert_alpha(), self.texture.subsurface(512,512,64,128).convert_alpha(), self.texture.subsurface(576,512,64,128).convert_alpha()]
         self.back_texture = [self.texture.subsurface(0,640,64,128).convert_alpha(), self.texture.subsurface(64,640,64,128).convert_alpha(), self.texture.subsurface(128,640,64,128).convert_alpha(), self.texture.subsurface(192,640,64,128).convert_alpha(), self.texture.subsurface(256,640,64,128).convert_alpha(), self.texture.subsurface(320,640,64,128).convert_alpha(), self.texture.subsurface(384,640,64,128).convert_alpha(), self.texture.subsurface(448,640,64,128).convert_alpha(), self.texture.subsurface(512,640,64,128).convert_alpha(), self.texture.subsurface(576,640,64,128).convert_alpha()]
-        
+
         self.backleft_texture = []
         self.left_texture = []
         self.frontleft_texture = []
@@ -176,7 +180,7 @@ class Npc:
             if self.update_timer >= 2:
                 self.update_timer = 0
                 self.print_messages()
-            
+
         if not self.dead and self.health > 0 and not gamestate.player.player_states['dead']:
             self.render()
 
@@ -234,7 +238,7 @@ class Npc:
             if self.face >= geom.DEGREES_360:
                 self.face -= geom.DEGREES_360
             self.render()
-            
+
         elif self.health <= 0 and not self.dead:
             self.animate('dying')
             self.render()
@@ -286,24 +290,22 @@ class Npc:
     def touched_by_player(self):
         # TODO perhaps some perception modifier
         # depending on the state/mind?
-        perception_distance = consts.tile.TILE_SIZE
+        perception_distance = self.perception_range
 
         # using sides as render has calculated this for us
-        if self.side == 'backright' or self.side == 'backleft':
-            perception_distance = (consts.tile.TILE_SIZE / 2)
-        elif self.side == 'back':
+        if self.side == SIDE_BACK_RIGHT or self.side == SIDE_BACK_LEFT:
+            perception_distance = (perception_distance / 2)
+        elif self.side == SIDE_BACK:
             # if npc back is shown to player can sneak right up
-            perception_distance = (consts.tile.TILE_SIZE / 3)
+            perception_distance = (perception_distance / 3)
 
         something_touched_me = self.dist_from_player <= perception_distance and not SETTINGS.ignore_player
         if something_touched_me:
             self.add_message("something_touched_me!", self.state, self.mind)
-            pass
         else:
             # debug purposes
-            if self.dist_from_player <= (consts.tile.TILE_SIZE * 2):
+            if self.dist_from_player <= (self.perception_range * 2):
                 self.add_message("nothing touched_me!", self.state, self.mind, perception_distance, self.dist_from_player)
-                pass
 
         self.player_touched = something_touched_me
 
@@ -313,98 +315,98 @@ class Npc:
         '''== Draw the NPC =='''
         if self.dead:
             self.solid = False
-            
+
         xpos = gamestate.player.player_rect.centerx - self.rect.centerx
         ypos = gamestate.player.player_rect.centery - self.rect.centery
-        
+
         self.dist_from_player = math.sqrt(xpos * xpos + ypos * ypos)
-        
+
         if self.dist_from_player <= consts.raycast.render * consts.tile.TILE_SIZE:
             theta = math.atan2(-ypos, xpos) % (2*math.pi)
             theta = math.degrees(theta)
             self.postheta = theta
             theta -= self.face
-            if theta < 0:
-                theta += 360
-            elif theta > 360:
-                theta -= 360
+            if theta < geom.DEGREES_0:
+                theta += geom.DEGREES_360
+            elif theta > geom.DEGREES_360:
+                theta -= geom.DEGREES_360
 
             self.theta = theta
 
             self.sprite.update_pos([self.rect.x, self.rect.y])
 
-            #What side is the NPC facing? (or not self.side is to make sure it finds the right angle from initialization) 
+            #What side is the NPC facing? (or not self.side is to make sure it finds the right angle from initialization)
             if theta <= 22.5 or theta >= 337.5:
                 self.player_in_view = True
-                if (self.side != 'front' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
+                if (self.side != SIDE_FRONT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
                         self.sprite.texture = self.front_texture[self.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[0]
-                self.side = 'front'
+                self.side = SIDE_FRONT
 
             elif theta <= 67.5 and theta >= 22.5:
                 self.player_in_view = True
-                if (self.side != 'frontleft' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
+                if (self.side != SIDE_FRONT_LEFT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
                         self.sprite.texture = self.frontleft_texture[self.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[7]
-                self.side = 'frontleft'
-                
+                self.side = SIDE_FRONT_LEFT
+
             elif theta <= 112.5 and theta >= 67.5:
                 self.player_in_view = False
-                if (self.side != 'left' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
+                if (self.side != SIDE_LEFT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
                         self.sprite.texture = self.left_texture[self.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[6]
-                self.side = 'left'
+                self.side = SIDE_LEFT
 
             elif theta <= 157.5 and theta >= 112.5:
                 self.player_in_view = False
-                if (self.side != 'backleft' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
+                if (self.side != SIDE_BACK_LEFT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
                         self.sprite.texture = self.backleft_texture[self.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[5]
-                self.side = 'backleft'
-                
+                self.side = SIDE_BACK_LEFT
+
             elif theta <= 202.5 and theta >= 157.5:
                 self.player_in_view = False
-                if (self.side != 'back' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
+                if (self.side != SIDE_BACK and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
                         self.sprite.texture = self.back_texture[self.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[4]
-                self.side = 'back'
+                self.side = SIDE_BACK
 
             elif theta <= 247.5 and theta >= 202.5:
                 self.player_in_view = False
-                if (self.side != 'backright' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
+                if (self.side != SIDE_BACK_RIGHT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
                         self.sprite.texture = self.backright_texture[self.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[3]
-                self.side = 'backright'
-                
+                self.side = SIDE_BACK_RIGHT
+
             elif theta <= 292.5 and theta >= 247.5:
                 self.player_in_view = False
-                if (self.side != 'right' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
+                if (self.side != SIDE_RIGHT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
                         self.sprite.texture = self.right_texture[self.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[2]
-                self.side = 'right'
+                self.side = SIDE_RIGHT
 
             elif theta <= 337.5 and theta >= 292.5:
                 self.player_in_view = True
-                if (self.side != 'frontright' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
+                if (self.side != SIDE_FRONT_RIGHT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
                         self.sprite.texture = self.frontright_texture[self.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[1]
-                self.side = 'frontright'
+                self.side = SIDE_FRONT_RIGHT
 
         if gamestate.sprites.all_sprites[self.num] != self.sprite:
             gamestate.sprites.all_sprites[self.num] = self.sprite
@@ -421,7 +423,7 @@ class Npc:
 
     @staticmethod
     def round_up(a):
-        return int(a + 0.5)            
+        return int(a + 0.5)
 
     def detect_player(self):
 
@@ -469,15 +471,15 @@ class Npc:
             y += yinc
             mapx = self.round_up(x)
             mapy = self.round_up(y)
-            
+
             #If line of sight hits a wall
             next_wall = [tile for tile in self.dda_list if tile.map_pos == [mapx, mapy]]
-            
+
             if not next_wall:
                 break
             else:
                 next_wall = next_wall[0]
-            
+
             if gamedata.tiles.tile_visible[next_wall.ID]:
                 if next_wall.type != consts.tile.HORIZONTAL_DOOR and next_wall.type != consts.tile.VERTICAL_DOOR:
                     break
@@ -507,7 +509,7 @@ class Npc:
             self.collide_list[-1] = gamestate.player.player
 
         tile_hit_list = [s for s in self.collide_list if self.rect.colliderect(s)]
-        
+
         for tile in tile_hit_list:
             if tile.solid:
                 if x > 0:
@@ -556,7 +558,7 @@ class Npc:
 
             if self.rect.colliderect(self.path[self.path_progress].rect) and self.path[self.path_progress] != self.path[-1]:
                 self.path_progress += 1
-                
+
             else:
                 #Move down
                 if self.rect.centery < self.path[self.path_progress].rect.centery:
@@ -573,7 +575,7 @@ class Npc:
                         moving_up = True
                     else:
                         self.rect.centery = self.path[self.path_progress].rect.centery
-                    
+
                 #Move right
                 if self.rect.centerx < self.path[self.path_progress].rect.centerx:
                     if abs(self.path[self.path_progress].rect.centerx - self.rect.centerx) >= self.speed * SETTINGS.dt:
@@ -597,7 +599,7 @@ class Npc:
                         self.face = geom.DEGREES_45
                     elif moving_left:
                         self.face = geom.DEGREES_135
-                        
+
                 elif moving_down:
                     if not moving_right and not moving_left:
                         self.face = geom.DEGREES_270
@@ -608,10 +610,10 @@ class Npc:
 
                 elif moving_left:
                     self.face = geom.DEGREES_180
-                    
+
                 elif moving_right:
                     self.face = geom.DEGREES_0
-                
+
         else:
             self.moving = False
             self.attack_move = False
@@ -637,7 +639,7 @@ class Npc:
                     player_tile = player_tile[0]
                 else:
                     player_tile = PATHFINDING.find_near_position(gamestate.player.player_map_pos)
-                    
+
                 if self.player_in_view:
                     if self.detect_player() and player_tile:
                         if ((SETTINGS.walkable_area.index(flee_pos) < SETTINGS.walkable_area.index(player_tile) + int(SETTINGS.current_level_size[0] / 5)) or (SETTINGS.walkable_area.index(flee_pos) > SETTINGS.walkable_area.index(player_tile) - int(SETTINGS.current_level_size[0] / 5))) and self.path == []:
@@ -693,7 +695,7 @@ class Npc:
                     if self.dist_from_player > consts.tile.TILE_SIZE *0.7 and self.path == []:
                         self.path_progress = 0
                         self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
-                        
+
                     elif self.path != []:
                         try:
                             if self.path[-1].map_pos != gamestate.player.player_map_pos:
@@ -707,7 +709,7 @@ class Npc:
                                 self.move()
                         except:
                             pass
-                
+
             elif self.atcktype == 'hitscan':
                 #Move somewhat close to player and change position after attacking
                 if self.dist_from_player <= consts.tile.TILE_SIZE * self.range and (self.dist_from_player >= consts.tile.TILE_SIZE * 1.5 or (
@@ -740,8 +742,8 @@ class Npc:
                                     SOUND.play_sound(random.choice(self.sounds['damage']), self.dist_from_player)
                         else:
                             self.animate(npc_state.ATTACKING)
-                            
-                #Move away from player if too close            
+
+                #Move away from player if too close
                 elif self.dist_from_player < consts.tile.TILE_SIZE * 1.5 and self.health <= 6:
                     if self.rect.centerx > gamestate.player.player_rect.centerx:
                         self.collide_update(self.speed, 0)
@@ -755,8 +757,8 @@ class Npc:
                     elif self.rect.centery < gamestate.player.player_rect.centery:
                         self.collide_update(0, -self.speed)
                         self.animate('walking')
-                    
-                        
+
+
                 else:
                     if not self.attack_move:
                         if self.dist_from_player >= consts.tile.TILE_SIZE * 2.5 and self.path == []:
@@ -777,30 +779,39 @@ class Npc:
                             except:
                                 pass
 
+    def get_direction_texture(self, direction = None):
+        if direction is None:
+            direction = self.side
+
+        if direction == SIDE_FRONT:
+            return self.front_texture
+        elif direction == SIDE_FRONT_LEFT:
+            return self.frontleft_texture
+        elif direction == SIDE_LEFT:
+            return self.left_texture
+        elif direction == SIDE_BACK_LEFT:
+            return self.backleft_texture
+        elif direction == SIDE_BACK:
+            return self.back_texture
+        elif direction == SIDE_BACK_RIGHT:
+            return self.backright_texture
+        elif direction == SIDE_RIGHT:
+            return self.right_texture
+        elif direction == SIDE_FRONT_RIGHT:
+            return self.frontright_texture
+
+        # TODO probably some sort of warning/exception for unknown side
+        return self.front_texture
+
     def animate(self, animation):
         '''== Animate NPC ==\nanimation -> dying, walking, attacking, hurting'''
         if self.running_animation != animation:
             self.current_frame = 0
             self.running_animation = animation
-            
+
         #walk animation
         if animation == 'walking':
-            if self.side == 'front':
-                self.sprite.texture = self.front_texture[self.current_frame]
-            elif self.side == 'frontleft':
-                self.sprite.texture = self.frontleft_texture[self.current_frame]
-            elif self.side == 'left':
-                self.sprite.texture = self.left_texture[self.current_frame]
-            elif self.side == 'backleft':
-                self.sprite.texture = self.backleft_texture[self.current_frame]
-            elif self.side == 'back':
-                self.sprite.texture = self.back_texture[self.current_frame]
-            elif self.side == 'backright':
-                self.sprite.texture = self.backright_texture[self.current_frame]
-            elif self.side == 'right':
-                self.sprite.texture = self.right_texture[self.current_frame]
-            elif self.side == 'frontright':
-                self.sprite.texture = self.frontright_texture[self.current_frame]
+            self.sprite.texture = self.get_direction_texture()[self.current_frame]
 
             if self.timer >= self.frame_interval:
                 self.current_frame += 1

@@ -10,6 +10,7 @@ import os
 import consts.geom
 import consts.raycast
 import consts.tile
+from consts import npc_state
 import gamestate.inventory
 import gamestate.npcs
 import gamestate.player
@@ -233,17 +234,18 @@ class Gun:
                     ):
                         #Critical hit
 
-                        if (npc.state == 'idle' or npc.state == 'patrouling') and not npc.player_in_view:
+                        if (npc.state == npc_state.IDLE or npc.state == npc_state.PATROLLING) and not npc.player_in_view:
                             damage_to_be_done = damage_to_be_done * 2
                         else:
                             pass
                     else:
-                        if (npc.state == 'idle' or npc.state == 'patrouling') and not npc.player_in_view:
+                        if (npc.state == npc_state.IDLE or npc.state == npc_state.PATROLLING) and not npc.player_in_view:
                             pass
                         else:
                             damage_to_be_done = damage_to_be_done / 2
 
-                    if (npc.theta >= 330 and npc.theta <= 360) or (npc.theta >= 0 and npc.theta <= 30):
+                    if npc.side == 'back':
+                        npc.add_message("instakill")
                         damage_to_be_done = npc.health
 
                     SETTINGS.statistics['last ddealt'] += damage_to_be_done

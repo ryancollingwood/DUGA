@@ -8,7 +8,7 @@ import consts.tile
 import gamestate.player
 import gamestate.rendering
 import gamestate.sprites
-from consts.geom import DEGREES_360, DEGREES_270, DEGREES_180, DEGREES_90
+from consts.geom import DEGREES_360, DEGREES_270, DEGREES_90, DEGREES_0, DEGREES_EPSILON
  # I noticed, that the sprites are not projected correctly. However, I do not have the guts to fix it. Feel free to take a look.
 
 SPRITE_MAX_HEIGHT = 2500
@@ -35,7 +35,6 @@ class Sprite:
         self.distance = None
 
         self.theta = None
-        
 
         #If this sprite belongs to an NPC, make the NPC a parent of this sprite
         #This will help calculating the position of the NPC
@@ -54,14 +53,14 @@ class Sprite:
         ypos = gamestate.player.player_rect[1] - self.rect.centery
 
         dist = math.sqrt(xpos*xpos + ypos*ypos)
-        if dist == 0:
-            dist += 0.0001
+        if dist == DEGREES_0:
+            dist += DEGREES_EPSILON
         self.distance = dist
 
         thetaTemp = math.atan2(ypos, xpos)
         thetaTemp = math.degrees(thetaTemp)
         
-        if thetaTemp < 0:
+        if thetaTemp < DEGREES_0:
             thetaTemp += DEGREES_360
             
         self.theta = thetaTemp
@@ -99,7 +98,7 @@ class Sprite:
         # I think my changes to HUD screwed this up
         #self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
         # TODO Fix this
-        self.new_rect.center = (xTmp, (SETTINGS.canvas_target_height/2) )
+        self.new_rect.center = (xTmp, (SETTINGS.canvas_target_height/2))
         
         if self.parent:
             self.parent.hit_rect = self.new_rect
@@ -110,16 +109,3 @@ class Sprite:
     def update_pos(self, pos):
         self.rect.centerx = pos[0]
         self.rect.centery = pos[1]
-            
-
-
-
-
-
-
-
-
-
-        
-
-        
