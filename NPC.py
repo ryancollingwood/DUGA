@@ -66,6 +66,7 @@ class Npc:
         self.type = 'npc'
         self.player_touched = False
         self.last_seen_player_timer = 0
+        self.last_seen_player_position = None
         # debug maybe later messaging system?
         self.messages = []
 
@@ -256,11 +257,19 @@ class Npc:
                     self.react_to_player(state_if_spotted)
                     return True
                 else:
-                    self.add_message("player_in_view but didn't detect", self.mind, self.state)
+                    # TODO configureable search time
+                    if (self.timer - self.last_seen_player_timer < 5):
+                        self.add_message("player_in_view but didn't detect but saw them recently", self.mind, self.state)
+                        if self.path == []:
+                            if self.last_seen_player_position is not None:
+                                self.add_message("looking for player in last position")
+                                self.set_path(PATHFINDING.random_point(self.last_seen_player_position))
+                    else:
+                        self.add_message("player_in_view but didn't detect", self.mind, self.state)
         return False
 
     def react_to_player(self, new_state):
-
+        self.last_seen_player_position = gamestate.player.player_map_pos
         # if we have not changed state
         # then our current path is possibly
         # not what we want to be
@@ -270,9 +279,9 @@ class Npc:
 
         if (self.last_seen_player_timer == 0) or (SETTINGS.dt - self.last_seen_player_timer > 10):
             SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
-            self.call_allies(3, "hostile", npc_state.ATTACKING, gamestate.player.player_map_pos)
+            self.call_allies(3, "hostile", npc_state.ATTACKING, self.last_seen_player_position)
 
-        self.last_seen_player_timer = SETTINGS.dt
+        self.last_seen_player_timer = self.timer
 
     @staticmethod
     def call_allies(max_allies, mind_filter, new_state, target_pos):
@@ -283,6 +292,7 @@ class Npc:
                     # move to a method hunt_for_player
                     npc.state = new_state
                     npc.set_path(target_pos)
+                    npc.add_message("woken up as an ally")
                     woken_allies += 1
                     if woken_allies >= max_allies:
                         break
@@ -331,87 +341,14 @@ class Npc:
             elif theta > geom.DEGREES_360:
                 theta -= geom.DEGREES_360
 
-            self.theta = theta
-
             self.sprite.update_pos([self.rect.x, self.rect.y])
 
-            #What side is the NPC facing? (or not self.side is to make sure it finds the right angle from initialization)
-            if theta <= 22.5 or theta >= 337.5:
-                self.player_in_view = True
-                if (self.side != SIDE_FRONT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.front_texture[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[0]
-                self.side = SIDE_FRONT
-
-            elif theta <= 67.5 and theta >= 22.5:
-                self.player_in_view = True
-                if (self.side != SIDE_FRONT_LEFT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.frontleft_texture[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[7]
-                self.side = SIDE_FRONT_LEFT
-
-            elif theta <= 112.5 and theta >= 67.5:
-                self.player_in_view = False
-                if (self.side != SIDE_LEFT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.left_texture[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[6]
-                self.side = SIDE_LEFT
-
-            elif theta <= 157.5 and theta >= 112.5:
-                self.player_in_view = False
-                if (self.side != SIDE_BACK_LEFT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.backleft_texture[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[5]
-                self.side = SIDE_BACK_LEFT
-
-            elif theta <= 202.5 and theta >= 157.5:
-                self.player_in_view = False
-                if (self.side != SIDE_BACK and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.back_texture[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[4]
-                self.side = SIDE_BACK
-
-            elif theta <= 247.5 and theta >= 202.5:
-                self.player_in_view = False
-                if (self.side != SIDE_BACK_RIGHT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.backright_texture[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[3]
-                self.side = SIDE_BACK_RIGHT
-
-            elif theta <= 292.5 and theta >= 247.5:
-                self.player_in_view = False
-                if (self.side != SIDE_RIGHT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.right_texture[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[2]
-                self.side = SIDE_RIGHT
-
-            elif theta <= 337.5 and theta >= 292.5:
-                self.player_in_view = True
-                if (self.side != SIDE_FRONT_RIGHT and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.frontright_texture[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[1]
-                self.side = SIDE_FRONT_RIGHT
+            self.set_theta_and_side(theta)
 
         if gamestate.sprites.all_sprites[self.num] != self.sprite:
             gamestate.sprites.all_sprites[self.num] = self.sprite
 
-        #Find out what x and y coordinates would change
+        # Find out what x and y coordinates would change
         if self.face == geom.DEGREES_90:
             self.front_tile = (0, -1)
         elif self.face == geom.DEGREES_180:
@@ -420,6 +357,42 @@ class Npc:
             self.front_tile = (0, 1)
         elif self.face == geom.DEGREES_0 or self.face == geom.DEGREES_360:
             self.front_tile = (1, 0)
+
+    def set_theta_and_side(self, theta):
+        self.theta = theta
+        # What side is the NPC facing?
+        # (or not self.side is to make sure it finds the right angle from initialization)
+        for side in [
+            SIDE_FRONT, SIDE_FRONT_LEFT, SIDE_LEFT, SIDE_BACK_LEFT,
+            SIDE_BACK, SIDE_BACK_RIGHT, SIDE_RIGHT, SIDE_FRONT_RIGHT,
+        ]:
+            # need OR for SIDE_FRONT, as the degree_min is numerically
+            # larger than the degree_max value
+            if (side.degree_min < side.degree_max and side.degree_min <= theta <= side.degree_max) or \
+                    (side.degree_min > side.degree_max and (theta >= side.degree_min or theta <= side.degree_max)):
+                self.player_in_view = True
+
+                # all of these conditions must be met
+                # if we are going to change the sprite
+                change_sprite_rules = [
+                    self.side != side.name,
+                    not self.dead,
+                    not self.hurting,
+                    not self.attacking,
+                    self.in_canvas
+                ]
+
+                if all(change_sprite_rules) or not self.side:
+                    if self.moving:
+                        self.sprite.texture = self.get_direction_texture(side.name)[self.current_frame]
+                    else:
+                        self.sprite.texture = self.stand_texture[side.stand_index]
+
+                    self.side = side.name
+                    break
+
+        return self.side
+
 
     @staticmethod
     def round_up(a):
@@ -801,6 +774,7 @@ class Npc:
             return self.frontright_texture
 
         # TODO probably some sort of warning/exception for unknown side
+        self.add_message("unknown direction in get_direction_texture", direction)
         return self.front_texture
 
     def animate(self, animation):

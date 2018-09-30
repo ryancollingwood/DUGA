@@ -30,19 +30,24 @@ def pathfind(start, end):
             print("=== WARNING: ===")
             print("Error! Start point in pathfinding is a solid block!")
             print(start_point.map_pos, start_point.ID)
+            print(start_point)
             print()
             error = True
         if gamedata.tiles.tile_solid[end_point.ID] and (end_point.type != consts.tile.HORIZONTAL_DOOR and end_point.type != consts.tile.VERTICAL_DOOR):
             print("=== WARNING: ===")
             print("Error! End point in pathfinding is a solid block!")
             print(end_point.map_pos, end_point.ID)
+            print(end_point)
             print()
             error = True
 
         if error:
             end_point = [x for x in SETTINGS.all_tiles if x.map_pos == find_near_position(end)]
+            if not end_point:
+                end_point = [x for x in SETTINGS.all_tiles if x.map_pos == find_near_position(start)]
             if end_point:
                 end_point = end_point[0]
+                print("Fallback to", end_point)
                 error = False
                     
                 

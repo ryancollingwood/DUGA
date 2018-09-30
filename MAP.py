@@ -126,6 +126,9 @@ class Tile:
 
                 SETTINGS.all_doors.append(self)
 
+    def __str__(self):
+        return f"{self.type}, solid: {self.solid}, state: {self.state}"
+
 
     def draw(self, canvas):
         canvas.blit(self.icon, (self.rect.x/4, self.rect.y/4))

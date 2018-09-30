@@ -244,7 +244,7 @@ class Gun:
                         else:
                             damage_to_be_done = damage_to_be_done / 2
 
-                    if npc.side == 'back':
+                    if npc.side == 'back' and npc.state != npc_state.ATTACKING:
                         npc.add_message("instakill")
                         damage_to_be_done = npc.health
 
