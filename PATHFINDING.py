@@ -41,11 +41,10 @@ def pathfind(start, end):
             error = True
 
         if error:
-            end_point = [x for x in SETTINGS.all_tiles if x.map_pos == find_near_position(end)]
+            end_point = find_near_position(end)
             if not end_point:
-                end_point = [x for x in SETTINGS.all_tiles if x.map_pos == find_near_position(start)]
+                end_point = find_near_position(start)
             if end_point:
-                end_point = end_point[0]
                 print("Fallback to", end_point)
                 error = False
                     
@@ -68,6 +67,7 @@ def pathfind(start, end):
             del openlist[current_point]
 
             #Find adjacent nodes
+            #TODO refactor to user find_near_position or find_adjacenttiles??
             adjacent = []
             
             adj_up = [x for x in SETTINGS.all_tiles if x.map_pos[0] == current_point.map_pos[0] and x.map_pos[1] == current_point.map_pos[1]-1]
@@ -139,14 +139,16 @@ def get_adjacent_tiles(position, tile_radius = 1):
 
 def find_near_position(position):
     adjacent_tiles = get_adjacent_tiles(position)
-    
-    #convert coordinates to a tile
-    chosen_tiles = [x for x in SETTINGS.all_tiles if x.map_pos in adjacent_tiles]
 
-    if chosen_tiles:
-        return random.choice(chosen_tiles)
-    else:
-        return None
+    return random.choice(adjacent_tiles)
+
+    #convert coordinates to a tile
+    #chosen_tiles = [x for x in SETTINGS.all_tiles if x.map_pos in adjacent_tiles]
+
+    #if chosen_tiles:
+    #    return random.choice(chosen_tiles)
+    #else:
+    #    return None
     
         
 def find_distance(point, end):

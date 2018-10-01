@@ -364,12 +364,17 @@ class Npc:
         if self.state != new_state:
             self.set_path([])
             self.state = new_state
-        
-        if (self.last_seen_player_timer is not None) or (SETTINGS.dt - self.last_seen_player_timer > 10):
+
+        call_for_help = self.last_seen_player_timer is None
+        if not call_for_help:
+            call_for_help = (SETTINGS.dt - self.last_seen_player_timer) > 10
+
+        self.seen_player()
+
+        if call_for_help:
             SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
             self.call_allies(3, "hostile", npc_state.ATTACKING, self.last_seen_player_position)
-        
-        self.seen_player()
+
     
     @staticmethod
     def call_allies(max_allies, mind_filter, new_state, target_pos):
@@ -758,7 +763,8 @@ class Npc:
                         else:
                             if random.randint(0, self.movechance) == 10:
                                 
-                                move_pos = PATHFINDING.get_adjacent_tiles(self.map_pos)
+                                move_pos = PATHFINDING.find_near_position(self.map_pos)
+                                print("move_pos", move_pos)
                                 self.path_progress = 0
                                 self.path = PATHFINDING.pathfind(self.map_pos, move_pos.map_pos)
                                 self.attacking = False

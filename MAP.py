@@ -127,7 +127,7 @@ class Tile:
                 SETTINGS.all_doors.append(self)
 
     def __str__(self):
-        return f"{self.type}, solid: {self.solid}, state: {self.state}"
+        return f"{self.type}, solid: {self.solid}, state: {self.state}, map_pos: {self.map_pos}"
 
 
     def draw(self, canvas):
