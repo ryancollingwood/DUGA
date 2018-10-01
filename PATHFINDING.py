@@ -11,7 +11,6 @@ import random
 import gamedata.tiles
 import consts.tile
 
-
 def pathfind(start, end):
     #print(start, end)
     '''== A* Pathfinding ==\npathfind(start, end) -> Shortest path from start to end\nFormat is list with tile objects'''
@@ -168,4 +167,66 @@ def random_point(start):
             closedlist.append(cpos)
 
     return cpos
+
+
+def round_up(a):
+    return int(a + 0.5)
+
+
+def has_line_of_sight(map_pos_a, map_pos_b):
+    
+    if map_pos_a == map_pos_b:
+        return True
+    
+    # DDA Algorithm
+    x1, y1 = map_pos_a[0], map_pos_a[1]
+    x2, y2 = map_pos_b[0], map_pos_b[1]
+
+    # If the coords are negative, start from map_pos_b instead of map_pos_a
+    if x1 > x2 or (x1 == x2 and y1 > y2):
+        temp1, temp2 = x1, y1
+        x1, y1 = x2, y2
+        x2, y2 = temp1, temp2
+    
+    x, y = x1, y1
+    dx = abs(x2 - x1)
+    dy = abs(y2 - y1)
+    length = dx if dx > dy else dy
+    # Make sure, you won't divide by 0
+    if length == 0:
+        length = 0.001
+    
+    xinc = (x2 - x1) / float(length)
+    yinc = (y2 - y1) / float(length)
+
+    # Extend DDA algorithm
+    for i in range(int(length)):
+        if i > consts.raycast.render:
+            break
+        x += xinc
+        y += yinc
+        mapx = round_up(x)
+        mapy = round_up(y)
+
+        # If line of sight hits a wall
+        next_wall = [tile for tile in SETTINGS.dda_list if tile.map_pos == [mapx, mapy]]
+        
+        if not next_wall:
+            break
+        else:
+            next_wall = next_wall[0]
+        
+        if gamedata.tiles.tile_visible[next_wall.ID]:
+            # TODO check for closed doors?
+            if next_wall.type != consts.tile.HORIZONTAL_DOOR and next_wall.type != consts.tile.VERTICAL_DOOR:
+                break
+            elif next_wall.type == consts.tile.HORIZONTAL_DOOR or next_wall.type == consts.tile.VERTICAL_DOOR:
+                if next_wall.solid:
+                    break
+        # if player is spotted
+        if mapx == x2 and mapy == y2:
+            return True
+    
+    return False
+
 

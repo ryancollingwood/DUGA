@@ -60,6 +60,7 @@ all_tiles = []
 trigger_tiles = []
 all_solid_tiles = []
 walkable_area = []
+dda_list = []
 all_doors = []
 end_angle = 0
 

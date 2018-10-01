@@ -131,6 +131,7 @@ class Load:
         gamestate.npcs.npc_list = []
         gamestate.items.all_items = []
         SETTINGS.walkable_area = []
+        SETTINGS.dda_list = []
         SETTINGS.all_tiles = []
         SETTINGS.all_doors = []
         SETTINGS.all_solid_tiles = []
@@ -159,6 +160,8 @@ class Load:
         gamestate.player.player_states['title'] = True
                 
         SETTINGS.walkable_area = list(PATHFINDING.pathfind(gamestate.player.player_map_pos, SETTINGS.all_tiles[-1].map_pos))
+        SETTINGS.dda_list = SETTINGS.walkable_area + [x for x in SETTINGS.all_solid_tiles if x.type == 'sprite']
+        
         gameMap.move_inaccessible_entities()
         ENTITIES.spawn_npcs()
         ENTITIES.spawn_items()

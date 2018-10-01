@@ -36,7 +36,6 @@ class Npc:
         self.pos = [self.map_pos[0] * consts.tile.TILE_SIZE, self.map_pos[1] * consts.tile.TILE_SIZE]
         self.face = stats['face']
         self.frame_interval = stats['spf']
-        self.dda_list = SETTINGS.walkable_area + [x for x in SETTINGS.all_solid_tiles if x.type == 'sprite']
 
         #Visual and rect settings
         self.rect = pygame.Rect((self.pos[0], self.pos[1]), (consts.tile.TILE_SIZE / 3, consts.tile.TILE_SIZE / 3))
@@ -65,12 +64,10 @@ class Npc:
         self.mein_leben = False
         self.type = 'npc'
         self.player_touched = False
-        self.last_seen_player_timer = 0
+        self.last_seen_player_timer = None
         self.last_seen_player_position = None
         # debug maybe later messaging system?
         self.messages = []
-
-
 
         #NPC Characteristics
         self.health = stats['health']
@@ -81,7 +78,7 @@ class Npc:
         self.OG_state = self.state
         self.atcktype = stats['atcktype']
         self.name = stats['name']
-        self.perception_range = consts.tile.TILE_SIZE
+        self.perception_range = consts.tile.TILE_SIZE * 2
 
         if stats['dmg'] != 3.1415:
             self.dmg = stats['dmg']
@@ -258,18 +255,39 @@ class Npc:
                     return True
                 else:
                     # TODO configureable search time
-                    if (self.timer - self.last_seen_player_timer < 5):
+                    if self.search_for_player():
                         self.add_message("player_in_view but didn't detect but saw them recently", self.mind, self.state)
-                        if self.path == []:
-                            if self.last_seen_player_position is not None:
-                                self.add_message("looking for player in last position")
-                                self.set_path(PATHFINDING.random_point(self.last_seen_player_position))
                     else:
                         self.add_message("player_in_view but didn't detect", self.mind, self.state)
         return False
-
-    def react_to_player(self, new_state):
+    
+    def search_for_player(self):
+        
+        conditions = [
+            self.state != npc_state.FLEEING,
+            not self.attacking,
+            not self.attack_move,
+            self.last_seen_player_timer is not None,
+            self.last_seen_player_position is not None,
+            self.path == [],
+        ]
+        
+        if all(conditions):
+            if self.timer - self.last_seen_player_timer < 5:
+                self.add_message("looking for player in last position", self.last_seen_player_position)
+                self.state = npc_state.PATROLLING
+                self.set_path(PATHFINDING.random_point(self.last_seen_player_position))
+                return True
+        
+        return False
+    
+    def seen_player(self):
         self.last_seen_player_position = gamestate.player.player_map_pos
+        self.last_seen_player_timer = self.timer
+        self.add_message("seen player at ", self.last_seen_player_position)
+    
+    def react_to_player(self, new_state):
+        
         # if we have not changed state
         # then our current path is possibly
         # not what we want to be
@@ -277,11 +295,12 @@ class Npc:
             self.set_path([])
             self.state = new_state
 
-        if (self.last_seen_player_timer == 0) or (SETTINGS.dt - self.last_seen_player_timer > 10):
+        if (self.last_seen_player_timer is not None) or (SETTINGS.dt - self.last_seen_player_timer > 10):
             SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
             self.call_allies(3, "hostile", npc_state.ATTACKING, self.last_seen_player_position)
 
-        self.last_seen_player_timer = self.timer
+        self.seen_player()
+
 
     @staticmethod
     def call_allies(max_allies, mind_filter, new_state, target_pos):
@@ -296,10 +315,9 @@ class Npc:
                     woken_allies += 1
                     if woken_allies >= max_allies:
                         break
-
-    def touched_by_player(self):
-        # TODO perhaps some perception modifier
-        # depending on the state/mind?
+                        
+    def get_perception_distance(self):
+        # TODO perhaps some perception modifier depending on the state/mind? and recency of seen player
         perception_distance = self.perception_range
 
         # using sides as render has calculated this for us
@@ -308,7 +326,14 @@ class Npc:
         elif self.side == SIDE_BACK:
             # if npc back is shown to player can sneak right up
             perception_distance = (perception_distance / 3)
+        
+        return perception_distance
 
+
+    # TODO roll this into detect_player
+    def touched_by_player(self):
+    
+        perception_distance = self.get_perception_distance()
         something_touched_me = self.dist_from_player <= perception_distance and not SETTINGS.ignore_player
         if something_touched_me:
             self.add_message("something_touched_me!", self.state, self.mind)
@@ -399,75 +424,33 @@ class Npc:
         return int(a + 0.5)
 
     def detect_player(self):
-
-        # if the player touched us we've detected
-        if self.player_touched:
-            self.player_touched = False
-            return True
-
-        if self.attacking:
-            return True
-
-        '''== Is player visible from NPC position? ==\ndetect_player(self) -> boolean'''
-        own_tile = self.map_pos
-        #front_tile = [own_tile[0] + self.front_tile[0], own_tile[1] + self.front_tile[1]]
-        player_tile = gamestate.player.player_map_pos
-
-        #DDA Algorithm
-        x1, y1 = own_tile[0], own_tile[1]
-        x2, y2 = player_tile[0], player_tile[1]
-
-        #If the coords are negative, start from player instead of NPC
-        if x1 > x2 or (x1 == x2 and y1 > y2):
-            temp1, temp2 = x1, y1
-            x1, y1 = x2, y2
-            x2, y2 = temp1, temp2
-
-        x, y = x1, y1
-        dx = abs(x2-x1)
-        dy = abs(y2-y1)
-        length = dx if dx > dy else dy
-        #Make sure, you won't divide by 0
-        if length == 0:
-            length = 0.001
-
-        xinc = (x2-x1)/float(length)
-        yinc = (y2-y1)/float(length)
-        mapx = self.round_up(x)
-        mapy = self.round_up(y)
-
-        #Extend DDA algorithm
-        for i in range(int(length)):
-            if i > consts.raycast.render:
-                break
-            x += xinc
-            y += yinc
-            mapx = self.round_up(x)
-            mapy = self.round_up(y)
-
-            #If line of sight hits a wall
-            next_wall = [tile for tile in self.dda_list if tile.map_pos == [mapx, mapy]]
-
-            if not next_wall:
-                break
-            else:
-                next_wall = next_wall[0]
-
-            if gamedata.tiles.tile_visible[next_wall.ID]:
-                if next_wall.type != consts.tile.HORIZONTAL_DOOR and next_wall.type != consts.tile.VERTICAL_DOOR:
-                    break
-                elif next_wall.type == consts.tile.HORIZONTAL_DOOR or next_wall.type == consts.tile.VERTICAL_DOOR:
-                    if next_wall.solid:
-                        break
-            #if player is spotted
-            if mapx == x2 and mapy == y2:
-                return True
-
-        # TODO this should also hook into some notion of NPC perception
-        if self.dist_from_player <= consts.tile.TILE_SIZE * 2:
-            return True
-
-        return False
+        result = False
+        
+        try:
+            # if the player touched us we've detected
+            if self.player_touched:
+                result = True
+                return result
+    
+            if self.attacking:
+                result = True
+                return result
+    
+            '''== Is player visible from NPC position? ==\ndetect_player(self) -> boolean'''
+            result = PATHFINDING.has_line_of_sight(self.map_pos, gamestate.player.player_map_pos)
+            if result:
+                if self.dist_from_player <= self.get_perception_distance():
+                    return result
+                else:
+                    self.add_message("my eyesight let me down")
+                    result = False
+                    return result
+            
+            # it should be False here
+            return result
+        finally:
+            if result:
+                self.seen_player()
 
     def collide_update(self, x, y):
         #make sure the NPC doesn't walk inside stuff
@@ -837,14 +820,10 @@ class Npc:
                     self.current_frame = 0
                     self.attacking = False
                     if random.randint(0,8) != 8: #A chance to miss
-                        if gamestate.player.player_armor > 0:
-                            gamestate.player.player_health -= int(self.dmg * 0.65)
-                            if gamestate.player.player_armor >= self.dmg * 2:
-                                gamestate.player.player_armor -= self.dmg * 2
-                            else:
-                                gamestate.player.player_armor = 0
+                        if gamestate.player.damage_player(self.dmg, self.atcktype, self.map_pos):
+                            self.add_message("Did damage to player")
                         else:
-                            gamestate.player.player_health -= self.dmg
+                            self.add_message("tried to attack but I don't have LOS?")
 
     def change_facing_direction(self):
         self.face = self.face + self.theta
