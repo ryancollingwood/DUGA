@@ -124,9 +124,22 @@ def check_path_points_inside_map(start, end):
     return error
 
 
+def get_adjacent_tiles(position, tile_radius = 1):
+    adjacent_tiles = [
+        x for x in SETTINGS.walkable_area if
+        (
+                position[0] + tile_radius >= x.map_pos[0] >= position[0] - tile_radius
+        ) and (
+                position[1] + tile_radius >= x.map_pos[1] >= position[1] - tile_radius
+        )
+    ]
+    
+    return adjacent_tiles
+
+
 def find_near_position(position):
-    adjacent_tiles = [x for x in SETTINGS.walkable_area if (x.map_pos[0] == position[0] + 1 or x.map_pos[0] == position[0] -1 or x.map_pos[0] == position[0])
-                      and (x.map_pos[1] == position[1] + 1 or x.map_pos[1] == position[1] - 1 or x.map_pos[1] == position[1])]
+    adjacent_tiles = get_adjacent_tiles(position)
+    
     #convert coordinates to a tile
     chosen_tiles = [x for x in SETTINGS.all_tiles if x.map_pos in adjacent_tiles]
 
