@@ -1,6 +1,5 @@
 import pygame
 import SETTINGS
-import ITEMS
 import TEXT
 import random
 

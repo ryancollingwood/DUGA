@@ -224,7 +224,6 @@ class Gun:
                 if cap >= random.randint(0,int(npc.dist_from_player*(1/self.range))):
                     SOUND.play_sound(self.hit_marker, 0)
 
-                    print(npc.theta)
                     damage_to_be_done = self.dmg
 
                     #Damage less if NPC is far away from center.

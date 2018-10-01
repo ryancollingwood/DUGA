@@ -1,5 +1,8 @@
 import SETTINGS
 import random
+from typing import List
+import world.tile
+#from world import Tile
 
 #There is some whack error handling. This is because this might be used manually by a human and therefore it needs some human-friendly feedback.
 #This is the A* pathfinding algorithm for NPC movement and more
@@ -9,9 +12,13 @@ import random
 #open/closedlist syntax = [G, H, F, parent]
 #Parent is from where the node is checked.
 import gamedata.tiles
-import consts.tile
+from consts.tile import HORIZONTAL_DOOR, VERTICAL_DOOR
+import consts.raycast
 
-def pathfind(start, end):
+# perhaps an optional param for tile search radius
+# similar to get_adjacent_tiles so that if we
+# get a solid destination we wont get stuck trying the same nodes
+def pathfind(start: List[int], end: List[int]):
     #print(start, end)
     '''== A* Pathfinding ==\npathfind(start, end) -> Shortest path from start to end\nFormat is list with tile objects'''
     openlist = {}
@@ -21,18 +28,18 @@ def pathfind(start, end):
     error = check_path_points_inside_map(start, end)
 
     if not error:
-        start_point = [x for x in SETTINGS.all_tiles if x.map_pos == start][0]
-        end_point = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
+        start_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == start][0]
+        end_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
         
         #Report errors
-        if gamedata.tiles.tile_solid[start_point.ID] and (start_point.type != consts.tile.HORIZONTAL_DOOR and start_point.type != consts.tile.VERTICAL_DOOR):
+        if gamedata.tiles.tile_solid[start_point.ID] and (start_point.type != HORIZONTAL_DOOR and start_point.type != VERTICAL_DOOR):
             print("=== WARNING: ===")
             print("Error! Start point in pathfinding is a solid block!")
             print(start_point.map_pos, start_point.ID)
             print(start_point)
             print()
             error = True
-        if gamedata.tiles.tile_solid[end_point.ID] and (end_point.type != consts.tile.HORIZONTAL_DOOR and end_point.type != consts.tile.VERTICAL_DOOR):
+        if gamedata.tiles.tile_solid[end_point.ID] and (end_point.type != HORIZONTAL_DOOR and end_point.type != VERTICAL_DOOR):
             print("=== WARNING: ===")
             print("Error! End point in pathfinding is a solid block!")
             print(end_point.map_pos, end_point.ID)
@@ -41,9 +48,9 @@ def pathfind(start, end):
             error = True
 
         if error:
-            end_point = find_near_position(end)
+            end_point = find_tile_near_position(end)
             if not end_point:
-                end_point = find_near_position(start)
+                end_point = find_tile_near_position(start)
             if end_point:
                 print("Fallback to", end_point)
                 error = False
@@ -87,7 +94,7 @@ def pathfind(start, end):
             # Add adjacent nodes to `openlist` if they are not in `closedlist` and are not solid
             for adj in adjacent:
                 
-                if (adj.type == consts.tile.HORIZONTAL_DOOR or adj.type == consts.tile.VERTICAL_DOOR or not gamedata.tiles.tile_solid[adj.ID]) and adj not in closedlist:
+                if (adj.type == HORIZONTAL_DOOR or adj.type == VERTICAL_DOOR or not gamedata.tiles.tile_solid[adj.ID]) and adj not in closedlist:
                     if (adj in openlist and openlist[adj][0] > closedlist[current_point][0]+1) or adj not in openlist:
                         openlist[adj] = [closedlist[current_point][0]+1, find_distance(adj, end_point), 0, current_point]
                         openlist[adj][2] = f_value(adj, openlist)
@@ -108,7 +115,7 @@ def pathfind(start, end):
             return path
 
 
-def check_path_points_inside_map(start, end):
+def check_path_points_inside_map(start: List[int], end: List[int]):
     error = False
     # Reports if a node is outside the map
     if start[0] > max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[0] or start[1] > \
@@ -123,7 +130,7 @@ def check_path_points_inside_map(start, end):
         error = True
     return error
 
-
+# position List[int]
 def get_adjacent_tiles(position, tile_radius = 1):
     adjacent_tiles = [
         x for x in SETTINGS.walkable_area if
@@ -137,20 +144,28 @@ def get_adjacent_tiles(position, tile_radius = 1):
     return adjacent_tiles
 
 
-def find_near_position(position):
-    adjacent_tiles = get_adjacent_tiles(position)
+def get_adjacent_walkable_tiles(position, tile_radius = 1):
+    adjacent_tiles = get_adjacent_tiles(position, tile_radius)
+    walkable_tiles = [x for x in adjacent_tiles if x not in SETTINGS.all_solid_tiles]
+    # perhaps also need to consider?
+    # adj.type == HORIZONTAL_DOOR or adj.type == VERTICAL_DOOR or not gamedata.tiles.tile_solid[adj.ID]
+    if len(walkable_tiles) == 0:
+        print("No walkable adjacent tiles!")
+        return adjacent_tiles
 
+    return walkable_tiles
+
+# position List[int] - returns  tile
+def find_tile_near_position(position: List[int], tile_radius = 1):
+    adjacent_tiles = get_adjacent_tiles(position, tile_radius = tile_radius)
     return random.choice(adjacent_tiles)
 
-    #convert coordinates to a tile
-    #chosen_tiles = [x for x in SETTINGS.all_tiles if x.map_pos in adjacent_tiles]
+# position List[int] - returns  tile
+def find_walkable_tile_near_position(position: List[int], tile_radius = 1):
+    walkable_adjacent_tiles = get_adjacent_walkable_tiles(position, tile_radius = tile_radius)
+    return random.choice(walkable_adjacent_tiles)
 
-    #if chosen_tiles:
-    #    return random.choice(chosen_tiles)
-    #else:
-    #    return None
-    
-        
+
 def find_distance(point, end):
     x = point.map_pos[0] + point.map_pos[1]
     y = end.map_pos[0] + end.map_pos[1]
@@ -233,9 +248,9 @@ def has_line_of_sight(map_pos_a, map_pos_b):
         
         if gamedata.tiles.tile_visible[next_wall.ID]:
             # TODO check for closed doors?
-            if next_wall.type != consts.tile.HORIZONTAL_DOOR and next_wall.type != consts.tile.VERTICAL_DOOR:
+            if next_wall.type != HORIZONTAL_DOOR and next_wall.type != VERTICAL_DOOR:
                 break
-            elif next_wall.type == consts.tile.HORIZONTAL_DOOR or next_wall.type == consts.tile.VERTICAL_DOOR:
+            elif next_wall.type == HORIZONTAL_DOOR or next_wall.type == VERTICAL_DOOR:
                 if next_wall.solid:
                     break
         # if player is spotted

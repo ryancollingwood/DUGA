@@ -10,8 +10,6 @@ import sys
 #-- Engine imports--
 import SETTINGS
 import PLAYER
-import TEXTURES
-import MAP
 import LEVELS
 import PATHFINDING
 import TEXT
@@ -40,6 +38,7 @@ import gamestate.player
 import gamestate.rendering
 import gamestate.sprites
 import render.raycast
+import world.map
 from render.gamecanvas import GameCanvas
 
 SECONDS_IN_MINUTE = 60
@@ -476,7 +475,7 @@ if __name__ == '__main__':
     text.update_pos(SETTINGS.canvas_actual_width/2 - text.layout.get_width()/2, SETTINGS.canvas_target_height/2 - text.layout.get_height()/2)
 
     #Classes for later use
-    gameMap = MAP.Map(SETTINGS.levels_list[SETTINGS.current_level].array)
+    gameMap = world.map.Map(SETTINGS.levels_list[SETTINGS.current_level].array)
     gameCanvas = GameCanvas(SETTINGS.canvas_map_width, SETTINGS.canvas_map_height)
     gamePlayer = PLAYER.Player(gamestate.player.player_pos)
     gameRaycast = render.raycast.Raycast(gameCanvas.canvas, gameCanvas.window)

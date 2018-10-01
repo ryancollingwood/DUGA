@@ -2,14 +2,10 @@
 #It needs access to LEVELS.py, TEXTURES.py, ENTITIES.py, TEXT.py and SETTINGS.py
 
 import pygame
-import copy
 import os
 import sys
 import pickle
-import LEVELS
 import ENTITIES
-import SETTINGS
-import TEXTURES
 import TEXT
 import consts.colours
 import gamedata.items

@@ -1,6 +1,5 @@
 #Level classes for DUGA
 
-import SETTINGS
 
 class Level:
     

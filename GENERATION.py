@@ -4,7 +4,6 @@ import copy
 import os
 import SEGMENTS
 import SETTINGS
-import TEXTURES
 import LEVELS
 import consts.colours
 import gamedata.items

@@ -16,13 +16,12 @@ from consts.npc_side import SIDE_FRONT, SIDE_FRONT_LEFT, SIDE_FRONT_RIGHT
 from consts.npc_side import SIDE_BACK, SIDE_BACK_LEFT, SIDE_BACK_RIGHT
 from consts import geom
 import consts.tile
-import gamedata.npcs
-import gamedata.tiles
 import gamestate.inventory
 import gamestate.items
 import gamestate.npcs
 import gamestate.player
 import gamestate.sprites
+from typing import List
 
 
 class Npc:
@@ -32,7 +31,7 @@ class Npc:
         self.stats = stats  # Used for creating new NPCs
         self.sounds = sounds
         self.ID = stats['id']
-        self.map_pos = stats['pos']
+        self.map_pos = stats['pos'] #List[int]
         self.pos = [self.map_pos[0] * consts.tile.TILE_SIZE, self.map_pos[1] * consts.tile.TILE_SIZE]
         self.face = stats['face']
         self.frame_interval = stats['spf']
@@ -61,6 +60,7 @@ class Npc:
         self.movechance = 10
         self.knockback = 0
         self.postheta = 0
+        self.theta = 0
         self.mein_leben = False
         self.type = 'npc'
         self.player_touched = False
@@ -78,7 +78,7 @@ class Npc:
         self.OG_state = self.state
         self.atcktype = stats['atcktype']
         self.name = stats['name']
-        self.perception_range = consts.tile.TILE_SIZE * random.choice([1, 2, 3])
+        self.perception_range = int(consts.tile.TILE_SIZE * random.choice([2, 3, 4]))
         
         if stats['dmg'] != 3.1415:
             self.dmg = stats['dmg']
@@ -335,8 +335,6 @@ class Npc:
         
         conditions = [
             self.state != npc_state.FLEEING,
-            not self.attacking,
-            not self.attack_move,
             self.last_seen_player_timer is not None,
             self.last_seen_player_position is not None,
             self.path == [],
@@ -346,7 +344,8 @@ class Npc:
             if self.timer - self.last_seen_player_timer < 5:
                 self.add_message("looking for player in last position", self.last_seen_player_position)
                 self.state = npc_state.PATROLLING
-                self.set_path(PATHFINDING.random_point(self.last_seen_player_position))
+                destination_tile = PATHFINDING.find_walkable_tile_near_position(self.last_seen_player_position, self.perception_range)
+                self.set_path(destination_tile.map_pos)
                 return True
         
         return False
@@ -431,6 +430,7 @@ class Npc:
         self.dist_from_player = math.sqrt(xpos * xpos + ypos * ypos)
         
         if self.dist_from_player <= consts.raycast.render * consts.tile.TILE_SIZE:
+
             theta = math.atan2(-ypos, xpos) % (2 * math.pi)
             theta = math.degrees(theta)
             self.postheta = theta
@@ -439,9 +439,9 @@ class Npc:
                 theta += geom.DEGREES_360
             elif theta > geom.DEGREES_360:
                 theta -= geom.DEGREES_360
-            
+
             self.sprite.update_pos([self.rect.x, self.rect.y])
-            
+
             self.set_theta_and_side(theta)
         
         if gamestate.sprites.all_sprites[self.num] != self.sprite:
@@ -456,9 +456,11 @@ class Npc:
             self.front_tile = (0, 1)
         elif self.face == geom.DEGREES_0 or self.face == geom.DEGREES_360:
             self.front_tile = (1, 0)
-    
+
+
     def set_theta_and_side(self, theta):
         self.theta = theta
+
         # What side is the NPC facing?
         # (or not self.side is to make sure it finds the right angle from initialization)
         for side in [
@@ -499,6 +501,7 @@ class Npc:
             # if the player touched us we've detected
             if self.player_touched:
                 result = True
+                self.player_touched = False
                 return result
             
             if self.attacking:
@@ -555,14 +558,29 @@ class Npc:
                 door.sesam_luk_dig_op()
                 break
     
-    def set_path(self, destination):
-        if len(destination) > 0:
-            self.path = PATHFINDING.pathfind(self.map_pos, destination)
+    def set_path(self, destination_map_pos: List[int]):
+        if len(destination_map_pos) > 0:
+            self.path = PATHFINDING.pathfind(self.map_pos, destination_map_pos)
         else:
             self.path = []
         
         self.path_progress = 0
-    
+
+    def set_path_to_player(self):
+        destination_map_pos = self.last_seen_player_position
+        if destination_map_pos is None:
+            # magical gps!
+            destination_map_pos = gamestate.player.player_map_pos
+
+        self.set_path(destination_map_pos)
+
+        # now if our destination has changed it's because
+        # the player is porbably in a solid-ish block
+        if self.path[-1].map_pos != destination_map_pos:
+            # TODO some sort of tolerance based on our attackrange
+            self.last_seen_player_position = self.path[-1]
+
+
     def move(self):
         # Make the NPC move according to current state.
         moving_up = False
@@ -668,7 +686,7 @@ class Npc:
                 if player_tile:
                     player_tile = player_tile[0]
                 else:
-                    player_tile = PATHFINDING.find_near_position(self.last_seen_player_position)
+                    player_tile = PATHFINDING.find_tile_near_position(self.last_seen_player_position)
                 
                 if self.player_in_view:
                     if self.detect_player() and player_tile:
@@ -699,8 +717,12 @@ class Npc:
         
         # Make NPC react to gunshot if close. Or just if the player is too close.
         # TODO move this elsewhere
-        if (
-                self.dist_from_player <= self.get_perception_distance() * 4 and gamestate.player.mouse_btn_active and gamestate.inventory.current_gun) or self.dist_from_player <= self.rect.width:
+        player_shot_near_conditions = [
+            self.dist_from_player <= self.get_perception_distance() * 4,
+            gamestate.player.mouse_btn_active,
+            gamestate.inventory.current_gun
+        ]
+        if all(player_shot_near_conditions) or self.dist_from_player <= self.rect.width:
             self.change_facing_direction()
     
     def attack(self):
@@ -710,7 +732,7 @@ class Npc:
             if self.atcktype == 'melee':
                 # Move close to player and keep attacking
                 if self.dist_from_player <= consts.tile.TILE_SIZE * 0.7:
-                    self.path = []
+                    self.set_path([])
                     self.moving = False
                     if not self.attacking:
                         if self.timer >= self.frame_interval * self.atckrate:
@@ -729,20 +751,19 @@ class Npc:
                 
                 else:
                     if self.dist_from_player > consts.tile.TILE_SIZE * 0.7 and self.path == []:
-                        self.path_progress = 0
-                        self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
-                    
+                        self.set_path_to_player()
+
                     elif self.path != []:
                         try:
-                            if self.path[-1].map_pos != gamestate.player.player_map_pos:
-                                if self.dist_from_player <= (
-                                        consts.raycast.render / 2) * consts.tile.TILE_SIZE and random.randint(0,
-                                                                                                              5) == 5:
-                                    self.path_progress = 0
-                                    self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
+                            if self.path[-1].map_pos != self.last_seen_player_position:
+                                near_conditions = [
+                                    self.dist_from_player <= (consts.raycast.render / 2) * consts.tile.TILE_SIZE,
+                                    random.randint(0, 5) == 5
+                                ]
+                                if all(near_conditions):
+                                    self.set_path_to_player()
                                 elif random.randint(0, 10) >= 8:
-                                    self.path_progress = 0
-                                    self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
+                                    self.set_path_to_player()
                             else:
                                 self.move()
                         except:
@@ -763,10 +784,8 @@ class Npc:
                         else:
                             if random.randint(0, self.movechance) == 10:
                                 
-                                move_pos = PATHFINDING.find_near_position(self.map_pos)
-                                print("move_pos", move_pos)
-                                self.path_progress = 0
-                                self.path = PATHFINDING.pathfind(self.map_pos, move_pos.map_pos)
+                                move_tile = PATHFINDING.find_walkable_tile_near_position(self.map_pos)
+                                self.set_path(move_tile.map_pos)
                                 self.attacking = False
                                 self.attack_move = True
                                 # This variable is to make sure the NPC doesn't just walk around without attacking.
@@ -803,20 +822,19 @@ class Npc:
                 else:
                     if not self.attack_move:
                         if self.dist_from_player >= consts.tile.TILE_SIZE * 2.5 and self.path == []:
-                            self.path_progress = 0
-                            self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
-                        
+                            self.set_path_to_player()
+
                         elif self.path != []:
                             try:
-                                if self.path[-1].map_pos != gamestate.player.player_map_pos:
-                                    if self.dist_from_player <= (
-                                            consts.raycast.render / 2) * consts.tile.TILE_SIZE and random.randint(0,
-                                                                                                                  5) == 5:
-                                        self.path_progress = 0
-                                        self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
+                                if self.path[-1].map_pos != self.last_seen_player_position:
+                                    near_conditions = [
+                                        self.dist_from_player <= (consts.raycast.render / 2) * consts.tile.TILE_SIZE,
+                                        random.randint(0, 5) == 5
+                                    ]
+                                    if all(near_conditions):
+                                        self.set_path_to_player()
                                     elif random.randint(0, 10) == 10:
-                                        self.path_progress = 0
-                                        self.path = PATHFINDING.pathfind(self.map_pos, gamestate.player.player_map_pos)
+                                        self.set_path_to_player()
                                 else:
                                     self.move()
                             except:
@@ -913,7 +931,7 @@ class Npc:
                             self.add_message("tried to attack but I don't have LOS?")
     
     def change_facing_direction(self):
-        self.face = self.face + self.theta
+        self.face = self.face + self.sprite.theta
         if self.face >= geom.DEGREES_360:
             self.face -= geom.DEGREES_360
         self.face = min(
