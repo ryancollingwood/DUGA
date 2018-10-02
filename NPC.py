@@ -63,7 +63,6 @@ class Npc:
         self.theta = 0
         self.mein_leben = False
         self.type = 'npc'
-        self.player_touched = False
         self.last_seen_player_timer = None
         self.last_seen_player_position = None
         # debug maybe later messaging system?
@@ -79,6 +78,7 @@ class Npc:
         self.atcktype = stats['atcktype']
         self.name = stats['name']
         self.perception_range = int(consts.tile.TILE_SIZE * random.choice([2, 3, 4]))
+        self.call_for_help_interval = 8 + random.choice(list(range(-4, 4)))
         
         if stats['dmg'] != 3.1415:
             self.dmg = stats['dmg']
@@ -230,6 +230,7 @@ class Npc:
             for item in self.messages:
                 print(id(self), item)
             self.messages = []
+            
     
     def think(self):
         
@@ -310,7 +311,10 @@ class Npc:
             self.animate('dying')
             self.render()
     
-    def look_for_player(self, state_if_spotted):
+    def look_for_player(self, state_if_spotted, state_if_startled = None):
+        if state_if_startled is None:
+            state_if_startled = state_if_spotted
+        
         if self.dead:
             return False
         
@@ -320,7 +324,7 @@ class Npc:
         if not SETTINGS.ignore_player:
             if self.player_in_view:
                 if self.detect_player():
-                    self.react_to_player(state_if_spotted)
+                    self.react_to_player(state_if_spotted, state_if_startled)
                     return True
                 else:
                     # TODO configureable search time
@@ -341,7 +345,7 @@ class Npc:
         ]
         
         if all(conditions):
-            if self.timer - self.last_seen_player_timer < 5:
+            if self.timer - self.last_seen_player_timer < (self.call_for_help_interval + 5):
                 self.add_message("looking for player in last position", self.last_seen_player_position)
                 self.state = npc_state.PATROLLING
                 destination_tile = PATHFINDING.find_walkable_tile_near_position(self.last_seen_player_position, self.perception_range)
@@ -366,7 +370,7 @@ class Npc:
 
         call_for_help = self.last_seen_player_timer is None
         if not call_for_help:
-            call_for_help = (SETTINGS.dt - self.last_seen_player_timer) > 10
+            call_for_help = (SETTINGS.dt - self.last_seen_player_timer) > self.call_for_help_interval
 
         self.seen_player()
 
@@ -401,23 +405,6 @@ class Npc:
             perception_distance = (perception_distance / 3)
         
         return perception_distance
-    
-    # TODO roll this into detect_player
-    def touched_by_player(self):
-        
-        perception_distance = self.get_perception_distance()
-        something_touched_me = self.dist_from_player <= perception_distance and not SETTINGS.ignore_player
-        if something_touched_me:
-            self.add_message("something_touched_me!", self.state, self.mind)
-        else:
-            # debug purposes
-            if self.dist_from_player <= (self.perception_range * 2):
-                self.add_message("nothing touched_me!", self.state, self.mind, perception_distance,
-                                 self.dist_from_player)
-        
-        self.player_touched = something_touched_me
-        
-        return something_touched_me
     
     def render(self):
         '''== Draw the NPC =='''
@@ -498,26 +485,30 @@ class Npc:
         result = False
         
         try:
-            # if the player touched us we've detected
-            if self.player_touched:
-                result = True
-                self.player_touched = False
-                return result
-            
             if self.attacking:
                 result = True
                 return result
             
+            if SETTINGS.ignore_player:
+                self.add_message("ignoring player")
+                result = False
+                return result
+ 
             '''== Is player visible from NPC position? ==\ndetect_player(self) -> boolean'''
+            perception_distance = self.get_perception_distance()
             result = PATHFINDING.has_line_of_sight(self.map_pos, gamestate.player.player_map_pos)
+            
             if result:
                 if self.dist_from_player <= self.get_perception_distance():
                     return result
                 else:
-                    self.add_message("my eyesight let me down")
+                    self.add_message("my eyesight let me down", self.state, self.mind, perception_distance, self.dist_from_player)
                     result = False
                     return result
-            
+            else:
+                if self.dist_from_player <= consts.tile.TILE_SIZE * 2:
+                    self.add_message("player is close but I don't have LOS", self.state, self.mind, perception_distance, self.dist_from_player)
+                
             # it should be False here
             return result
         finally:
