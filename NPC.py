@@ -79,6 +79,7 @@ class Npc:
         self.name = stats['name']
         self.perception_range = int(consts.tile.TILE_SIZE * random.choice([2, 3, 4]))
         self.OG_perception_range = self.perception_range
+        self.max_perception_range = (consts.raycast.render * consts.tile.TILE_SIZE) - consts.tile.TILE_SIZE
         self.call_for_help_interval = 8 + random.choice(list(range(-4, 4)))
         
         if stats['dmg'] != 3.1415:
@@ -227,7 +228,7 @@ class Npc:
     
     def print_messages(self):
         if len(self.messages) > 0:
-            print(id(self), self.name, self.mind, self.state)
+            print(id(self), self.name, ":", self.mind, self.state)
             for item in self.messages:
                 print(id(self), item)
             self.messages = []
@@ -250,15 +251,7 @@ class Npc:
             if self.update_timer >= 2:
                 self.update_timer = 0
 
-                if self.player_in_view and self.is_within_renderable_distance():
-                    self.perception_range += int(self.OG_perception_range / 4)
-                    self.add_message("increasing perception rage", self.perception_range)
-                else:
-                    if self.perception_range != self.OG_perception_range:
-                        self.perception_range -= int(self.OG_perception_range / 2)
-                        if self.perception_range < self.OG_perception_range:
-                            self.perception_range = self.OG_perception_range
-                        self.add_message("shrinking perception rage", self.perception_range)
+                self.update_perception_range()
 
                 self.print_messages()
         
@@ -279,6 +272,10 @@ class Npc:
                 # SHY
                 elif self.mind == 'shy':
                     self.look_for_player(npc_state.FLEEING, npc_state.ATTACKING)
+
+                else:
+                    self.add_message("No Instructions for Mind!", self.mind)
+
 
             # Act upon state
             if self.state == npc_state.ATTACKING:
@@ -311,7 +308,40 @@ class Npc:
         elif self.health <= 0 and not self.dead:
             self.animate('dying')
             self.render()
-    
+
+    def update_perception_range(self):
+
+        # if we are in combat then we can skip
+        if self.attacking:
+            return
+
+        # prevent div by zero errors
+        perception_range_denominator = self.dist_from_player
+        if perception_range_denominator < 1.0:
+            perception_range_denominator = 1.0
+
+        if self.player_in_view and self.is_within_renderable_distance():
+            ratio = self.perception_range / perception_range_denominator
+            delta = int(self.OG_perception_range * ratio)
+            self.perception_range += delta
+
+            if self.perception_range > self.max_perception_range:
+                self.perception_range = self.max_perception_range
+                self.add_message("perception range at max", self.perception_range)
+            else:
+                self.add_message("increasing perception range", self.perception_range)
+        else:
+            ratio = self.OG_perception_range / perception_range_denominator
+            delta = int(consts.tile.TILE_SIZE * ratio)
+
+            if self.perception_range != self.OG_perception_range:
+                self.perception_range = - delta
+                if self.perception_range < self.OG_perception_range:
+                    self.add_message("perception range reset", self.perception_range)
+                    self.perception_range = self.OG_perception_range
+                else:
+                    self.add_message("shrinking perception range", self.perception_range)
+
     def look_for_player(self, state_if_spotted, state_if_startled = None):
         if state_if_startled is None:
             state_if_startled = state_if_spotted
@@ -333,15 +363,18 @@ class Npc:
                 else:
                     # TODO configureable search time
                     if self.search_for_player():
-                        self.add_message("player_in_view but didn't detect but saw them recently", self.mind,
+                        self.add_message("searching for player", self.mind,
                                          self.state)
                     else:
-                        self.add_message("player_in_view but didn't detect", self.mind, self.state)
+                        self.add_message("not searching for player", self.mind, self.state)
         return False
 
 
     def is_searching_for_player(self):
-        return (self.timer - self.last_seen_player_timer) < (self.call_for_help_interval + 5)
+        if self.last_seen_player_timer is None:
+            return False
+        self.add_message("is_searching_for_player:", (self.timer - self.last_seen_player_timer), (self.call_for_help_interval + 15))
+        return (self.timer - self.last_seen_player_timer) < (self.call_for_help_interval + 15)
 
 
     def search_for_player(self):
@@ -508,6 +541,11 @@ class Npc:
             if SETTINGS.ignore_player:
                 self.add_message("ignoring player")
                 result = False
+                return result
+
+            if self.dist_from_player < (consts.tile.TILE_SIZE / 2):
+                self.add_message("Player is on top of me")
+                result = True
                 return result
  
             '''== Is player visible from NPC position? ==\ndetect_player(self) -> boolean'''

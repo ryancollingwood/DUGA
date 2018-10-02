@@ -84,6 +84,7 @@ class Player:
             self.health = gamestate.player.player_health
 
         key = pygame.key.get_pressed()
+        event = pygame.event.get()
 
         # Movement controls (WASD)
         if not gamestate.player.player_states['dead']:
@@ -157,8 +158,9 @@ class Player:
 
                 # invisible debug
                 if key[pygame.K_n]:
-                    SETTINGS.ignore_player = not SETTINGS.ignore_player
-                    print("ignore_player", SETTINGS.ignore_player)
+                    if event.type == pygame.KEYUP:
+                        SETTINGS.ignore_player = not SETTINGS.ignore_player
+                        print("ignore_player", SETTINGS.ignore_player)
 
                 # Change gun
                 if key[pygame.K_1] and gamestate.inventory.held_weapons['primary']:
