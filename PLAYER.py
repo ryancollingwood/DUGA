@@ -155,6 +155,11 @@ class Player:
                 else:
                     gamestate.player.reload_key_active = False
 
+                # invisible debug
+                if key[pygame.K_n]:
+                    SETTINGS.ignore_player = not SETTINGS.ignore_player
+                    print("ignore_player", SETTINGS.ignore_player)
+
                 # Change gun
                 if key[pygame.K_1] and gamestate.inventory.held_weapons['primary']:
                     gamestate.inventory.next_gun = gamestate.inventory.held_weapons['primary']

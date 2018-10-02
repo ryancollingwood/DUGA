@@ -261,24 +261,12 @@ class Npc:
                 
                 # HOSTILE
                 elif self.mind == 'hostile':
-                    if self.state != npc_state.ATTACKING and self.touched_by_player():
-                        self.react_to_player(npc_state.ATTACKING)
-                    else:
-                        self.look_for_player(npc_state.ATTACKING)
+                    self.look_for_player(npc_state.ATTACKING)
                 
                 # SHY
                 elif self.mind == 'shy':
-                    if self.state == npc_state.IDLE:
-                        self.look_for_player(npc_state.FLEEING)
-                    elif self.state == npc_state.PATROLLING:
-                        if self.state != npc_state.ATTACKING and self.touched_by_player():
-                            self.react_to_player(npc_state.ATTACKING)
-                        else:
-                            self.look_for_player(npc_state.FLEEING)
-                    else:
-                        if self.state != npc_state.FLEEING and self.touched_by_player():
-                            self.react_to_player(npc_state.FLEEING)
-            
+                    self.look_for_player(npc_state.FLEEING, npc_state.ATTACKING)
+
             # Act upon state
             if self.state == npc_state.ATTACKING:
                 self.attack()
@@ -324,7 +312,10 @@ class Npc:
         if not SETTINGS.ignore_player:
             if self.player_in_view:
                 if self.detect_player():
-                    self.react_to_player(state_if_spotted, state_if_startled)
+                    if self.dist_from_player < self.perception_range:
+                        self.react_to_player(state_if_startled)
+                    else:
+                        self.react_to_player(state_if_spotted)
                     return True
                 else:
                     # TODO configureable search time
@@ -334,7 +325,12 @@ class Npc:
                     else:
                         self.add_message("player_in_view but didn't detect", self.mind, self.state)
         return False
-    
+
+
+    def is_searching_for_player(self):
+        return (self.timer - self.last_seen_player_timer) < (self.call_for_help_interval + 5)
+
+
     def search_for_player(self):
         
         conditions = [
@@ -345,7 +341,7 @@ class Npc:
         ]
         
         if all(conditions):
-            if self.timer - self.last_seen_player_timer < (self.call_for_help_interval + 5):
+            if self.is_searching_for_player():
                 self.add_message("looking for player in last position", self.last_seen_player_position)
                 self.state = npc_state.PATROLLING
                 destination_tile = PATHFINDING.find_walkable_tile_near_position(self.last_seen_player_position, self.perception_range)
@@ -366,6 +362,7 @@ class Npc:
         # not what we want to be
         if self.state != new_state:
             self.set_path([])
+            self.add_message("changing state from", self.state, "to", new_state)
             self.state = new_state
 
         call_for_help = self.last_seen_player_timer is None
@@ -375,6 +372,7 @@ class Npc:
         self.seen_player()
 
         if call_for_help:
+            self.add_message("calling for backup")
             SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
             self.call_allies(3, "hostile", npc_state.ATTACKING, self.last_seen_player_position)
 
@@ -500,6 +498,7 @@ class Npc:
             
             if result:
                 if self.dist_from_player <= self.get_perception_distance():
+                    self.add_message("player is within perception did I see", result)
                     return result
                 else:
                     self.add_message("my eyesight let me down", self.state, self.mind, perception_distance, self.dist_from_player)

@@ -226,11 +226,12 @@ class Gun:
 
                     damage_to_be_done = self.dmg
 
-                    #Damage less if NPC is far away from center.
-                    if self.hit_rect.width < 120 or (
+                    in_center = self.hit_rect.width < 120 or (
                                     npc.hit_rect.centerx > self.hit_rect.left + self.hit_rect.width / 3 and
                                     npc.hit_rect.centerx < self.hit_rect.right - self.hit_rect.width/3
-                    ):
+                    )
+                    #Damage less if NPC is far away from center.
+                    if in_center:
                         #Critical hit
 
                         if (npc.state == npc_state.IDLE or npc.state == npc_state.PATROLLING) and not npc.player_in_view:
@@ -244,8 +245,13 @@ class Gun:
                             damage_to_be_done = damage_to_be_done / 2
 
                     if npc.side == 'back' and npc.state != npc_state.ATTACKING:
-                        npc.add_message("instakill")
-                        damage_to_be_done = npc.health
+                        if in_center:
+                            if not npc.is_searching_for_player():
+                                npc.add_message("instakill")
+                                damage_to_be_done = npc.health
+                            else:
+                                npc.add_message("I expected that attack")
+                                damage_to_be_done = damage_to_be_done * 1.5
 
                     SETTINGS.statistics['last ddealt'] += damage_to_be_done
                     npc.health -= damage_to_be_done
