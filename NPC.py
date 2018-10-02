@@ -78,6 +78,7 @@ class Npc:
         self.atcktype = stats['atcktype']
         self.name = stats['name']
         self.perception_range = int(consts.tile.TILE_SIZE * random.choice([2, 3, 4]))
+        self.OG_perception_range = self.perception_range
         self.call_for_help_interval = 8 + random.choice(list(range(-4, 4)))
         
         if stats['dmg'] != 3.1415:
@@ -245,8 +246,20 @@ class Npc:
         if not self.dead:
             self.timer += SETTINGS.dt
             self.update_timer += SETTINGS.dt
+
             if self.update_timer >= 2:
                 self.update_timer = 0
+
+                if self.player_in_view and self.is_within_renderable_distance():
+                    self.perception_range += int(self.OG_perception_range / 4)
+                    self.add_message("increasing perception rage", self.perception_range)
+                else:
+                    if self.perception_range != self.OG_perception_range:
+                        self.perception_range -= int(self.OG_perception_range / 2)
+                        if self.perception_range < self.OG_perception_range:
+                            self.perception_range = self.OG_perception_range
+                        self.add_message("shrinking perception rage", self.perception_range)
+
                 self.print_messages()
         
         if not self.dead and self.health > 0 and not gamestate.player.player_states['dead']:
@@ -403,7 +416,12 @@ class Npc:
             perception_distance = (perception_distance / 3)
         
         return perception_distance
-    
+
+
+    def is_within_renderable_distance(self):
+        return self.dist_from_player <= consts.raycast.render * consts.tile.TILE_SIZE
+
+
     def render(self):
         '''== Draw the NPC =='''
         if self.dead:
@@ -414,7 +432,7 @@ class Npc:
         
         self.dist_from_player = math.sqrt(xpos * xpos + ypos * ypos)
         
-        if self.dist_from_player <= consts.raycast.render * consts.tile.TILE_SIZE:
+        if self.is_within_renderable_distance():
 
             theta = math.atan2(-ypos, xpos) % (2 * math.pi)
             theta = math.degrees(theta)
@@ -456,7 +474,7 @@ class Npc:
             # larger than the degree_max value
             if (side.degree_min < side.degree_max and side.degree_min <= theta <= side.degree_max) or \
                     (side.degree_min > side.degree_max and (theta >= side.degree_min or theta <= side.degree_max)):
-                self.player_in_view = True
+                self.player_in_view = side.player_in_view
                 
                 # all of these conditions must be met
                 # if we are going to change the sprite
