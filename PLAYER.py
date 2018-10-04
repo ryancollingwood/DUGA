@@ -158,9 +158,10 @@ class Player:
 
                 # invisible debug
                 if key[pygame.K_n]:
-                    if event.type == pygame.KEYUP:
-                        SETTINGS.ignore_player = not SETTINGS.ignore_player
-                        print("ignore_player", SETTINGS.ignore_player)
+                    if len(event) > 0:
+                        if event[0].type == pygame.KEYUP:
+                            SETTINGS.ignore_player = not SETTINGS.ignore_player
+                            print("ignore_player", SETTINGS.ignore_player)
 
                 # Change gun
                 if key[pygame.K_1] and gamestate.inventory.held_weapons['primary']:

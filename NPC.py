@@ -32,6 +32,7 @@ class Npc:
         self.sounds = sounds
         self.ID = stats['id']
         self.map_pos = stats['pos'] #List[int]
+        self.OG_map_pos = self.map_pos
         self.pos = [self.map_pos[0] * consts.tile.TILE_SIZE, self.map_pos[1] * consts.tile.TILE_SIZE]
         self.face = stats['face']
         self.frame_interval = stats['spf']
@@ -286,6 +287,10 @@ class Npc:
                 self.move()
             elif self.state == npc_state.IDLE:
                 self.idle()
+            elif self.state == npc_state.SEARCHING:
+                self.move()
+            else:
+                self.add_message("Unknown State", self.state)
             
             # Run animations
             if self.hurting:
@@ -294,7 +299,8 @@ class Npc:
                 # if npc takes damage and is not fleeing
                 # retaliate and fight back
                 if self.state != npc_state.FLEEING:
-                    self.state = npc_state.ATTACKING
+                    # todo call a method to make this transition
+                    self.set_state(npc_state.ATTACKING)
             
             elif self.moving:
                 self.animate('walking')
@@ -331,8 +337,7 @@ class Npc:
             else:
                 self.add_message("increasing perception range", self.perception_range)
         else:
-            ratio = self.OG_perception_range / perception_range_denominator
-            delta = int(consts.tile.TILE_SIZE * ratio)
+            delta = int(self.perception_range * 0.10)
 
             if self.perception_range != self.OG_perception_range:
                 self.perception_range = - delta
@@ -369,12 +374,35 @@ class Npc:
                         self.add_message("not searching for player", self.mind, self.state)
         return False
 
-
     def is_searching_for_player(self):
-        if self.last_seen_player_timer is None:
-            return False
-        self.add_message("is_searching_for_player:", (self.timer - self.last_seen_player_timer), (self.call_for_help_interval + 15))
-        return (self.timer - self.last_seen_player_timer) < (self.call_for_help_interval + 15)
+        try:
+            result = False
+
+            if self.last_seen_player_timer is None:
+                return result
+
+            # todo customisable/random additional search time?
+            result = (self.timer - self.last_seen_player_timer) < (self.call_for_help_interval + 8)
+
+            self.add_message("is_searching_for_player:", (self.timer - self.last_seen_player_timer), (self.call_for_help_interval + 15))
+        finally:
+            if result:
+                self.set_state(npc_state.SEARCHING)
+            else:
+                if self.state == npc_state.SEARCHING:
+                    self.reset_to_original_state()
+
+            return result
+
+    def reset_to_original_state(self):
+        # TODO rules before switching
+        self.add_message(
+            "reseting state to ", self.OG_state,
+            " and returning to ", self.OG_map_pos
+        )
+
+        self.set_state(self.OG_state)
+        self.set_path(self.OG_map_pos)
 
 
     def search_for_player(self):
@@ -383,15 +411,19 @@ class Npc:
             self.state != npc_state.FLEEING,
             self.last_seen_player_timer is not None,
             self.last_seen_player_position is not None,
-            self.path == [],
         ]
         
         if all(conditions):
             if self.is_searching_for_player():
-                self.add_message("looking for player in last position", self.last_seen_player_position)
-                self.state = npc_state.PATROLLING
-                destination_tile = PATHFINDING.find_walkable_tile_near_position(self.last_seen_player_position, self.perception_range)
-                self.set_path(destination_tile.map_pos)
+
+                self.set_state(npc_state.SEARCHING)
+
+                if self.path == []:
+                    self.add_message("looking for player in last position", self.last_seen_player_position)
+                    destination_tile = PATHFINDING.find_walkable_tile_near_position(self.last_seen_player_position, self.perception_range)
+                    self.set_path(destination_tile.map_pos)
+                else:
+                    self.add_message("looking for player, already have a path", self.path[-1].map_pos, self.last_seen_player_position)
                 return True
         
         return False
@@ -400,9 +432,8 @@ class Npc:
         self.last_seen_player_position = gamestate.player.player_map_pos
         self.last_seen_player_timer = self.timer
         self.add_message("seen player at ", self.last_seen_player_position)
-    
-    def react_to_player(self, new_state):
-        
+
+    def set_state(self, new_state):
         # if we have not changed state
         # then our current path is possibly
         # not what we want to be
@@ -410,6 +441,10 @@ class Npc:
             self.set_path([])
             self.add_message("changing state from", self.state, "to", new_state)
             self.state = new_state
+    
+    def react_to_player(self, new_state):
+
+        self.set_state(new_state)
 
         call_for_help = self.last_seen_player_timer is None
         if not call_for_help:
@@ -430,7 +465,7 @@ class Npc:
             if npc.mind == mind_filter:
                 if npc.dist_from_player <= consts.tile.TILE_SIZE * 3:
                     # move to a method hunt_for_player
-                    npc.state = new_state
+                    npc.set_state(new_state)
                     npc.set_path(target_pos)
                     npc.add_message("woken up as an ally")
                     woken_allies += 1
@@ -493,6 +528,32 @@ class Npc:
         elif self.face == geom.DEGREES_0 or self.face == geom.DEGREES_360:
             self.front_tile = (1, 0)
 
+    def set_side(self, side):
+        # this function assumes we only have one player
+        # this and host of other will have to change if
+        # that changes
+        self.player_in_view = side.player_in_view
+
+        # all of these conditions must be met
+        # if we are going to change the sprite
+        change_sprite_rules = [
+            self.side != side.name,
+            not self.dead,
+            not self.hurting,
+            not self.attacking,
+            self.in_canvas
+        ]
+
+        if all(change_sprite_rules) or not self.side:
+            if not self.attacking:
+                if self.moving:
+                    self.sprite.texture = self.get_direction_texture(side.name)[self.current_frame]
+                else:
+                    self.sprite.texture = self.stand_texture[side.stand_index]
+
+        self.side = side.name
+
+        return self.side
 
     def set_theta_and_side(self, theta):
         self.theta = theta
@@ -507,26 +568,9 @@ class Npc:
             # larger than the degree_max value
             if (side.degree_min < side.degree_max and side.degree_min <= theta <= side.degree_max) or \
                     (side.degree_min > side.degree_max and (theta >= side.degree_min or theta <= side.degree_max)):
-                self.player_in_view = side.player_in_view
-                
-                # all of these conditions must be met
-                # if we are going to change the sprite
-                change_sprite_rules = [
-                    self.side != side.name,
-                    not self.dead,
-                    not self.hurting,
-                    not self.attacking,
-                    self.in_canvas
-                ]
-                
-                if all(change_sprite_rules) or not self.side:
-                    if self.moving:
-                        self.sprite.texture = self.get_direction_texture(side.name)[self.current_frame]
-                    else:
-                        self.sprite.texture = self.stand_texture[side.stand_index]
-                    
-                    self.side = side.name
-                    break
+
+                self.set_side(side)
+                break
         
         return self.side
     
@@ -716,7 +760,7 @@ class Npc:
         if self.state == npc_state.PATROLLING:
             if self.path == []:
                 if random.randint(0, 3) == 3:
-                    self.state = npc_state.IDLE
+                    self.set_state(npc_state.IDLE)
                     self.sprite.texture = self.stand_texture[4]
                 else:
                     # Make the NPC not walk too far.
@@ -759,7 +803,7 @@ class Npc:
             # Do only change to patrouling if it was that in the first place.
             if self.OG_state != npc_state.IDLE:
                 if random.randint(0, 2) == 2:
-                    self.state = npc_state.PATROLLING
+                    self.set_state(npc_state.PATROLLING)
         
         # Make NPC react to gunshot if close. Or just if the player is too close.
         # TODO move this elsewhere
@@ -908,7 +952,7 @@ class Npc:
             return self.frontright_texture
         
         # TODO probably some sort of warning/exception for unknown side
-        self.add_message("unknown direction in get_direction_texture", direction)
+        # self.add_message("unknown direction in get_direction_texture", direction)
         return self.front_texture
     
     def animate(self, animation):
@@ -954,12 +998,23 @@ class Npc:
                 self.hurting = False
                 self.timer = 0
                 SOUND.play_sound(random.choice(self.sounds['damage']), self.dist_from_player)
-                
-                if self.state == npc_state.IDLE or self.state == npc_state.PATROLLING or self.state == npc_state.FLEEING:
+
+                change_direction_conditions = [
+                    self.state == npc_state.IDLE,
+                    self.state == npc_state.PATROLLING,
+                    self.state == npc_state.FLEEING,
+                    self.state == npc_state.SEARCHING,
+                ]
+
+                if any(change_direction_conditions):
                     self.change_facing_direction()
 
         # attack animation
         elif animation == npc_state.ATTACKING:
+            # at the moment the only attack animation
+            # is directly facing the player
+            self.set_side(SIDE_FRONT)
+
             self.sprite.texture = self.hit_texture[self.current_frame]
             self.moving = False
             if self.timer >= self.frame_interval:
@@ -988,6 +1043,8 @@ class Npc:
             ],
             key = lambda x: abs(x - self.face)
         )
+
+        self.set_theta_and_side(self.face)
     
     @staticmethod
     def drop_item(map_pos):
