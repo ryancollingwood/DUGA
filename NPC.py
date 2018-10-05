@@ -46,6 +46,7 @@ class Npc:
         # Initialise boring variables
         self.timer = 0
         self.idle_timer = 0
+        self.alive_turn = 0 # make this number of "turns" rather than absolute timer
         self.die_animation = False
         self.running_animation = None
         self.add = 0
@@ -64,7 +65,7 @@ class Npc:
         self.theta = 0
         self.mein_leben = False
         self.type = 'npc'
-        self.last_seen_player_timer = None
+        self.last_seen_player_turn = None
         self.last_seen_player_position = None
         # debug maybe later messaging system?
         self.messages = []
@@ -81,7 +82,7 @@ class Npc:
         self.perception_range = int(consts.tile.TILE_SIZE * random.choice([2, 3, 4]))
         self.OG_perception_range = self.perception_range
         self.max_perception_range = (consts.raycast.render * consts.tile.TILE_SIZE) - consts.tile.TILE_SIZE
-        self.call_for_help_interval = 8 + random.choice(list(range(-4, 4)))
+        self.call_for_help_turns = 8 + random.choice(list(range(-4, 4)))
         
         if stats['dmg'] != 3.1415:
             self.dmg = stats['dmg']
@@ -248,6 +249,7 @@ class Npc:
         if not self.dead:
             self.timer += SETTINGS.dt
             self.update_timer += SETTINGS.dt
+            self.alive_turn += 1
 
             if self.update_timer >= 2:
                 self.update_timer = 0
@@ -288,7 +290,8 @@ class Npc:
             elif self.state == npc_state.IDLE:
                 self.idle()
             elif self.state == npc_state.SEARCHING:
-                self.move()
+                if self.search_for_player():
+                    self.move()
             else:
                 self.add_message("Unknown State", self.state)
             
@@ -340,7 +343,7 @@ class Npc:
             delta = int(self.perception_range * 0.10)
 
             if self.perception_range != self.OG_perception_range:
-                self.perception_range = - delta
+                self.perception_range -= delta
                 if self.perception_range < self.OG_perception_range:
                     self.add_message("perception range reset", self.perception_range)
                     self.perception_range = self.OG_perception_range
@@ -357,7 +360,7 @@ class Npc:
         if self.attacking:
             return True
         
-        if not SETTINGS.ignore_player:
+        if not self.is_ignoring_player():
             if self.player_in_view:
                 if self.detect_player():
                     if self.dist_from_player < self.perception_range:
@@ -378,13 +381,15 @@ class Npc:
         try:
             result = False
 
-            if self.last_seen_player_timer is None:
+            if self.last_seen_player_turn is None:
                 return result
+        
+            # TODO this calculation is not correct
+            time_delta = self.alive_turn - self.last_seen_player_turn
+            result = time_delta < (self.call_for_help_turns + 8)
 
-            # todo customisable/random additional search time?
-            result = (self.timer - self.last_seen_player_timer) < (self.call_for_help_interval + 8)
-
-            self.add_message("is_searching_for_player:", (self.timer - self.last_seen_player_timer), (self.call_for_help_interval + 15))
+            # todo customisable/random additional search time
+            self.add_message("is_searching_for_player:", time_delta, (self.call_for_help_turns + 5))
         finally:
             if result:
                 self.set_state(npc_state.SEARCHING)
@@ -396,6 +401,10 @@ class Npc:
 
     def reset_to_original_state(self):
         # TODO rules before switching
+        if self.attacking:
+            self.add_message("won't reset_to_original_state busy attacking")
+            return False
+        
         self.add_message(
             "reseting state to ", self.OG_state,
             " and returning to ", self.OG_map_pos
@@ -403,13 +412,20 @@ class Npc:
 
         self.set_state(self.OG_state)
         self.set_path(self.OG_map_pos)
+        
+        return True
+        
+        
+    def has_a_path(self):
+        return len(self.path) > 0
 
 
     def search_for_player(self):
         
         conditions = [
+            not self.is_ignoring_player(),
             self.state != npc_state.FLEEING,
-            self.last_seen_player_timer is not None,
+            self.last_seen_player_turn is not None,
             self.last_seen_player_position is not None,
         ]
         
@@ -418,7 +434,7 @@ class Npc:
 
                 self.set_state(npc_state.SEARCHING)
 
-                if self.path == []:
+                if not self.has_a_path():
                     self.add_message("looking for player in last position", self.last_seen_player_position)
                     destination_tile = PATHFINDING.find_walkable_tile_near_position(self.last_seen_player_position, self.perception_range)
                     self.set_path(destination_tile.map_pos)
@@ -430,7 +446,7 @@ class Npc:
     
     def seen_player(self):
         self.last_seen_player_position = gamestate.player.player_map_pos
-        self.last_seen_player_timer = self.timer
+        self.last_seen_player_turn = self.alive_turn
         self.add_message("seen player at ", self.last_seen_player_position)
 
     def set_state(self, new_state):
@@ -442,21 +458,34 @@ class Npc:
             self.add_message("changing state from", self.state, "to", new_state)
             self.state = new_state
     
+    def can_call_for_help(self):
+        call_for_help = self.last_seen_player_turn is None
+        if not call_for_help:
+            call_for_help = (self.timer - self.last_seen_player_turn) < self.call_for_help_turns
+        return call_for_help
+    
+    def do_call_for_help(self, number_of_allies):
+        if self.can_call_for_help():
+            SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
+            self.seen_player()
+            self.add_message("calling for backup")
+            self.call_allies(number_of_allies, "hostile", npc_state.SEARCHING, self.last_seen_player_position)
+            
+            return True
+        
+        return False
+
     def react_to_player(self, new_state):
 
         self.set_state(new_state)
 
-        call_for_help = self.last_seen_player_timer is None
-        if not call_for_help:
-            call_for_help = (SETTINGS.dt - self.last_seen_player_timer) > self.call_for_help_interval
-
         self.seen_player()
 
-        if call_for_help:
-            self.add_message("calling for backup")
-            SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
-            self.call_allies(3, "hostile", npc_state.ATTACKING, self.last_seen_player_position)
-
+        # if we didn't call for help
+        # still update the last_seen vars
+        if not self.do_call_for_help(number_of_allies = 2):
+            self.seen_player()
+            
     
     @staticmethod
     def call_allies(max_allies, mind_filter, new_state, target_pos):
@@ -464,10 +493,11 @@ class Npc:
         for npc in gamestate.npcs.npc_list:
             if npc.mind == mind_filter:
                 if npc.dist_from_player <= consts.tile.TILE_SIZE * 3:
-                    # move to a method hunt_for_player
+                    npc.add_message("woken up as an ally")
+                    # call seen_player so that search checks pass
+                    npc.seen_player()
                     npc.set_state(new_state)
                     npc.set_path(target_pos)
-                    npc.add_message("woken up as an ally")
                     woken_allies += 1
                     if woken_allies >= max_allies:
                         break
@@ -574,6 +604,17 @@ class Npc:
         
         return self.side
     
+    def is_ignoring_player(self):
+        
+        if SETTINGS.ignore_player:
+            return True
+        
+        # TODO additional additional explicit conditions
+        if self.attacking:
+            return False
+        
+        return False
+    
     def detect_player(self):
         result = False
         
@@ -582,7 +623,7 @@ class Npc:
                 result = True
                 return result
             
-            if SETTINGS.ignore_player:
+            if self.is_ignoring_player():
                 self.add_message("ignoring player")
                 result = False
                 return result
@@ -665,7 +706,7 @@ class Npc:
         self.set_path(destination_map_pos)
 
         # now if our destination has changed it's because
-        # the player is porbably in a solid-ish block
+        # the player is probably in a solid-ish block
         if self.path[-1].map_pos != destination_map_pos:
             # TODO some sort of tolerance based on our attackrange
             self.last_seen_player_position = self.path[-1]
@@ -758,7 +799,7 @@ class Npc:
                 self.set_path([])
         
         if self.state == npc_state.PATROLLING:
-            if self.path == []:
+            if not self.has_a_path():
                 if random.randint(0, 3) == 3:
                     self.set_state(npc_state.IDLE)
                     self.sprite.texture = self.stand_texture[4]
@@ -783,7 +824,7 @@ class Npc:
                         if ((SETTINGS.walkable_area.index(flee_pos) < SETTINGS.walkable_area.index(player_tile) + int(
                                 SETTINGS.current_level_size[0] / 5)) or (
                                     SETTINGS.walkable_area.index(flee_pos) > SETTINGS.walkable_area.index(
-                                    player_tile) - int(SETTINGS.current_level_size[0] / 5))) and self.path == []:
+                                    player_tile) - int(SETTINGS.current_level_size[0] / 5))) and not self.has_a_path():
                             self.set_path(flee_pos.map_pos)
     
     def idle(self):
@@ -840,10 +881,10 @@ class Npc:
                             self.animate(npc_state.ATTACKING)
                 
                 else:
-                    if self.dist_from_player > consts.tile.TILE_SIZE * 0.7 and self.path == []:
+                    if self.dist_from_player > consts.tile.TILE_SIZE * 0.7 and not self.has_a_path():
                         self.set_path_to_player()
 
-                    elif self.path != []:
+                    elif self.has_a_path():
                         try:
                             if self.path[-1].map_pos != self.last_seen_player_position:
                                 near_conditions = [
@@ -911,10 +952,10 @@ class Npc:
                 
                 else:
                     if not self.attack_move:
-                        if self.dist_from_player >= consts.tile.TILE_SIZE * 2.5 and self.path == []:
+                        if self.dist_from_player >= consts.tile.TILE_SIZE * 2.5 and not self.has_a_path():
                             self.set_path_to_player()
 
-                        elif self.path != []:
+                        elif self.has_a_path():
                             try:
                                 if self.path[-1].map_pos != self.last_seen_player_position:
                                     near_conditions = [
