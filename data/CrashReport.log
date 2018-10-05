@@ -60,3 +60,109 @@ Traceback (most recent call last):
   File "c:\DUGA\RAYCAST.py", line 76, in get_tan_in_radians
     return TAN_IN_RADIANS[angle]
 KeyError: -0.0009
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 419, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 260, in render_screen
+    gamestate.inventory.current_gun.draw(gameCanvas.canvas)
+  File "D:\Projects\DUGA\GUNS.py", line 315, in draw
+    self.shoot_animation()
+  File "D:\Projects\DUGA\GUNS.py", line 167, in shoot_animation
+    self.damage()
+  File "D:\Projects\DUGA\GUNS.py", line 249, in damage
+    if not npc.is_searching_for_player():
+  File "D:\Projects\DUGA\NPC.py", line 344, in is_searching_for_player
+    return (self.timer - self.last_seen_player_timer) < (self.call_for_help_interval + 5)
+TypeError: unsupported operand type(s) for -: 'float' and 'NoneType'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 403, in main_loop
+    gamePlayer.control(gameCanvas.canvas)
+  File "D:/Projects/DUGA\PLAYER.py", line 161, in control
+    if event.type == pygame.KEYUP:
+AttributeError: 'list' object has no attribute 'type'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 438, in main_loop
+    update_game()
+  File "D:/Projects/DUGA/MAIN.py", line 283, in update_game
+    npc.think()
+  File "D:/Projects/DUGA\NPC.py", line 293, in think
+    if self.search_for_player():
+  File "D:/Projects/DUGA\NPC.py", line 433, in search_for_player
+    if self.is_searching_for_player():
+  File "D:/Projects/DUGA\NPC.py", line 398, in is_searching_for_player
+    self.reset_to_original_state()
+  File "D:/Projects/DUGA\NPC.py", line 414, in reset_to_original_state
+    self.set_path(self.OG_map_pos)
+  File "D:/Projects/DUGA\NPC.py", line 694, in set_path
+    self.path = PATHFINDING.pathfind(self.map_pos, destination_map_pos)
+  File "D:/Projects/DUGA\PATHFINDING.py", line 32, in pathfind
+    end_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
+IndexError: list index out of range
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 438, in main_loop
+    update_game()
+  File "D:/Projects/DUGA/MAIN.py", line 283, in update_game
+    npc.think()
+  File "D:/Projects/DUGA\NPC.py", line 273, in think
+    self.look_for_player(npc_state.ATTACKING)
+  File "D:/Projects/DUGA\NPC.py", line 373, in look_for_player
+    if self.search_for_player():
+  File "D:/Projects/DUGA\NPC.py", line 433, in search_for_player
+    if self.is_searching_for_player():
+  File "D:/Projects/DUGA\NPC.py", line 398, in is_searching_for_player
+    self.reset_to_original_state()
+  File "D:/Projects/DUGA\NPC.py", line 414, in reset_to_original_state
+    self.set_path(self.OG_map_pos)
+  File "D:/Projects/DUGA\NPC.py", line 694, in set_path
+    self.path = PATHFINDING.pathfind(self.map_pos, destination_map_pos)
+  File "D:/Projects/DUGA\PATHFINDING.py", line 32, in pathfind
+    end_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
+IndexError: list index out of range
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 438, in main_loop
+    update_game()
+  File "D:/Projects/DUGA/MAIN.py", line 283, in update_game
+    npc.think()
+  File "D:/Projects/DUGA\NPC.py", line 294, in think
+    if self.search_for_player():
+  File "D:/Projects/DUGA\NPC.py", line 434, in search_for_player
+    if self.is_searching_for_player():
+  File "D:/Projects/DUGA\NPC.py", line 399, in is_searching_for_player
+    self.reset_to_original_state()
+  File "D:/Projects/DUGA\NPC.py", line 415, in reset_to_original_state
+    self.set_path(self.OG_map_pos)
+  File "D:/Projects/DUGA\NPC.py", line 696, in set_path
+    self.path = PATHFINDING.pathfind(self.map_pos, destination_map_pos)
+  File "D:/Projects/DUGA\PATHFINDING.py", line 32, in pathfind
+    end_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
+IndexError: list index out of range
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 438, in main_loop
+    update_game()
+  File "D:/Projects/DUGA/MAIN.py", line 283, in update_game
+    npc.think()
+  File "D:/Projects/DUGA\NPC.py", line 294, in think
+    if self.search_for_player():
+  File "D:/Projects/DUGA\NPC.py", line 434, in search_for_player
+    if self.is_searching_for_player():
+  File "D:/Projects/DUGA\NPC.py", line 399, in is_searching_for_player
+    self.reset_to_original_state()
+  File "D:/Projects/DUGA\NPC.py", line 415, in reset_to_original_state
+    self.set_path(self.OG_map_pos)
+  File "D:/Projects/DUGA\NPC.py", line 696, in set_path
+    self.path = PATHFINDING.pathfind(self.map_pos, destination_map_pos)
+  File "D:/Projects/DUGA\PATHFINDING.py", line 32, in pathfind
+    end_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
+IndexError: list index out of range
