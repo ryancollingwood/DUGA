@@ -32,7 +32,6 @@ class Npc:
         self.sounds = sounds
         self.ID = stats['id']
         self.map_pos = stats['pos'] #List[int]
-        self.OG_map_pos = self.map_pos
         self.pos = [self.map_pos[0] * consts.tile.TILE_SIZE, self.map_pos[1] * consts.tile.TILE_SIZE]
         self.face = stats['face']
         self.frame_interval = stats['spf']
@@ -42,6 +41,13 @@ class Npc:
         self.rect.center = (self.pos[0] + consts.tile.TILE_SIZE / 2, self.pos[1] + consts.tile.TILE_SIZE / 2)
         self.real_x = self.rect.x
         self.real_y = self.rect.y
+
+        # todo move this caluclation to a function
+        self.OG_map_pos = [
+            int(self.rect.centerx / consts.tile.TILE_SIZE),
+            int(self.rect.centery / consts.tile.TILE_SIZE)
+        ]
+
         
         # Initialise boring variables
         self.timer = 0
@@ -79,10 +85,11 @@ class Npc:
         self.OG_state = self.state
         self.atcktype = stats['atcktype']
         self.name = stats['name']
-        self.perception_range = int(consts.tile.TILE_SIZE * random.choice([2, 3, 4]))
+        self.perception_range = int(consts.tile.TILE_SIZE * random.choice([4, 5, 6]))
         self.OG_perception_range = self.perception_range
         self.max_perception_range = (consts.raycast.render * consts.tile.TILE_SIZE) - consts.tile.TILE_SIZE
-        self.call_for_help_turns = 8 + random.choice(list(range(-4, 4)))
+        self.call_for_help_turns = 20 * random.choice(list(range(1, 4)))
+        self.search_turns = (self.call_for_help_turns * random.choice([3, 3, 3, 4, 4, 5]))
         
         if stats['dmg'] != 3.1415:
             self.dmg = stats['dmg']
@@ -290,8 +297,7 @@ class Npc:
             elif self.state == npc_state.IDLE:
                 self.idle()
             elif self.state == npc_state.SEARCHING:
-                if self.search_for_player():
-                    self.move()
+                self.move()
             else:
                 self.add_message("Unknown State", self.state)
             
@@ -386,10 +392,10 @@ class Npc:
         
             # TODO this calculation is not correct
             time_delta = self.alive_turn - self.last_seen_player_turn
-            result = time_delta < (self.call_for_help_turns + 8)
+            result = time_delta < self.search_turns
 
             # todo customisable/random additional search time
-            self.add_message("is_searching_for_player:", time_delta, (self.call_for_help_turns + 5))
+            self.add_message("is_searching_for_player:", result, time_delta, self.search_turns)
         finally:
             if result:
                 self.set_state(npc_state.SEARCHING)
@@ -461,7 +467,8 @@ class Npc:
     def can_call_for_help(self):
         call_for_help = self.last_seen_player_turn is None
         if not call_for_help:
-            call_for_help = (self.timer - self.last_seen_player_turn) < self.call_for_help_turns
+            # todo this firing too much
+            call_for_help = (self.alive_turn - self.last_seen_player_turn) < self.call_for_help_turns
         return call_for_help
     
     def do_call_for_help(self, number_of_allies):
@@ -469,7 +476,7 @@ class Npc:
             SOUND.play_sound(self.sounds['spot'], self.dist_from_player)
             self.seen_player()
             self.add_message("calling for backup")
-            self.call_allies(number_of_allies, "hostile", npc_state.SEARCHING, self.last_seen_player_position)
+            self.call_allies(id(self), number_of_allies, "hostile", npc_state.SEARCHING, self.last_seen_player_position)
             
             return True
         
@@ -488,10 +495,11 @@ class Npc:
             
     
     @staticmethod
-    def call_allies(max_allies, mind_filter, new_state, target_pos):
+    def call_allies(caller, max_allies, mind_filter, new_state, target_pos):
         woken_allies = 0
         for npc in gamestate.npcs.npc_list:
-            if npc.mind == mind_filter:
+            # todo better rules
+            if npc.mind == mind_filter and id(npc) != caller and not npc.attacking:
                 if npc.dist_from_player <= consts.tile.TILE_SIZE * 3:
                     npc.add_message("woken up as an ally")
                     # call seen_player so that search checks pass
@@ -799,17 +807,9 @@ class Npc:
                 self.set_path([])
         
         if self.state == npc_state.PATROLLING:
-            if not self.has_a_path():
-                if random.randint(0, 3) == 3:
-                    self.set_state(npc_state.IDLE)
-                    self.sprite.texture = self.stand_texture[4]
-                else:
-                    # Make the NPC not walk too far.
-                    available_pos = [x for x in SETTINGS.walkable_area if
-                                     abs(x.map_pos[0] - self.map_pos[0]) <= 3 and abs(
-                                         x.map_pos[1] - self.map_pos[1]) <= 3]
-                    self.set_path(random.choice(available_pos).map_pos)
-        
+            self.loiter()
+        elif self.state == npc_state.SEARCHING:
+            self.wander_nearby()
         elif self.state == npc_state.FLEEING:
             if self.dist_from_player <= consts.tile.TILE_SIZE * 4:
                 flee_pos = random.choice(SETTINGS.walkable_area)
@@ -826,7 +826,25 @@ class Npc:
                                     SETTINGS.walkable_area.index(flee_pos) > SETTINGS.walkable_area.index(
                                     player_tile) - int(SETTINGS.current_level_size[0] / 5))) and not self.has_a_path():
                             self.set_path(flee_pos.map_pos)
-    
+
+    def loiter(self):
+        if not self.has_a_path():
+            if random.randint(0, 3) == 3:
+                self.add_message("loitering")
+                self.set_state(npc_state.IDLE)
+                self.sprite.texture = self.stand_texture[4]
+            else:
+                self.wander_nearby()
+
+    def wander_nearby(self):
+        if not self.has_a_path():
+            self.add_message("wandering")
+            # Make the NPC not walk too far.
+            available_pos = [x for x in SETTINGS.walkable_area if
+                             abs(x.map_pos[0] - self.map_pos[0]) <= 3 and abs(
+                                 x.map_pos[1] - self.map_pos[1]) <= 3]
+            self.set_path(random.choice(available_pos).map_pos)
+
     def idle(self):
         # Make the NPC rotate randomly as it stands still.
         self.idle_timer += SETTINGS.dt

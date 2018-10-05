@@ -28,8 +28,19 @@ def pathfind(start: List[int], end: List[int]):
     error = check_path_points_inside_map(start, end)
 
     if not error:
-        start_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == start][0]
-        end_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
+        start_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == start]
+        if len(start_point) == 0:
+            print("Coudln't get a Tile for start", start)
+            return path
+        else:
+            start_point = start_point[0]
+
+        end_point: world.tile.Tile = [x for x in SETTINGS.all_tiles if x.map_pos == end]
+        if len(end_point) == 0:
+            print("Coudln't get a Tile for end", end)
+            return path
+        else:
+            end_point = end_point[0]
         
         #Report errors
         if gamedata.tiles.tile_solid[start_point.ID] and (start_point.type != HORIZONTAL_DOOR and start_point.type != VERTICAL_DOOR):
