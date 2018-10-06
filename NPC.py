@@ -334,7 +334,9 @@ class Npc:
 
         # prevent div by zero errors
         perception_range_denominator = self.dist_from_player
-        if perception_range_denominator < 1.0:
+        if perception_range_denominator is None:
+            perception_range_denominator = 1.0
+        elif perception_range_denominator < 1.0:
             perception_range_denominator = 1.0
 
         if self.player_in_view and self.is_within_renderable_distance():
@@ -831,10 +833,9 @@ class Npc:
         if not self.has_a_path():
             self.add_message("wandering")
             # Make the NPC not walk too far.
-            available_pos = [x for x in SETTINGS.walkable_area if
-                             abs(x.map_pos[0] - self.map_pos[0]) <= 3 and abs(
-                                 x.map_pos[1] - self.map_pos[1]) <= 3]
-            self.set_path(random.choice(available_pos).map_pos)
+            available_tile = PATHFINDING.find_walkable_tile_near_position(self.map_pos, 3)
+            if available_tile:
+                self.set_path(available_tile.map_pos)
 
     def idle(self):
         # Make the NPC rotate randomly as it stands still.
