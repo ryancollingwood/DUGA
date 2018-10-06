@@ -88,7 +88,7 @@ class Npc:
         self.perception_range = int(consts.tile.TILE_SIZE * random.choice([4, 5, 6]))
         self.OG_perception_range = self.perception_range
         self.max_perception_range = (consts.raycast.render * consts.tile.TILE_SIZE) - consts.tile.TILE_SIZE
-        self.call_for_help_turns = 20 * random.choice(list(range(1, 4)))
+        self.call_for_help_turns = 40 * random.choice(list(range(1, 4)))
         self.search_turns = (self.call_for_help_turns * random.choice([3, 3, 3, 4, 4, 5]))
         
         if stats['dmg'] != 3.1415:
@@ -241,18 +241,18 @@ class Npc:
             for item in self.messages:
                 print(id(self), item)
             self.messages = []
-            
-    
+
+
     def think(self):
-        
+
         self.map_pos = [
             int(self.rect.centerx / consts.tile.TILE_SIZE),
             int(self.rect.centery / consts.tile.TILE_SIZE)
         ]
-        
+
         if self.state == npc_state.ATTACKING or self.state == npc_state.FLEEING:
             self.speed = self.OG_speed * 2
-        
+
         if not self.dead:
             self.timer += SETTINGS.dt
             self.update_timer += SETTINGS.dt
@@ -263,22 +263,24 @@ class Npc:
 
                 self.update_perception_range()
 
+                if self.state == npc_state.SEARCHING:
+                    self.add_message("Searching - last player pos", self.last_seen_player_position, " - my position", self.map_pos)
+
                 self.print_messages()
-        
+
         if not self.dead and self.health > 0 and not gamestate.player.player_states['dead']:
             self.render()
-            
+
             if self.dist_from_player and self.dist_from_player <= consts.raycast.render * consts.tile.TILE_SIZE * 1.2:
-                
+
                 # PASSIVE
                 if self.mind == 'passive':
-                    # TODO alternate between idle and patrol
-                    pass
-                
+                    self.look_for_player(npc_state.IDLE, npc_state.ATTACKING)
+
                 # HOSTILE
                 elif self.mind == 'hostile':
                     self.look_for_player(npc_state.ATTACKING)
-                
+
                 # SHY
                 elif self.mind == 'shy':
                     self.look_for_player(npc_state.FLEEING, npc_state.ATTACKING)
@@ -300,26 +302,26 @@ class Npc:
                 self.move()
             else:
                 self.add_message("Unknown State", self.state)
-            
+
             # Run animations
             if self.hurting:
                 self.animate('hurting')
-                
+
                 # if npc takes damage and is not fleeing
                 # retaliate and fight back
                 if self.state != npc_state.FLEEING:
                     # todo call a method to make this transition
                     self.set_state(npc_state.ATTACKING)
-            
+
             elif self.moving:
                 self.animate('walking')
-        
+
         if gamestate.player.player_states['dead']:
             self.face += geom.DEGREES_10
             if self.face >= geom.DEGREES_360:
                 self.face -= geom.DEGREES_360
             self.render()
-        
+
         elif self.health <= 0 and not self.dead:
             self.animate('dying')
             self.render()
@@ -362,48 +364,38 @@ class Npc:
         
         if self.dead:
             return False
-        
-        if self.attacking:
-            return True
-        
+
         if not self.is_ignoring_player():
-            if self.player_in_view:
-                if self.detect_player():
-                    if self.dist_from_player < self.perception_range:
-                        self.react_to_player(state_if_startled)
-                    else:
-                        self.react_to_player(state_if_spotted)
-                    return True
+            if self.detect_player():
+                if self.dist_from_player < self.perception_range:
+                    self.react_to_player(state_if_startled)
                 else:
-                    # TODO configureable search time
-                    if self.search_for_player():
-                        self.add_message("searching for player", self.mind,
-                                         self.state)
-                    else:
-                        self.add_message("not searching for player", self.mind, self.state)
+                    self.react_to_player(state_if_spotted)
+                return True
+            else:
+                # TODO configureable search time
+                if self.search_for_player():
+                    self.add_message("searching for player", self.mind,
+                                     self.state)
+                else:
+                    self.add_message("not searching for player", self.mind, self.state)
+                    if self.state == npc_state.SEARCHING:
+                        self.reset_to_original_state()
         return False
 
     def is_searching_for_player(self):
-        try:
-            result = False
-
-            if self.last_seen_player_turn is None:
-                return result
-        
-            # TODO this calculation is not correct
-            time_delta = self.alive_turn - self.last_seen_player_turn
-            result = time_delta < self.search_turns
-
-            # todo customisable/random additional search time
-            self.add_message("is_searching_for_player:", result, time_delta, self.search_turns)
-        finally:
-            if result:
-                self.set_state(npc_state.SEARCHING)
-            else:
-                if self.state == npc_state.SEARCHING:
-                    self.reset_to_original_state()
-
+        result = False
+        if self.last_seen_player_turn is None:
             return result
+
+        time_delta = self.alive_turn - self.last_seen_player_turn
+        result = time_delta < self.search_turns
+
+        # todo customisable/random additional search time
+        self.add_message("is_searching_for_player:", result)
+
+
+        return result
 
     def reset_to_original_state(self):
         # TODO rules before switching
@@ -425,7 +417,6 @@ class Npc:
     def has_a_path(self):
         return len(self.path) > 0
 
-
     def search_for_player(self):
         
         conditions = [
@@ -433,17 +424,26 @@ class Npc:
             self.state != npc_state.FLEEING,
             self.last_seen_player_turn is not None,
             self.last_seen_player_position is not None,
+            self.mind != "shy"
         ]
+
+        can_search = all(conditions)
+
+        # if passive maybe sometime we don't go
+        # looking for the player
+        if self.mind == "passive" and can_search:
+            if random.choice(list(range(1, 8))) > 5:
+                self.add_message("could go searching, but I'm lazy")
+                can_search = False
+
         
-        if all(conditions):
+        if can_search:
             if self.is_searching_for_player():
 
-                self.set_state(npc_state.SEARCHING)
-
-                if not self.has_a_path():
+                if not self.has_a_path() or self.state != npc_state.SEARCHING:
+                    self.set_state(npc_state.SEARCHING)
                     self.add_message("looking for player in last position", self.last_seen_player_position)
-                    destination_tile = PATHFINDING.find_walkable_tile_near_position(self.last_seen_player_position, self.perception_range)
-                    self.set_path(destination_tile.map_pos)
+                    self.set_path_to_player()
                 else:
                     self.add_message("looking for player, already have a path", self.path[-1].map_pos, self.last_seen_player_position)
                 return True
@@ -467,8 +467,7 @@ class Npc:
     def can_call_for_help(self):
         call_for_help = self.last_seen_player_turn is None
         if not call_for_help:
-            # todo this firing too much
-            call_for_help = (self.alive_turn - self.last_seen_player_turn) < self.call_for_help_turns
+            call_for_help = (self.alive_turn - self.last_seen_player_turn) > self.call_for_help_turns
         return call_for_help
     
     def do_call_for_help(self, number_of_allies):
@@ -486,8 +485,6 @@ class Npc:
 
         self.set_state(new_state)
 
-        self.seen_player()
-
         # if we didn't call for help
         # still update the last_seen vars
         if not self.do_call_for_help(number_of_allies = 2):
@@ -500,7 +497,7 @@ class Npc:
         for npc in gamestate.npcs.npc_list:
             # todo better rules
             if npc.mind == mind_filter and id(npc) != caller and not npc.attacking:
-                if npc.dist_from_player <= consts.tile.TILE_SIZE * 3:
+                if npc.dist_from_player <= (npc.get_perception_distance() * 1.5):
                     npc.add_message("woken up as an ally")
                     # call seen_player so that search checks pass
                     npc.seen_player()
@@ -624,44 +621,35 @@ class Npc:
         return False
     
     def detect_player(self):
-        result = False
-        
-        try:
-            if self.attacking:
-                result = True
-                return result
-            
-            if self.is_ignoring_player():
-                self.add_message("ignoring player")
-                result = False
-                return result
 
-            if self.dist_from_player < (consts.tile.TILE_SIZE / 2):
-                self.add_message("Player is on top of me")
-                result = True
-                return result
- 
-            '''== Is player visible from NPC position? ==\ndetect_player(self) -> boolean'''
-            perception_distance = self.get_perception_distance()
-            result = PATHFINDING.has_line_of_sight(self.map_pos, gamestate.player.player_map_pos)
-            
-            if result:
-                if self.dist_from_player <= self.get_perception_distance():
-                    self.add_message("player is within perception did I see", result)
-                    return result
-                else:
-                    self.add_message("my eyesight let me down", self.state, self.mind, perception_distance, self.dist_from_player)
-                    result = False
-                    return result
+        if self.attacking:
+            return True
+
+        if self.is_ignoring_player():
+            self.add_message("ignoring player")
+            return False
+
+        if self.dist_from_player < (consts.tile.TILE_SIZE / 2):
+            self.add_message("Player is on top of me")
+            return True
+
+        '''== Is player visible from NPC position? ==\ndetect_player(self) -> boolean'''
+        perception_distance = self.get_perception_distance()
+        has_los = PATHFINDING.has_line_of_sight(self.map_pos, gamestate.player.player_map_pos)
+
+        if has_los:
+            if self.dist_from_player <= perception_distance:
+                self.add_message("player in LOS within perception did I see", has_los)
+                return True
             else:
-                if self.dist_from_player <= consts.tile.TILE_SIZE * 2:
-                    self.add_message("player is close but I don't have LOS", self.state, self.mind, perception_distance, self.dist_from_player)
-                
-            # it should be False here
-            return result
-        finally:
-            if result:
-                self.seen_player()
+                self.add_message("player in LOS but my eyesight let me down", self.state, self.mind, perception_distance, self.dist_from_player)
+                return False
+        else:
+            if self.dist_from_player <= consts.tile.TILE_SIZE * 2:
+                self.add_message("player is close but I don't have LOS", self.state, self.mind, perception_distance, self.dist_from_player)
+
+        # it should be False here
+        return False
     
     def collide_update(self, x, y):
         # make sure the NPC doesn't walk inside stuff
@@ -717,7 +705,7 @@ class Npc:
         # the player is probably in a solid-ish block
         if self.path[-1].map_pos != destination_map_pos:
             # TODO some sort of tolerance based on our attackrange
-            self.last_seen_player_position = self.path[-1]
+            self.last_seen_player_position = self.path[-1].map_pos
 
 
     def move(self):
@@ -805,11 +793,15 @@ class Npc:
             if self.timer >= self.frame_interval:
                 # TODO make a reset_path method
                 self.set_path([])
+
+                if self.state == npc_state.SEARCHING:
+                    self.add_message("searching but stopped moving", self.map_pos, " player", self.last_seen_player_position)
         
         if self.state == npc_state.PATROLLING:
             self.loiter()
         elif self.state == npc_state.SEARCHING:
-            self.wander_nearby()
+            if not self.has_a_path() and self.map_pos == self.last_seen_player_position:
+                self.wander_nearby()
         elif self.state == npc_state.FLEEING:
             if self.dist_from_player <= consts.tile.TILE_SIZE * 4:
                 flee_pos = random.choice(SETTINGS.walkable_area)
@@ -831,8 +823,7 @@ class Npc:
         if not self.has_a_path():
             if random.randint(0, 3) == 3:
                 self.add_message("loitering")
-                self.set_state(npc_state.IDLE)
-                self.sprite.texture = self.stand_texture[4]
+                self.idle()
             else:
                 self.wander_nearby()
 
@@ -1043,11 +1034,14 @@ class Npc:
                 self.dead = True
                 self.drop_item(self.map_pos)
                 SETTINGS.statistics['last enemies'] += 1
+                self.add_message("bye")
+                self.print_messages()
             elif self.knockback > 0:
                 self.collide_update(-math.cos(math.radians(self.postheta)) * self.knockback, 0)
                 self.collide_update(0, math.sin(math.radians(self.postheta)) * self.knockback)
                 self.knockback = int(self.knockback * 0.8)
-        
+
+
         # hurt animation
         elif animation == 'hurting':
             self.sprite.texture = self.hurt_texture[0]
@@ -1087,6 +1081,7 @@ class Npc:
                     if random.randint(0, 8) != 8:  # A chance to miss
                         if gamestate.player.damage_player(self.dmg, self.atcktype, self.map_pos):
                             self.add_message("Did damage to player")
+                            self.seen_player()
                         else:
                             self.add_message("tried to attack but I don't have LOS?")
     
