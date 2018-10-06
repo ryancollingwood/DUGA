@@ -436,7 +436,6 @@ class Npc:
                 self.add_message("could go searching, but I'm lazy")
                 can_search = False
 
-        
         if can_search:
             if self.is_searching_for_player():
 
@@ -703,9 +702,10 @@ class Npc:
 
         # now if our destination has changed it's because
         # the player is probably in a solid-ish block
-        if self.path[-1].map_pos != destination_map_pos:
-            # TODO some sort of tolerance based on our attackrange
-            self.last_seen_player_position = self.path[-1].map_pos
+        if self.has_a_path():
+            if self.path[-1].map_pos != destination_map_pos:
+                # TODO some sort of tolerance based on our attackrange
+                self.last_seen_player_position = self.path[-1].map_pos
 
 
     def move(self):
@@ -823,7 +823,7 @@ class Npc:
         if not self.has_a_path():
             if random.randint(0, 3) == 3:
                 self.add_message("loitering")
-                self.idle()
+                self.set_state(npc_state.IDLE)
             else:
                 self.wander_nearby()
 
