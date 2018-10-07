@@ -7,6 +7,7 @@ import os
 import pickle
 import logging
 import sys
+import threading
 #-- Engine imports--
 import SETTINGS
 import PLAYER
@@ -278,21 +279,16 @@ def render_screen(canvas):
                 
 
     #Render all items in zbuffer
+    item_threads = []
     for item in SETTINGS.zbuffer:
-        if item == None:
-            pass
-        elif item.type == 'slice':
-            canvas.blit(item.tempslice, (item.xpos, item.rect.y))
-            if item.vh == 'v':
-                #Make vertical walls slightly darker
-                canvas.blit(item.darkslice, (item.xpos, item.rect.y))
-            if SETTINGS.shade:
-                canvas.blit(item.shade_slice, (item.xpos, item.rect.y))
-                
-        else:
-            if item.new_rect.right > 0 and item.new_rect.x < SETTINGS.canvas_actual_width and item.distance < (SETTINGS.render * SETTINGS.tile_size):
-                item.draw(canvas)
-                
+        #item_thread = threading.Thread(target=render_zbuffer_item, args=(canvas, item))
+        #item_threads.append(item_thread)
+        #item_thread.start()
+        render_zbuffer_item(canvas, item)
+
+    #for item_thread in item_threads:
+    #    item_thread.join()
+
     #Draw weapon if it is there
     if SETTINGS.current_gun:
         SETTINGS.current_gun.draw(gameCanvas.canvas)
@@ -314,15 +310,37 @@ def render_screen(canvas):
     if SETTINGS.levels_list == SETTINGS.tlevels_list:
             tutorialController.control(gameCanvas.window)
 
+
+def render_zbuffer_item(canvas, item):
+    if item is None:
+        return
+    elif item.type == 'slice':
+        canvas.blit(item.tempslice, (item.xpos, item.rect.y))
+        if item.vh == 'v':
+            # Make vertical walls slightly darker
+            canvas.blit(item.darkslice, (item.xpos, item.rect.y))
+        if SETTINGS.shade:
+            canvas.blit(item.shade_slice, (item.xpos, item.rect.y))
+    else:
+        draw_rules = [
+            item.new_rect.right > 0,
+            item.new_rect.x < SETTINGS.canvas_actual_width,
+            item.distance < (SETTINGS.render * SETTINGS.tile_size)
+        ]
+
+        if all(draw_rules):
+            item.draw(canvas)
+
+
 def update_game():
     if SETTINGS.npc_list:
         for npc in SETTINGS.npc_list:
             if not npc.dead:
-                npc.think()
+                threading.Thread(target=npc.think, args=()).start()
 
     SETTINGS.ground_weapon = None
     for item in SETTINGS.all_items:
-        item.update()
+        threading.Thread(target=item.update, args=()).start()
 
     if (SETTINGS.changing_level and SETTINGS.player_states['black']) or SETTINGS.player_states['dead']:
         if SETTINGS.current_level < len(SETTINGS.levels_list)-1 and SETTINGS.changing_level:
