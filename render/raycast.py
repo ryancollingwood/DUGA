@@ -44,6 +44,7 @@ class Raycast:
 
 
     def calculate(self):
+        # TODO perhaps some vectorisation ala numpy?
         self.res = consts.raycast.resolution
         self.fov = consts.raycast.fov
         angle = consts.player.player_angle

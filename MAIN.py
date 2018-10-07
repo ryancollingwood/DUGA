@@ -7,6 +7,7 @@ import os
 import pickle
 import logging
 import sys
+import threading
 #-- Engine imports--
 import SETTINGS
 import PLAYER
@@ -280,11 +281,13 @@ def update_game():
     if gamestate.npcs.npc_list:
         for npc in gamestate.npcs.npc_list:
             if not npc.dead:
-                npc.think()
+                #npc.think()
+                threading.Thread(target=npc.think).start()
 
     gamestate.inventory.ground_weapon = None
     for item in gamestate.items.all_items:
-        item.update()
+        #item.update()
+        threading.Thread(target=item.update).start()
 
     if (SETTINGS.changing_level and gamestate.player.player_states['black']) or gamestate.player.player_states['dead']:
         if SETTINGS.current_level < len(SETTINGS.levels_list)-1 and SETTINGS.changing_level:
