@@ -5,6 +5,7 @@ import random
 
 import consts.colours
 import gamestate.player
+from gamestate.rendering import add_blit
 
 title = TEXT.Text(0, 0, "None :-)", consts.colours.BLACK, "DUGAFONT.ttf", 60)
 author = TEXT.Text(0, 0, "None :-)", consts.colours.BLACK, "DUGAFONT.ttf", 40)
@@ -80,7 +81,8 @@ def player_hurt(canvas):
         blood.fill((255, 0, 0, dead_intensity))
         if dead_intensity <= 120:
             dead_intensity += 10
-    canvas.blit(blood, (0,0))
+
+    add_blit(canvas.blit(blood, (0,0)))
 
 def player_heal(canvas):
     global heal_intensity
@@ -93,7 +95,7 @@ def player_heal(canvas):
     if heal_intensity == 0:
         gamestate.player.player_states['heal'] = False
         heal_intensity = 85
-    canvas.blit(heal, (0,0))
+    add_blit(canvas.blit(heal, (0,0)))
 
 def player_armor(canvas):
     global armor_intensity
@@ -105,7 +107,7 @@ def player_armor(canvas):
     if armor_intensity == 0:
         gamestate.player.player_states['armor'] = False
         armor_intensity = 85
-    canvas.blit(armor, (0,0))
+    add_blit(canvas.blit(armor, (0,0)))
 
 def fade_black(canvas):
     global fade_value
@@ -126,8 +128,8 @@ def fade_black(canvas):
             fade_value = 0
             gamestate.player.player_states['black'] = False
             gamestate.player.player_states['fade'] = False
-            
-    canvas.blit(black, (0,0))
+
+    add_blit(canvas.blit(black, (0,0)))
 
 def show_title(canvas):
     global title_timer, title, author, white_titles, white_authors, int_to_string
@@ -146,7 +148,7 @@ def show_title(canvas):
         white_box2.fill((255,255,255,180))
 
         if title_timer <= 3:
-            canvas.blit(white_box2, (author.posx-7, author.posy+3))
+            add_blit(canvas.blit(white_box2, (author.posx-7, author.posy+3)))
             author.draw(canvas)
 
     elif SETTINGS.levels_list == SETTINGS.glevels_list:
@@ -159,7 +161,7 @@ def show_title(canvas):
         white_box.fill((255,255,255,180))
 
     if title_timer <= 3:
-        canvas.blit(white_box, (title.posx-7, title.posy-8))
+        add_blit(canvas.blit(white_box, (title.posx-7, title.posy-8)))
         title.draw(canvas)
         title_timer += SETTINGS.dt
     else:

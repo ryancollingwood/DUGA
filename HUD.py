@@ -7,6 +7,7 @@ import math
 import consts.colours
 import gamestate.inventory
 import gamestate.player
+from gamestate.rendering import add_blit
 
 
 class hud:
@@ -42,7 +43,7 @@ class hud:
         self.arrow_spritesheet = pygame.image.load(os.path.join('graphics', 'arrows.png')).convert_alpha()
 
 
-        self.arrow = self.arrow_spritesheet.subsurface(0,0,17,17).convert_alpha()
+        self.arrow = self.arrow_spritesheet.subsurface(0,0,17,17)
         self.arrow = pygame.transform.scale(self.arrow, (50,50))
         self.original_arrow = self.arrow
         self.arrow_rect = self.arrow.get_rect()
@@ -50,16 +51,16 @@ class hud:
         self.arrow_center = (self.arrow_rect.centerx - self.arrow_rect.width / 2,
                              self.arrow_rect.centery - self.arrow_rect.height / 2)
 
-        self.arrow2 = self.arrow_spritesheet.subsurface(0,17,17,17).convert_alpha()
+        self.arrow2 = self.arrow_spritesheet.subsurface(0,17,17,17)
         self.arrow2 = pygame.transform.scale(self.arrow2, (50,50))
         self.original_arrow2 = self.arrow2
-        self.arrow3 = self.arrow_spritesheet.subsurface(0,34,17,17).convert_alpha()
+        self.arrow3 = self.arrow_spritesheet.subsurface(0,34,17,17)
         self.arrow3 = pygame.transform.scale(self.arrow3, (50,50))
         self.original_arrow3 = self.arrow3
 
     def render(self, canvas):
         
-        canvas.blit(self.sprite, self.rect)
+        add_blit(canvas.blit(self.sprite, self.rect))
         self.text[0].update_string('%s / 100' % gamestate.player.player_armor)
         self.text[1].update_string('%s / 100' % gamestate.player.player_health)
         if gamestate.inventory.current_gun and gamestate.inventory.current_gun.ammo_type:
@@ -74,12 +75,12 @@ class hud:
         self.arrow = pygame.transform.rotate(self.original_arrow, SETTINGS.end_angle)
         self.arrow_rect.topleft = (self.arrow_center[0] - self.arrow.get_rect().width /2,
                                    self.arrow_center[1] - self.arrow.get_rect().height /2)
-        canvas.blit(self.arrow, self.arrow_rect)
+        add_blit(canvas.blit(self.arrow, self.arrow_rect))
 
         #test
         self.arrow2 = pygame.transform.rotate(self.original_arrow2, SETTINGS.end_angle)
         self.arrow3 = pygame.transform.rotate(self.original_arrow3, SETTINGS.end_angle)
 
-        canvas.blit(self.arrow2, (self.arrow_rect[0], self.arrow_rect[1] - 4))
-        canvas.blit(self.arrow3, (self.arrow_rect[0], self.arrow_rect[1] - 8))
+        add_blit(canvas.blit(self.arrow2, (self.arrow_rect[0], self.arrow_rect[1] - 4)))
+        add_blit(canvas.blit(self.arrow3, (self.arrow_rect[0], self.arrow_rect[1] - 8)))
 

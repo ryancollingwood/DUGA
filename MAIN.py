@@ -37,6 +37,7 @@ import gamestate.items
 import gamestate.npcs
 import gamestate.player
 import gamestate.rendering
+from gamestate.rendering import add_blit
 import gamestate.sprites
 import render.raycast
 import world.map
@@ -244,23 +245,23 @@ def render_screen(canvas):
         if item == None:
             pass
         elif item.type == 'slice':
-            canvas.blit(item.tempslice, (item.xpos, item.rect.y))
+            add_blit(canvas.blit(item.tempslice, (item.xpos, item.rect.y)))
             if item.vh == 'v':
                 #Make vertical walls slightly darker
-                canvas.blit(item.darkslice, (item.xpos, item.rect.y))
+                add_blit(canvas.blit(item.darkslice, (item.xpos, item.rect.y)))
             if consts.raycast.shade:
-                canvas.blit(item.shade_slice, (item.xpos, item.rect.y))
+                add_blit(canvas.blit(item.shade_slice, (item.xpos, item.rect.y)))
                 
         else:
             if item.new_rect.right > 0 and item.new_rect.x < SETTINGS.canvas_actual_width and item.distance < (
                     consts.raycast.render * consts.tile.TILE_SIZE):
-                item.draw(canvas)
+                add_blit(item.draw(canvas))
                 
     #Draw weapon if it is there
     if gamestate.inventory.current_gun:
-        gamestate.inventory.current_gun.draw(gameCanvas.canvas)
+        add_blit(gamestate.inventory.current_gun.draw(gameCanvas.canvas))
     elif gamestate.inventory.next_gun:
-        gamestate.inventory.next_gun.draw(gameCanvas.canvas)
+        add_blit(gamestate.inventory.next_gun.draw(gameCanvas.canvas))
 
     #Draw Inventory and effects
     if gamestate.player.player_states['invopen']:
@@ -270,7 +271,7 @@ def render_screen(canvas):
     gamestate.rendering.zbuffer = []
 
     #Draw HUD and canvas
-    gameCanvas.window.blit(canvas, (SETTINGS.axes))
+    add_blit(gameCanvas.window.blit(canvas, (SETTINGS.axes)))
     gameHUD.render(gameCanvas.window)
 
     #Draw tutorial strings
@@ -375,7 +376,7 @@ def main_loop():
             musicController.control_music()
             
             if SETTINGS.menu_showing and menuController.current_type == 'main':
-                gameCanvas.window.fill(consts.colours.WHITE)
+                add_blit(gameCanvas.window.fill(consts.colours.WHITE))
                 menuController.control()
 
                 #Load custom maps
@@ -416,8 +417,7 @@ def main_loop():
                 #Render - Draw
                 gameRaycast.calculate()
                 gameCanvas.draw()
-                
-                
+
                 if SETTINGS.mode == 1:
                     render_screen(gameCanvas.canvas)
 
@@ -449,11 +449,13 @@ def main_loop():
             sys.exit(0)
 
         #Update Game
-        pygame.display.update()
+        # pygame.display.update()
+        gamestate.rendering.update_display()
+
         delta_time = clock.tick(SETTINGS.fps)
         SETTINGS.dt = delta_time / MILLISECONDS_IN_SECOND
         SETTINGS.cfps = int(clock.get_fps())
-        #pygame.display.set_caption(SETTINGS.caption % SETTINGS.cfps)
+        pygame.display.set_caption(str(SETTINGS.cfps))
 
        # allfps.append(clock.get_fps())
 

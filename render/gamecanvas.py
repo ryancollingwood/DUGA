@@ -3,6 +3,7 @@ import consts.colours
 import pygame
 
 import consts.raycast
+from gamestate.rendering import add_blit
 
 
 class GameCanvas:
@@ -56,6 +57,7 @@ class GameCanvas:
                     else:
                         self.shade[i].fill((self.rgba[0], self.rgba[1], self.rgba[2], consts.raycast.shade_rgba[3]))
                     self.canvas.blit(self.shade[i], (0, self.height/2 - self.shade[i].get_height()/2))
+                    add_blit(self.canvas.blit(self.shade[i], (0, self.height/2 - self.shade[i].get_height()/2)))
 
         else:
             self.window.fill(consts.colours.WHITE)

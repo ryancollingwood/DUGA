@@ -130,64 +130,64 @@ class Npc:
         self.texture = pygame.image.load(texture).convert_alpha()
         self.texturerect = self.texture.get_rect()
         
-        self.stand_texture = [self.texture.subsurface(0, 0, 64, 128).convert_alpha(),
-                              self.texture.subsurface(64, 0, 64, 128).convert_alpha(),
-                              self.texture.subsurface(128, 0, 64, 128).convert_alpha(),
-                              self.texture.subsurface(192, 0, 64, 128).convert_alpha(),
-                              self.texture.subsurface(256, 0, 64, 128).convert_alpha(),
-                              self.texture.subsurface(320, 0, 64, 128).convert_alpha(),
-                              self.texture.subsurface(384, 0, 64, 128).convert_alpha(),
-                              self.texture.subsurface(448, 0, 64, 128).convert_alpha()]
-        self.front_texture = [self.texture.subsurface(0, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(64, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(128, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(192, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(256, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(320, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(384, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(448, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(512, 128, 64, 128).convert_alpha(),
-                              self.texture.subsurface(576, 128, 64, 128).convert_alpha()]
-        self.frontright_texture = [self.texture.subsurface(0, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(64, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(128, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(192, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(256, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(320, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(384, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(448, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(512, 256, 64, 128).convert_alpha(),
-                                   self.texture.subsurface(576, 256, 64, 128).convert_alpha()]
-        self.right_texture = [self.texture.subsurface(0, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(64, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(128, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(192, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(256, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(320, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(384, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(448, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(512, 384, 64, 128).convert_alpha(),
-                              self.texture.subsurface(576, 384, 64, 128).convert_alpha()]
-        self.backright_texture = [self.texture.subsurface(0, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(64, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(128, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(192, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(256, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(320, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(384, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(448, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(512, 512, 64, 128).convert_alpha(),
-                                  self.texture.subsurface(576, 512, 64, 128).convert_alpha()]
-        self.back_texture = [self.texture.subsurface(0, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(64, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(128, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(192, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(256, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(320, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(384, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(448, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(512, 640, 64, 128).convert_alpha(),
-                             self.texture.subsurface(576, 640, 64, 128).convert_alpha()]
+        self.stand_texture = [self.texture.subsurface(0, 0, 64, 128),
+                              self.texture.subsurface(64, 0, 64, 128),
+                              self.texture.subsurface(128, 0, 64, 128),
+                              self.texture.subsurface(192, 0, 64, 128),
+                              self.texture.subsurface(256, 0, 64, 128),
+                              self.texture.subsurface(320, 0, 64, 128),
+                              self.texture.subsurface(384, 0, 64, 128),
+                              self.texture.subsurface(448, 0, 64, 128)]
+        self.front_texture = [self.texture.subsurface(0, 128, 64, 128),
+                              self.texture.subsurface(64, 128, 64, 128),
+                              self.texture.subsurface(128, 128, 64, 128),
+                              self.texture.subsurface(192, 128, 64, 128),
+                              self.texture.subsurface(256, 128, 64, 128),
+                              self.texture.subsurface(320, 128, 64, 128),
+                              self.texture.subsurface(384, 128, 64, 128),
+                              self.texture.subsurface(448, 128, 64, 128),
+                              self.texture.subsurface(512, 128, 64, 128),
+                              self.texture.subsurface(576, 128, 64, 128)]
+        self.frontright_texture = [self.texture.subsurface(0, 256, 64, 128),
+                                   self.texture.subsurface(64, 256, 64, 128),
+                                   self.texture.subsurface(128, 256, 64, 128),
+                                   self.texture.subsurface(192, 256, 64, 128),
+                                   self.texture.subsurface(256, 256, 64, 128),
+                                   self.texture.subsurface(320, 256, 64, 128),
+                                   self.texture.subsurface(384, 256, 64, 128),
+                                   self.texture.subsurface(448, 256, 64, 128),
+                                   self.texture.subsurface(512, 256, 64, 128),
+                                   self.texture.subsurface(576, 256, 64, 128)]
+        self.right_texture = [self.texture.subsurface(0, 384, 64, 128),
+                              self.texture.subsurface(64, 384, 64, 128),
+                              self.texture.subsurface(128, 384, 64, 128),
+                              self.texture.subsurface(192, 384, 64, 128),
+                              self.texture.subsurface(256, 384, 64, 128),
+                              self.texture.subsurface(320, 384, 64, 128),
+                              self.texture.subsurface(384, 384, 64, 128),
+                              self.texture.subsurface(448, 384, 64, 128),
+                              self.texture.subsurface(512, 384, 64, 128),
+                              self.texture.subsurface(576, 384, 64, 128)]
+        self.backright_texture = [self.texture.subsurface(0, 512, 64, 128),
+                                  self.texture.subsurface(64, 512, 64, 128),
+                                  self.texture.subsurface(128, 512, 64, 128),
+                                  self.texture.subsurface(192, 512, 64, 128),
+                                  self.texture.subsurface(256, 512, 64, 128),
+                                  self.texture.subsurface(320, 512, 64, 128),
+                                  self.texture.subsurface(384, 512, 64, 128),
+                                  self.texture.subsurface(448, 512, 64, 128),
+                                  self.texture.subsurface(512, 512, 64, 128),
+                                  self.texture.subsurface(576, 512, 64, 128)]
+        self.back_texture = [self.texture.subsurface(0, 640, 64, 128),
+                             self.texture.subsurface(64, 640, 64, 128),
+                             self.texture.subsurface(128, 640, 64, 128),
+                             self.texture.subsurface(192, 640, 64, 128),
+                             self.texture.subsurface(256, 640, 64, 128),
+                             self.texture.subsurface(320, 640, 64, 128),
+                             self.texture.subsurface(384, 640, 64, 128),
+                             self.texture.subsurface(448, 640, 64, 128),
+                             self.texture.subsurface(512, 640, 64, 128),
+                             self.texture.subsurface(576, 640, 64, 128)]
         
         self.backleft_texture = []
         self.left_texture = []
@@ -200,23 +200,23 @@ class Npc:
         for frame in self.frontright_texture:
             self.frontleft_texture.append(pygame.transform.flip(frame, True, False))
         
-        self.die_texture = [self.texture.subsurface(0, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(64, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(128, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(192, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(256, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(320, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(384, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(448, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(512, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(576, 768, 64, 128).convert_alpha(),
-                            self.texture.subsurface(640, 768, 64, 128).convert_alpha()]
-        self.hit_texture = [self.texture.subsurface(0, 896, 64, 128).convert_alpha(),
-                            self.texture.subsurface(64, 896, 64, 128).convert_alpha(),
-                            self.texture.subsurface(128, 896, 64, 128).convert_alpha(),
-                            self.texture.subsurface(192, 896, 64, 128).convert_alpha(),
-                            self.texture.subsurface(256, 896, 64, 128).convert_alpha(),
-                            self.texture.subsurface(320, 896, 64, 128).convert_alpha()]
+        self.die_texture = [self.texture.subsurface(0, 768, 64, 128),
+                            self.texture.subsurface(64, 768, 64, 128),
+                            self.texture.subsurface(128, 768, 64, 128),
+                            self.texture.subsurface(192, 768, 64, 128),
+                            self.texture.subsurface(256, 768, 64, 128),
+                            self.texture.subsurface(320, 768, 64, 128),
+                            self.texture.subsurface(384, 768, 64, 128),
+                            self.texture.subsurface(448, 768, 64, 128),
+                            self.texture.subsurface(512, 768, 64, 128),
+                            self.texture.subsurface(576, 768, 64, 128),
+                            self.texture.subsurface(640, 768, 64, 128)]
+        self.hit_texture = [self.texture.subsurface(0, 896, 64, 128),
+                            self.texture.subsurface(64, 896, 64, 128),
+                            self.texture.subsurface(128, 896, 64, 128),
+                            self.texture.subsurface(192, 896, 64, 128),
+                            self.texture.subsurface(256, 896, 64, 128),
+                            self.texture.subsurface(320, 896, 64, 128)]
         self.hurt_texture = [self.die_texture[0]]
         self.current_frame = 1
         self.update_timer = 0
@@ -244,6 +244,7 @@ class Npc:
             print(id(self), self.name, ":", self.mind, self.state)
             for item in self.messages:
                 print(id(self), item)
+            del self.messages
             self.messages = []
 
 
@@ -425,7 +426,7 @@ class Npc:
         return self.has_a_path() and (self.rect.center == self.path[-1].rect.center)
 
     def is_at_destination(self):
-        return self.path[self.path_progress] == self.path[-1]
+        return self.has_a_path() and self.path[self.path_progress] == self.path[-1]
 
     def search_for_player(self):
         

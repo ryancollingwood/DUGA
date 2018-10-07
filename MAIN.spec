@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['MAIN.py'],
-             pathex=['c:\\Python34\\Portfolio\\PyGame\\DUGA'],
+             pathex=['D:\\Projects\\DUGA'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -13,16 +13,24 @@ a = Analysis(['MAIN.py'],
              excludes=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
-             cipher=block_cipher)
+             cipher=block_cipher,
+             noarchive=False)
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
+          [],
+          exclude_binaries=True,
           name='MAIN',
           debug=False,
+          bootloader_ignore_signals=False,
           strip=False,
           upx=True,
-          console=False , icon='icon.ico')
+          console=True )
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=False,
+               upx=True,
+               name='MAIN')

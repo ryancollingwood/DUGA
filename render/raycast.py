@@ -65,7 +65,6 @@ class Raycast:
                 degree -= DEGREES_360
 
             self.beta = abs(degree - angle)
-
             self.cast(gamestate.player.player_rect, degree, ray_number)
 
             ray_number += 1

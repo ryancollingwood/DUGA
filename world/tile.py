@@ -11,7 +11,7 @@ import gamedata.tiles
 import gamestate.npcs
 import gamestate.player
 import gamestate.sprites
-
+from gamestate.rendering import add_blit
 
 class Tile:
 
@@ -59,7 +59,7 @@ class Tile:
 
 
     def draw(self, canvas):
-        canvas.blit(self.icon, (self.rect.x/4, self.rect.y/4))
+        add_blit(canvas.blit(self.icon, (self.rect.x/4, self.rect.y/4)))
 
     def get_dist(self, pos, *called):
         xpos = self.rect.center[0] - pos[0]

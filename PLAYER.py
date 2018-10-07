@@ -14,7 +14,7 @@ import consts.player
 import consts.geom
 import gamestate.inventory
 import gamestate.player
-
+from gamestate.rendering import add_blit
 
 class Player:
 
@@ -330,5 +330,5 @@ class Player:
         pointer = self.direction(0, 10)
         p1 = pointer[0] + self.rect.center[0]
         p2 = pointer[1] + self.rect.center[1]
-        canvas.blit(self.sprite, (self.rect.x / 4, self.rect.y / 4))
+        add_blit(canvas.blit(self.sprite, (self.rect.x / 4, self.rect.y / 4)))
         pygame.draw.line(canvas, self.color, (self.rect.center[0] / 4, self.rect.center[1] / 4), (p1 / 4, p2 / 4))

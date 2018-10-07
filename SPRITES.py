@@ -7,6 +7,7 @@ import consts.raycast
 import consts.tile
 import gamestate.player
 import gamestate.rendering
+from gamestate.rendering import add_blit
 import gamestate.sprites
 from consts.geom import DEGREES_360, DEGREES_270, DEGREES_90, DEGREES_0, DEGREES_EPSILON
  # I noticed, that the sprites are not projected correctly. However, I do not have the guts to fix it. Feel free to take a look.
@@ -104,7 +105,7 @@ class Sprite:
             self.parent.hit_rect = self.new_rect
 
     def draw(self, canvas):
-        canvas.blit(self.new_size, self.new_rect)
+        add_blit(canvas.blit(self.new_size, self.new_rect))
 
     def update_pos(self, pos):
         self.rect.centerx = pos[0]

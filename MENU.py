@@ -12,6 +12,7 @@ import consts.raycast
 import gamedata.items
 import gamestate.inventory
 import gamestate.player
+from gamestate.rendering import add_blit
 
 SETTINGS.menu_showing = True
 
@@ -231,16 +232,15 @@ class MainMenu(Menu):
 
     def logo_animation(self, canvas):
         for tile in self.tiles:
-            self.logo_surface.blit(tile[0], (tile[1], self.logo_rect.top))
+            add_blit(self.logo_surface.blit(tile[0], (tile[1], self.logo_rect.top)))
             tile[1] -= 1
 
             if tile[1] < self.logo_surface_rect.left - 160:
                 tile[1] += (160 * len(self.tiles))
-                
 
-        self.logo_surface.blit(self.logo, (0,0))
+        add_blit(self.logo_surface.blit(self.logo, (0,0)))
 
-        canvas.blit(self.logo_surface, self.logo_surface_rect)
+        add_blit(canvas.blit(self.logo_surface, self.logo_surface_rect))
         
         
 
@@ -513,11 +513,11 @@ class ScoreMenu(Menu):
         self.title.draw(canvas)
         self.back_button.draw(canvas)
         self.area.fill((200,200,200))
-        self.area.blit(self.middle_area, (200,0))
+        add_blit(self.area.blit(self.middle_area, (200,0)))
 
         pos = 0
         for i in self.highlights:
-            self.area.blit(i, (0, pos))
+            add_blit(self.area.blit(i, (0, pos)))
             if pos == 0:
                 pos = 5
             pos += 60
@@ -531,7 +531,7 @@ class ScoreMenu(Menu):
         for i in self.all_texts:
             i.draw(self.area)
 
-        canvas.blit(self.area, self.area_rect)
+            add_blit(canvas.blit(self.area, self.area_rect))
 
             
 class CreditsMenu(Menu):
@@ -619,9 +619,9 @@ class SupportSplash:
         self.title.draw(self.area)
 
         for text in self.texts:
-            text.draw(self.area)        
+            text.draw(self.area)
 
-        canvas.blit(self.area, self.rect)
+        add_blit(canvas.blit(self.area, self.rect))
 
         self.button.draw(canvas)
 
@@ -643,7 +643,7 @@ class GMainMenu(Menu):
         self.background.fill((100,100,100,10))
         
     def draw(self, canvas):
-        canvas.blit(self.background, (0,0))
+        add_blit(canvas.blit(self.background, (0,0)))
         self.resume_button.draw(canvas)
         self.exit_button.draw(canvas)
         self.title.draw(canvas)
@@ -667,7 +667,7 @@ class Button:
 
     def draw(self, canvas):
         self.surface.fill(self.filling)
-        canvas.blit(self.surface, self.rect)
+        add_blit(canvas.blit(self.surface, self.rect))
         self.text.draw(canvas)
 
         if self.rect.collidepoint(pygame.mouse.get_pos()):

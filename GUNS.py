@@ -383,7 +383,7 @@ class Gun:
             else:
                 gamestate.inventory.prev_gun = gamestate.inventory.current_gun
 
-        canvas.blit(self.current_img, self.aim_pos)
+        return canvas.blit(self.current_img, self.aim_pos)
 
     def re_init(self):
         # TODO: found the default aim position to be a bit to low with HUD positioning changes

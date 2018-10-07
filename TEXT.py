@@ -1,6 +1,7 @@
 import pygame
 
 pygame.font.init()
+from gamestate.rendering import add_blit
 
 class Text:
 
@@ -15,7 +16,7 @@ class Text:
         
     def draw(self, canvas):
         #Draw the text - Call each frame.
-        canvas.blit(self.layout,(self.posx, self.posy))
+        add_blit(canvas.blit(self.layout,(self.posx, self.posy)))
 
     def update_string(self, string):
         #Update the string that will be shown if needed.

@@ -3,6 +3,7 @@ import TEXT
 import SETTINGS
 import consts.colours
 import gamestate.player
+from gamestate.rendering import add_blit
 
 
 class Controller:
@@ -138,7 +139,7 @@ class Controller:
         self.text.update_pos((SETTINGS.canvas_actual_width/2)-(self.text.layout.get_width()/2), 480)
         self.box = pygame.Surface((self.text.layout.get_width()+6, self.text.layout.get_height()+6)).convert_alpha()
         self.box.fill((255,255,255,180))
-        canvas.blit(self.box, (self.text.posx-3, self.text.posy-3))
+        add_blit(canvas.blit(self.box, (self.text.posx-3, self.text.posy-3)))
         self.text.draw(canvas)
                 
             
