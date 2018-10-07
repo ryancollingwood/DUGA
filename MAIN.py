@@ -62,7 +62,7 @@ class Load:
         self.timer = 0
         for texture in gamedata.textures.all_textures:
             if gamedata.tiles.texture_type[ID] == 'sprite':
-                gamedata.textures.texture_list.append(pygame.image.load(texture))
+                gamedata.textures.texture_list.append(pygame.image.load(texture).convert_alpha())
             else:
                 gamedata.textures.texture_list.append(Texture(texture, ID))
             ID += 1

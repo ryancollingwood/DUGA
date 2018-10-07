@@ -695,7 +695,12 @@ class Npc:
                 door.sesam_luk_dig_op()
                 break
     
-    def set_path(self, destination_map_pos: List[int]):
+    def set_path(self, destination_map_pos):
+        """
+        Set the set destination and generate a path to it
+        :param destination_map_pos: List[int]
+        :return:
+        """
         if len(destination_map_pos) > 0:
             self.path = PATHFINDING.pathfind(self.map_pos, destination_map_pos)
         else:

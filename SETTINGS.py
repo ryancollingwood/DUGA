@@ -53,14 +53,11 @@ screen_shake = 0
 
 
 '''Tile settings'''
-from typing import List
-from world.tile import Tile
-
 #Below this point are the non-configurable tile variables.
 rendered_tiles = []
-all_tiles: List[Tile] = []
-trigger_tiles: List[Tile] = []
-all_solid_tiles: List[Tile] = []
+all_tiles = []  # List[Tile
+trigger_tiles = []  # List[Tile]
+all_solid_tiles = []  # List[Tile]
 walkable_area = []
 dda_list = []
 all_doors = []

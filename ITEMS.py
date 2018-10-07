@@ -19,7 +19,7 @@ class Item:
         self.item_type = item_type
         self.rect = pygame.Rect(self.pos[0], self.pos[1], int(consts.tile.TILE_SIZE), int(consts.tile.TILE_SIZE))
         self.rect.center = (self.pos[0] + consts.tile.TILE_SIZE / 2, self.pos[1] + consts.tile.TILE_SIZE / 2)
-        self.sprite = SPRITES.Sprite(pygame.image.load(sprite), hash(item_type), self.rect.center, 'sprite')
+        self.sprite = SPRITES.Sprite(pygame.image.load(sprite).convert_alpha(), hash(item_type), self.rect.center, 'sprite')
         self.effect = effect
         self.sound = pygame.mixer.Sound(os.path.join('sounds', 'other', 'blub.ogg'))
         

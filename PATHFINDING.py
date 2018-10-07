@@ -18,7 +18,13 @@ import consts.raycast
 # perhaps an optional param for tile search radius
 # similar to get_adjacent_tiles so that if we
 # get a solid destination we wont get stuck trying the same nodes
-def pathfind(start: List[int], end: List[int]):
+def pathfind(start, end):
+    """
+
+    :param start: List[int]
+    :param end: List[int]
+    :return:
+    """
     #print(start, end)
     '''== A* Pathfinding ==\npathfind(start, end) -> Shortest path from start to end\nFormat is list with tile objects'''
     openlist = {}
@@ -126,7 +132,13 @@ def pathfind(start: List[int], end: List[int]):
             return path
 
 
-def check_path_points_inside_map(start: List[int], end: List[int]):
+def check_path_points_inside_map(start, end):
+    """
+
+    :param start: List[int]
+    :param end: List[int]
+    :return:
+    """
     error = False
     # Reports if a node is outside the map
     if start[0] > max(SETTINGS.all_tiles, key=lambda x: x.map_pos).map_pos[0] or start[1] > \
@@ -166,13 +178,27 @@ def get_adjacent_walkable_tiles(position, tile_radius = 1):
 
     return walkable_tiles
 
+
 # position List[int] - returns  tile
-def find_tile_near_position(position: List[int], tile_radius = 1):
+def find_tile_near_position(position, tile_radius = 1):
+    """
+
+    :param position: List[int]
+    :param tile_radius: int
+    :return:
+    """
     adjacent_tiles = get_adjacent_tiles(position, tile_radius = tile_radius)
     return random.choice(adjacent_tiles)
 
+
 # position List[int] - returns  tile
-def find_walkable_tile_near_position(position: List[int], tile_radius = 1):
+def find_walkable_tile_near_position(position, tile_radius = 1):
+    """
+
+    :param position: List[int]
+    :param tile_radius: int
+    :return:
+    """
     walkable_adjacent_tiles = get_adjacent_walkable_tiles(position, tile_radius = tile_radius)
     return random.choice(walkable_adjacent_tiles)
 

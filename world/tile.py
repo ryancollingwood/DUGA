@@ -38,6 +38,7 @@ class Tile:
         else:
             self.texture = gamedata.tiles.tile_texture[self.ID].texture
             self.icon = pygame.transform.scale(self.texture, (16,16)).convert()
+            # TODO might need to wrap this in a setting
             self.texture = pygame.transform.scale(self.texture, (
                 consts.tile.TILE_SIZE, consts.tile.TILE_SIZE)).convert()
             self.rect = self.texture.get_rect()
