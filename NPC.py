@@ -28,6 +28,7 @@ class Npc:
     
     def __init__(self, stats, sounds, texture):
         # Technical settings
+        self.front_tile = (1, 0)
         self.stats = stats  # Used for creating new NPCs
         self.sounds = sounds
         self.ID = stats['id']
@@ -43,10 +44,7 @@ class Npc:
         self.real_y = self.rect.y
 
         # todo move this caluclation to a function
-        self.OG_map_pos = [
-            int(self.rect.centerx / consts.tile.TILE_SIZE),
-            int(self.rect.centery / consts.tile.TILE_SIZE)
-        ]
+        self.OG_map_pos = self.calculate_map_pos_from_rect()
 
         
         # Initialise boring variables
@@ -229,7 +227,13 @@ class Npc:
         
         # The position in SETTINGS.all_sprites of this NPC
         self.num = len(gamestate.sprites.all_sprites) - 1
-    
+
+    def calculate_map_pos_from_rect(self):
+        return [
+            int(self.rect.centerx / consts.tile.TILE_SIZE),
+            int(self.rect.centery / consts.tile.TILE_SIZE)
+        ]
+
     def add_message(self, *args):
         message = [*args]
         if message not in self.messages:
@@ -245,14 +249,13 @@ class Npc:
 
     def think(self):
 
-        self.map_pos = [
-            int(self.rect.centerx / consts.tile.TILE_SIZE),
-            int(self.rect.centery / consts.tile.TILE_SIZE)
-        ]
+        self.map_pos = self.calculate_map_pos_from_rect()
 
         if self.state == npc_state.ATTACKING or self.state == npc_state.FLEEING:
             self.speed = self.OG_speed * 2
 
+        # not calling is_alive because we need
+        # to render the dying frames
         if not self.dead:
             self.timer += SETTINGS.dt
             self.update_timer += SETTINGS.dt
@@ -268,7 +271,7 @@ class Npc:
 
                 self.print_messages()
 
-        if not self.dead and self.health > 0 and not gamestate.player.player_states['dead']:
+        if self.is_alive() and not gamestate.player.player_states['dead']:
             self.render()
 
             if self.dist_from_player and self.dist_from_player <= consts.raycast.render * consts.tile.TILE_SIZE * 1.2:
@@ -364,7 +367,7 @@ class Npc:
         if state_if_startled is None:
             state_if_startled = state_if_spotted
         
-        if self.dead:
+        if not self.is_alive():
             return False
 
         if not self.is_ignoring_player():
@@ -414,10 +417,15 @@ class Npc:
         self.set_path(self.OG_map_pos)
         
         return True
-        
-        
+
     def has_a_path(self):
         return len(self.path) > 0
+
+    def is_at_destination_rect_center(self):
+        return self.has_a_path() and (self.rect.center == self.path[-1].rect.center)
+
+    def is_at_destination(self):
+        return self.path[self.path_progress] == self.path[-1]
 
     def search_for_player(self):
         
@@ -528,7 +536,7 @@ class Npc:
 
     def render(self):
         '''== Draw the NPC =='''
-        if self.dead:
+        if not self.is_alive():
             self.solid = False
         
         xpos = gamestate.player.player_rect.centerx - self.rect.centerx
@@ -562,7 +570,7 @@ class Npc:
         elif self.face == geom.DEGREES_270:
             self.front_tile = (0, 1)
         elif self.face == geom.DEGREES_0 or self.face == geom.DEGREES_360:
-            self.front_tile = (1, 0)
+            pass
 
     def set_side(self, side):
         # this function assumes we only have one player
@@ -574,7 +582,7 @@ class Npc:
         # if we are going to change the sprite
         change_sprite_rules = [
             self.side != side.name,
-            not self.dead,
+            self.is_alive(),
             not self.hurting,
             not self.attacking,
             self.in_canvas
@@ -710,14 +718,24 @@ class Npc:
                 self.last_seen_player_position = self.path[-1].map_pos
 
 
+    def is_alive(self):
+        return self.health > 0 and not self.dead
+
     def move(self):
         # Make the NPC move according to current state.
         moving_up = False
         moving_down = False
         moving_right = False
         moving_left = False
+
+        can_move_conditions = [
+            self.has_a_path(),
+            not self.is_at_destination_rect_center(),
+            self.is_alive(),
+            not self.hurting
+        ]
         
-        if self.path and self.rect.center != self.path[-1].rect.center and self.health > 0 and not self.hurting:
+        if all(can_move_conditions):
             self.moving = True
             
             # Redo path if tile is occupied by another NPC.
@@ -730,8 +748,7 @@ class Npc:
                         self.set_path(random.choice(available_pos).map_pos)
                         break
             
-            if self.rect.colliderect(self.path[self.path_progress].rect) and self.path[self.path_progress] != self.path[
-                -1]:
+            if self.rect.colliderect(self.path[self.path_progress].rect) and not self.is_at_destination():
                 self.path_progress += 1
             
             else:
