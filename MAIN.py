@@ -2,7 +2,6 @@
 #All the classes will be located at the bottom of this script.
 
 import pygame
-import math
 import os
 import pickle
 import logging
@@ -14,23 +13,19 @@ import PLAYER
 import TEXTURES
 import MAP
 import RAYCAST
-import SPRITES
-import NPC
 import LEVELS
-import GUNS
 import PATHFINDING
 import TEXT
 #-- Game imports --
 import EFFECTS
 import HUD
-import ITEMS
 import INVENTORY
 import ENTITIES
-import SEGMENTS
 import GENERATION
 import MENU
 import MUSIC
 import TUTORIAL
+from GEOM import sort_distance, sort_atan
 
 SECONDS_IN_MINUTE = 60
 MILLISECONDS_IN_SECOND = 1000.0
@@ -224,36 +219,6 @@ class Canvas:
         else:
             self.window.fill(SETTINGS.WHITE)
 
-def sort_distance(x):
-    if x == None:
-        return 0
-    else:
-        return x.distance
-
-def sort_atan(x):
-    if SETTINGS.middle_ray_pos:
-        pos = SETTINGS.middle_ray_pos
-    else:
-        pos = SETTINGS.player_rect.center
-        
-    #find the position on each tile that is closest to middle_ray_pos
-    xpos = max(x.rect.left, min(pos[0], x.rect.right)) - SETTINGS.player_rect.centerx
-    ypos = SETTINGS.player_rect.centery - max(x.rect.top, min(pos[1], x.rect.bottom))
-    theta = math.atan2(ypos, xpos)
-    theta = math.degrees(theta)
-    theta -= SETTINGS.player_angle
-
-    if theta < 0:
-        theta += 360
-    if theta > 180:
-        theta -= 360
-
-    if x.type == 'end':
-        SETTINGS.end_angle = theta
-
-    theta = abs(theta)
-    
-    return(theta)
 
 def render_screen(canvas):
     '''render_screen(canvas) -> Renders everything but NPC\'s'''
@@ -264,8 +229,9 @@ def render_screen(canvas):
         sprite.get_pos(canvas)
 
     #Sort zbuffer and solid tiles
-    SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
+    SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key= sort_distance, reverse=True)
     SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, sort_atan(x), x.distance))
+    
 
     #Calculate which tiles are visible
     for tile in SETTINGS.all_solid_tiles:
@@ -276,7 +242,6 @@ def render_screen(canvas):
                             
             elif tile.distance <= SETTINGS.tile_size * 1.5:
                 SETTINGS.rendered_tiles.append(tile)
-                
 
     #Render all items in zbuffer
     item_threads = []

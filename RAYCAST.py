@@ -33,7 +33,6 @@ class Slice:
 
         if SETTINGS.shade:
             # Shade intensity table
-            intensity = 0
             if self.distance < self.shade_intensity[0]:
                 intensity = 0
             elif self.distance < self.shade_intensity[1]:
@@ -78,7 +77,7 @@ class Raycast:
         self.wall_height = int(SETTINGS.canvas_target_height / self.res)
         self.wall_width_to_height_difference = self.wall_width - self.wall_height
         self.fov_mod = self.fov * 0.8
-        self.wall_height_mod = (360 / math.tan(math.radians(self.fov_mod))) * (self.wall_width_to_height_difference)        
+        self.wall_height_mod = (360 / math.tan(math.radians(self.fov_mod))) * self.wall_width_to_height_difference
         self.canvas = canvas
         self.canvas2 = canvas2
 
@@ -98,6 +97,9 @@ class Raycast:
         for tile in SETTINGS.all_solid_tiles:
             tile.distance = tile.get_dist(SETTINGS.player_rect.center)
 
+        tile_index = None
+        search_tiles = SETTINGS.rendered_tiles
+
         while ray < fov:
             degree = angle - ray
             if degree <= 0:
@@ -107,8 +109,11 @@ class Raycast:
 
             beta = abs(degree - angle)
 
-            self.cast(SETTINGS.player_rect, degree, ray_number, beta)
-
+            cast_tile_index, cast_search_tiles = self.cast(SETTINGS.player_rect, degree, ray_number, beta, tile_index, search_tiles)
+            if cast_tile_index is not None:
+                search_tiles = cast_search_tiles
+                tile_index = cast_tile_index
+                
             ray_number += 1
             ray += step
 
@@ -130,7 +135,8 @@ class Raycast:
         # Fuck it. Catch all the crashes.
         if offset >= SETTINGS.tile_size:
             offset = SETTINGS.tile_size - 1
-        return (offset)
+        
+        return offset
 
     @staticmethod
     def check_hit(V_hit, H_hit, H_distance, V_distance, full_check):
@@ -147,33 +153,14 @@ class Raycast:
                 if V_distance < H_distance:
                     return True
 
-    def cast(self, player_rect, angle, ray_number, beta):
+    def cast(self, player_rect, angle, ray_number, beta, tile_index, search_tiles):
         H_hit = False
         V_hit = False
         H_offset = V_offset = 0
         end_pos = (0, 0)
-        angle -= 0.001
-
-        # Horizontal
-        if angle < 180:
-            H_y = int(player_rect.center[1] / self.tile_size) * self.tile_size
-        else:
-            H_y = int(player_rect.center[1] / self.tile_size) * self.tile_size + self.tile_size
-
-        # numba could shave off some ns on this
-        tan_radians_angle = math.tan(math.radians(angle))
-        cos_radians_angle = math.cos(math.radians(angle))
-
-        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / tan_radians_angle
-
-        # Vertical
-        if angle > 270 or angle < 90:
-            V_x = int(player_rect.center[0] / self.tile_size) * self.tile_size + self.tile_size
-        else:
-            V_x = int(player_rect.center[0] / self.tile_size) * self.tile_size
-
-        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * tan_radians_angle
-
+        
+        H_x, H_y, V_x, V_y, angle, cos_radians_angle, tan_radians_angle = self.get_camera_plane_for_angle(angle,
+                                                                                                          player_rect)
         # Extend
         for x in range(0, SETTINGS.render):
 
@@ -182,8 +169,17 @@ class Raycast:
 
             if self.check_hit(V_hit, H_hit, H_distance, V_distance, True):
                 break
-
-            for tile in SETTINGS.rendered_tiles:
+                
+            if tile_index:
+                start_search_index = tile_index - 1
+                
+                # start from the prior tileindex
+                if start_search_index < 0:
+                    start_search_index = len(search_tiles) - 3
+                
+                search_tiles = search_tiles[start_search_index:] + search_tiles[:start_search_index]
+            
+            for tile_index, tile in enumerate(search_tiles):
 
                 if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):
                     break
@@ -252,7 +248,7 @@ class Raycast:
                     if all(left_conditions) and player_rect.centerx < tile.rect.left:
                         V_hit = True
                         V_texture = SETTINGS.tile_texture[tile.ID]
-                        self.current_vtile = tile
+                        self.current_vtile = tile #V_x == tile.pos[0]
                         if tile.type == 'vdoor':
                             V_x += self.door_size
                             V_y -= self.door_size * tan_radians_angle
@@ -267,7 +263,7 @@ class Raycast:
                     elif all(right_conditions) and player_rect.centerx > tile.rect.right:
                         V_hit = True
                         V_texture = SETTINGS.tile_texture[tile.ID]
-                        self.current_vtile = tile
+                        self.current_vtile = tile #V_x == tile.pos[0]
                         if tile.type == 'vdoor':
                             V_x -= self.door_size
                             V_y += self.door_size * tan_radians_angle
@@ -344,7 +340,39 @@ class Raycast:
             vh = 'h'
 
         # Mode
+        if current_tile is not None:
+            print(tile_index, angle)
+            
         self.control(end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh, beta)
+        
+        return tile_index, search_tiles
+
+    def get_camera_plane_for_angle(self, angle, player_rect):
+        # tan for right angle values result in undefined value
+        # therefore add a tiny amount to the angle to mitigate this
+        angle -= 0.001
+        
+        # Horizontal
+        if angle < 180:
+            H_y = int(player_rect.center[1] / self.tile_size) * self.tile_size
+        else:
+            H_y = int(player_rect.center[1] / self.tile_size) * self.tile_size + self.tile_size
+            
+        # numba could shave off some ns on this
+        tan_radians_angle = math.tan(math.radians(angle))
+        cos_radians_angle = math.cos(math.radians(angle))
+        
+        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / tan_radians_angle
+        
+        # Vertical
+        if angle > 270 or angle < 90:
+            V_x = int(player_rect.center[0] / self.tile_size) * self.tile_size + self.tile_size
+        else:
+            V_x = int(player_rect.center[0] / self.tile_size) * self.tile_size
+            
+        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * tan_radians_angle
+        
+        return H_x, H_y, V_x, V_y, angle, cos_radians_angle, tan_radians_angle
 
     def control(self, end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh, beta):
         if SETTINGS.mode == 1:
@@ -359,14 +387,14 @@ class Raycast:
 
     def render_screen(self, ray_number, wall_dist, texture, offset, current_tile, vh, end_pos):
         if wall_dist:
-            #wall_height = int((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))))
+            # wall_height = int((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))))
             
             wall_height = int((self.tile_size / wall_dist) * self.wall_height_mod)
             SETTINGS.zbuffer.append(Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh))
             SETTINGS.zbuffer[ray_number].distance = wall_dist
             rendered_slice = pygame.transform.scale(SETTINGS.zbuffer[ray_number].slice, (self.wall_width, wall_height))
             SETTINGS.zbuffer[ray_number].update_rect(rendered_slice)
-            SETTINGS.zbuffer[ray_number].xpos = ((ray_number) * self.wall_width)
+            SETTINGS.zbuffer[ray_number].xpos = ray_number * self.wall_width
 
         else:
             SETTINGS.zbuffer.append(None)
