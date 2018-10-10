@@ -183,7 +183,9 @@ class Raycast:
         H_x, H_y, V_x, V_y, angle, cos_radians_angle, tan_radians_angle = self.get_camera_plane_for_angle(
             angle, player_rect, self.tile_size
         )
-        
+
+        search_tiles_for_hit = self.search_tiles_for_hit
+
         # Extend
         for x in range(0, SETTINGS.render):
 
@@ -211,7 +213,7 @@ class Raycast:
                 # print("saved some loops")
                 break
 
-            got_H_hit, H_values, got_V_hit, V_values = self.search_tiles_for_hit(
+            got_H_hit, H_values, got_V_hit, V_values = search_tiles_for_hit(
                 H_distance, H_hit, H_offset, H_x, H_y,
                 V_distance, V_hit, V_offset, V_x, V_y,
                 player_rect, search_tiles, tan_radians_angle
@@ -287,25 +289,29 @@ class Raycast:
 
     def search_tiles_for_hit(self, H_distance, H_hit, H_offset, H_x, H_y, V_distance, V_hit, V_offset, V_x, V_y,
                              player_rect, search_tiles, tan_radians_angle):
-            
-        for tile_index, tile in enumerate(search_tiles):
 
-            if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):
+        check_hit = self.check_hit
+        test_tile_for_horizontal_hit = self.test_tile_for_horizontal_hit
+        test_tile_for_vertical_hit = self.test_tile_for_vertical_hit
+            
+        for tile in search_tiles:
+
+            if check_hit(V_hit, H_hit, H_distance, V_distance, False):
                 break
 
             if not H_hit:
     
-                H_hit, H_offset, H_x, H_y = self.test_tile_for_horizontal_hit(
+                H_hit, H_offset, H_x, H_y = test_tile_for_horizontal_hit(
                     H_hit, H_offset, H_x, H_y, player_rect, tan_radians_angle, tile
                 )
 
 
-            if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):
+            if check_hit(V_hit, H_hit, H_distance, V_distance, False):
                 break
 
             if not V_hit:
     
-                V_hit, V_offset, V_x, V_y = self.test_tile_for_vertical_hit(
+                V_hit, V_offset, V_x, V_y = test_tile_for_vertical_hit(
                     V_hit, V_offset, V_x, V_y, player_rect, tan_radians_angle, tile
                 )
 
