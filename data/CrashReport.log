@@ -1,0 +1,10 @@
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 427, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 123, in calculate
+    current_h_tile, current_v_tile, search_tiles
+  File "D:\Projects\DUGA\RAYCAST.py", line 231, in cast
+    got_H_hit, H_values, got_V_hit, V_values = search_tiles_for_hit(
+NameError: name 'search_tiles_for_hit' is not defined

@@ -13,8 +13,10 @@ def sort_distance(x):
 def sort_atan(x):
     if SETTINGS.middle_ray_pos:
         pos = SETTINGS.middle_ray_pos
-    else:
+    elif SETTINGS.player_rect:
         pos = SETTINGS.player_rect.center
+    else:
+        return None
         
     #find the position on each tile that is closest to middle_ray_pos
     xpos = max(x.rect.left, min(pos[0], x.rect.right)) - SETTINGS.player_rect.centerx
@@ -31,6 +33,6 @@ def sort_atan(x):
     if x.type == 'end':
         SETTINGS.end_angle = theta
 
-    theta = abs(theta)
+    #theta = abs(theta)
     
-    return(theta)
+    return theta

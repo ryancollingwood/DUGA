@@ -74,6 +74,8 @@ class Map:
 
         #print("This level has %s items and %s NPC's" % (len(SETTINGS.levels_list[SETTINGS.current_level].items), len(SETTINGS.levels_list[SETTINGS.current_level].npcs)))
 
+from GEOM import sort_atan
+
 class Tile:
     
     def __init__(self, ID, pos, map_pos):
@@ -113,6 +115,8 @@ class Tile:
                 self.close_sound = pygame.mixer.Sound(os.path.join('sounds', 'other', 'door_close.ogg'))
 
                 SETTINGS.all_doors.append(self)
+
+        self.atan = sort_atan(self)
 
 
     def draw(self, canvas):

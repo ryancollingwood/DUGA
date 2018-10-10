@@ -228,14 +228,14 @@ def render_screen(canvas):
         sprite.get_pos(canvas)
 
     #Sort zbuffer and solid tiles
-    SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key= sort_distance, reverse=True)
-    SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, sort_atan(x), x.distance))
+    SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
+    SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
     
 
     #Calculate which tiles are visible
     for tile in SETTINGS.all_solid_tiles:
         if tile.distance and SETTINGS.tile_visible[tile.ID]:
-            if sort_atan(tile) <= SETTINGS.fov:
+            if abs(tile.atan) <= SETTINGS.fov:
                 if tile.distance < SETTINGS.render * SETTINGS.tile_size:
                     SETTINGS.rendered_tiles.append(tile)
                             
@@ -243,15 +243,8 @@ def render_screen(canvas):
                 SETTINGS.rendered_tiles.append(tile)
 
     #Render all items in zbuffer
-    item_threads = []
     for item in SETTINGS.zbuffer:
-        #item_thread = threading.Thread(target=render_zbuffer_item, args=(canvas, item))
-        #item_threads.append(item_thread)
-        #item_thread.start()
         render_zbuffer_item(canvas, item)
-
-    #for item_thread in item_threads:
-    #    item_thread.join()
 
     #Draw weapon if it is there
     if SETTINGS.current_gun:
