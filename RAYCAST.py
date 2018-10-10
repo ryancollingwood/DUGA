@@ -3,6 +3,7 @@
 import SETTINGS
 import pygame
 import math
+from multiprocessing import Pool
 
 pygame.init()
 
@@ -180,11 +181,16 @@ class Raycast:
         H_offset = V_offset = 0
         end_pos = (0, 0)
 
+        test_tile_for_horizontal_hit = self.test_tile_for_horizontal_hit
+        test_tile_for_vertical_hit = self.test_tile_for_vertical_hit
+        tile_size = self.tile_size
+
         H_x, H_y, V_x, V_y, angle, cos_radians_angle, tan_radians_angle = self.get_camera_plane_for_angle(
-            angle, player_rect, self.tile_size
+            angle, player_rect, tile_size
         )
 
         search_tiles_for_hit = self.search_tiles_for_hit
+        check_hit = self.check_hit
 
         # Extend
         for x in range(0, SETTINGS.render):
@@ -192,24 +198,24 @@ class Raycast:
             H_distance = abs((player_rect.center[0] - H_x) / cos_radians_angle)
             V_distance = abs((player_rect.center[0] - V_x) / cos_radians_angle)
 
-            if self.check_hit(V_hit, H_hit, H_distance, V_distance, True):
+            if check_hit(V_hit, H_hit, H_distance, V_distance, True):
                 break
             
             # test if the last tile(s) are a hit?
             # doors are rendering a little odd so not reusing doors
             if previous_horizontal_tile and previous_horizontal_tile in search_tiles:
                 if previous_horizontal_tile.type != 'hdoor':
-                    H_hit, H_offset, H_x, H_y = self.test_tile_for_horizontal_hit(
+                    H_hit, H_offset, H_x, H_y = test_tile_for_horizontal_hit(
                         H_hit, H_offset, H_x, H_y, player_rect, tan_radians_angle, previous_horizontal_tile
                     )
                 
             if previous_vertical_tile and previous_vertical_tile in search_tiles:
                 if previous_vertical_tile.type != 'vdoor':
-                    V_hit, V_offset, V_x, V_y = self.test_tile_for_vertical_hit(
+                    V_hit, V_offset, V_x, V_y = test_tile_for_vertical_hit(
                         V_hit, V_offset, V_x, V_y, player_rect, tan_radians_angle, previous_vertical_tile
                     )
 
-            if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):
+            if check_hit(V_hit, H_hit, H_distance, V_distance, False):
                 # print("saved some loops")
                 break
 
@@ -229,23 +235,23 @@ class Raycast:
             # Extend actual ray
             if not H_hit:
                 if angle < 180:
-                    H_y -= self.tile_size
+                    H_y -= tile_size
                 else:
-                    H_y += self.tile_size
+                    H_y += tile_size
                 if angle >= 180:
-                    H_x -= self.tile_size / tan_radians_angle
+                    H_x -= tile_size / tan_radians_angle
                 else:
-                    H_x += self.tile_size / tan_radians_angle
+                    H_x += tile_size / tan_radians_angle
 
             if not V_hit:
                 if angle > 270 or angle < 90:  # ->
-                    V_x += self.tile_size
+                    V_x += tile_size
                 else:
-                    V_x -= self.tile_size
+                    V_x -= tile_size
                 if angle >= 270 or angle < 90:  # <-
-                    V_y -= self.tile_size * tan_radians_angle
+                    V_y -= tile_size * tan_radians_angle
                 else:
-                    V_y += self.tile_size * tan_radians_angle
+                    V_y += tile_size * tan_radians_angle
 
         if V_hit and H_hit:
             H_hit, V_hit = False, False
@@ -304,7 +310,6 @@ class Raycast:
                 H_hit, H_offset, H_x, H_y = test_tile_for_horizontal_hit(
                     H_hit, H_offset, H_x, H_y, player_rect, tan_radians_angle, tile
                 )
-
 
             if check_hit(V_hit, H_hit, H_distance, V_distance, False):
                 break
@@ -366,28 +371,30 @@ class Raycast:
         V_texture = SETTINGS.tile_texture[tile.ID]
         
         self.set_current_tile(tile, False)
+        door_size = self.door_size
         
         if tile.type == 'vdoor':
             if not player_rect_gt:
-                V_x += self.door_size
-                V_y -= self.door_size * tan_radians_angle
+                V_x += door_size
+                V_y -= door_size * tan_radians_angle
             else:
-                V_x -= self.door_size
-                V_y += self.door_size * tan_radians_angle
+                V_x -= door_size
+                V_y += door_size * tan_radians_angle
 
             V_offset = self.find_offset(V_y, tile, 'v')
             
             if V_offset < 0:
                 V_hit = False
                 if not player_rect_gt:
-                    V_x -= self.door_size
-                    V_y += self.door_size * tan_radians_angle
+                    V_x -= door_size
+                    V_y += door_size * tan_radians_angle
                 else:
-                    V_x += self.door_size
-                    V_y -= self.door_size * tan_radians_angle
+                    V_x += door_size
+                    V_y -= door_size * tan_radians_angle
 
         else:
             V_offset = self.find_offset(V_y, tile, 'v')
+
         return V_hit, V_offset, V_texture, V_x, V_y
 
     def set_horizontal_hit_values(self, H_x, H_y, tan_radians_angle, tile, player_rect_gt):
@@ -395,14 +402,15 @@ class Raycast:
         H_texture = SETTINGS.tile_texture[tile.ID]
         
         self.set_current_tile(tile, True)
+        door_size = self.door_size
         
         if tile.type == 'hdoor':
             if player_rect_gt:
-                H_y -= self.door_size
-                H_x += self.door_size / tan_radians_angle
+                H_y -= door_size
+                H_x += door_size / tan_radians_angle
             else:
-                H_y += self.door_size
-                H_x -= self.door_size / tan_radians_angle
+                H_y += door_size
+                H_x -= door_size / tan_radians_angle
 
             H_offset = self.find_offset(H_x, tile, 'h')
             
@@ -410,11 +418,11 @@ class Raycast:
                 H_hit = False
                 
                 if player_rect_gt:
-                    H_y += self.door_size
-                    H_x -= self.door_size / tan_radians_angle
+                    H_y += door_size
+                    H_x -= door_size / tan_radians_angle
                 else:
-                    H_y -= self.door_size
-                    H_x += self.door_size / tan_radians_angle
+                    H_y -= door_size
+                    H_x += door_size / tan_radians_angle
 
         else:
             H_offset = self.find_offset(H_x, tile, 'h')
