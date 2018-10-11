@@ -100,11 +100,18 @@ class Raycast:
             tile.atan = sort_atan(tile)
         
         current_h_tile = None
+        last_h_tile = None
         current_v_tile = None
+        last_v_tile = None
         
         angle = SETTINGS.player_angle
         player_pos = SETTINGS.player_map_pos
 
+        h_search_dir = ""
+
+        print("")
+        print("")
+        print("")
         while ray < fov:
             degree = angle - ray
             if degree <= 0:
@@ -117,10 +124,14 @@ class Raycast:
             search_tiles = SETTINGS.rendered_tiles
             
             if current_h_tile is not None:
-                if current_h_tile.map_pos[1] < player_pos[1]:
-                    search_tiles = [x for x in SETTINGS.rendered_tiles if x.map_pos[1] <= player_pos[1]+2]
-                elif current_h_tile.map_pos[1] > player_pos[1]:
-                    search_tiles = [x for x in SETTINGS.rendered_tiles if x.map_pos[1] >= player_pos[1]-2]
+                if current_h_tile.map_pos[0] < player_pos[0]:
+                    search_tiles = [x for x in SETTINGS.rendered_tiles if x.map_pos[0] <= player_pos[0]+2]
+                    h_search_dir = "x.map_pos[0] <= player_pos[0]+2"
+                elif current_h_tile.map_pos[0] > player_pos[0]:
+                    search_tiles = [x for x in SETTINGS.rendered_tiles if x.map_pos[0] >= player_pos[0]-2]
+                    h_search_dir = "x.map_pos[0] >= player_pos[0]-2]"
+                else:
+                    h_search_dir = ""
 
             cast_horizontal_tile, cast_vertical_tile = self.cast(
                 SETTINGS.player_rect, degree, ray_number, beta,
@@ -128,9 +139,19 @@ class Raycast:
             )
             
             if cast_horizontal_tile is not None:
+                if last_h_tile != current_h_tile:
+                    last_h_tile = current_h_tile
+                    if last_h_tile is not None:
+                        # print("h", last_h_tile.map_pos, player_pos, h_search_dir)
+                        pass
                 current_h_tile = cast_horizontal_tile
 
             if cast_vertical_tile is not None:
+                if last_v_tile != current_v_tile:
+                    last_v_tile = current_v_tile
+                    if last_v_tile is not None:
+                        # print("v", last_v_tile.map_pos, player_pos)
+                        pass
                 current_v_tile = cast_vertical_tile
                 
             ray_number += 1
