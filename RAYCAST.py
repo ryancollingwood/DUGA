@@ -105,13 +105,7 @@ class Raycast:
         last_v_tile = None
         
         angle = SETTINGS.player_angle
-        player_pos = SETTINGS.player_map_pos
 
-        h_search_dir = ""
-
-        print("")
-        print("")
-        print("")
         while ray < fov:
             degree = angle - ray
             if degree <= 0:
@@ -120,38 +114,23 @@ class Raycast:
                 degree -= 360
 
             beta = abs(degree - angle)
-            
-            search_tiles = SETTINGS.rendered_tiles
-            
-            if current_h_tile is not None:
-                if current_h_tile.map_pos[0] < player_pos[0]:
-                    search_tiles = [x for x in SETTINGS.rendered_tiles if x.map_pos[0] <= player_pos[0]+2]
-                    h_search_dir = "x.map_pos[0] <= player_pos[0]+2"
-                elif current_h_tile.map_pos[0] > player_pos[0]:
-                    search_tiles = [x for x in SETTINGS.rendered_tiles if x.map_pos[0] >= player_pos[0]-2]
-                    h_search_dir = "x.map_pos[0] >= player_pos[0]-2]"
-                else:
-                    h_search_dir = ""
 
             cast_horizontal_tile, cast_vertical_tile = self.cast(
                 SETTINGS.player_rect, degree, ray_number, beta,
-                current_h_tile, current_v_tile, search_tiles
+                current_h_tile, current_v_tile, SETTINGS.rendered_tiles
             )
-            
+
+            # not doing anything with these values at the moment :/
+            # still need to work on how to use them to reduce the
+            # search space of tiles rather than SETTINGS.rendered_tiles
             if cast_horizontal_tile is not None:
                 if last_h_tile != current_h_tile:
                     last_h_tile = current_h_tile
-                    if last_h_tile is not None:
-                        # print("h", last_h_tile.map_pos, player_pos, h_search_dir)
-                        pass
                 current_h_tile = cast_horizontal_tile
 
             if cast_vertical_tile is not None:
                 if last_v_tile != current_v_tile:
                     last_v_tile = current_v_tile
-                    if last_v_tile is not None:
-                        # print("v", last_v_tile.map_pos, player_pos)
-                        pass
                 current_v_tile = cast_vertical_tile
                 
             ray_number += 1
@@ -214,6 +193,7 @@ class Raycast:
 
         test_tile_for_horizontal_hit = self.test_tile_for_horizontal_hit
         test_tile_for_vertical_hit = self.test_tile_for_vertical_hit
+
         tile_size = self.tile_size
 
         H_x, H_y, V_x, V_y, angle, cos_radians_angle, tan_radians_angle = self.get_camera_plane_for_angle(
@@ -327,34 +307,48 @@ class Raycast:
     def search_tiles_for_hit(self, H_distance, H_hit, H_offset, H_x, H_y, V_distance, V_hit, V_offset, V_x, V_y,
                              player_rect, search_tiles, tan_radians_angle):
 
-        check_hit = self.check_hit
-        test_tile_for_horizontal_hit = self.test_tile_for_horizontal_hit
-        test_tile_for_vertical_hit = self.test_tile_for_vertical_hit
+        if not H_hit:
+            H_hit, H_offset, H_x, H_y = self.test_tiles_for_horizontal_hit(
+                H_hit, H_offset, H_x, H_y, player_rect, tan_radians_angle, search_tiles
+            )
 
-        search_iterations = 0
-        for tile in search_tiles:
-            search_iterations += 1
-            if check_hit(V_hit, H_hit, H_distance, V_distance, False):
-                break
-
-            if not H_hit:
-    
-                H_hit, H_offset, H_x, H_y = test_tile_for_horizontal_hit(
-                    H_hit, H_offset, H_x, H_y, player_rect, tan_radians_angle, tile
-                )
-
-            if check_hit(V_hit, H_hit, H_distance, V_distance, False):
-                break
-
-            if not V_hit:
-    
-                V_hit, V_offset, V_x, V_y = test_tile_for_vertical_hit(
-                    V_hit, V_offset, V_x, V_y, player_rect, tan_radians_angle, tile
-                )
-
-        #print("search_tiles_for_hit", search_iterations)
+        if not V_hit:
+            V_hit, V_offset, V_x, V_y = self.test_tiles_for_vertical_hit(
+                V_hit, V_offset, V_x, V_y, player_rect, tan_radians_angle, search_tiles
+            )
 
         return H_hit, (H_offset, H_x, H_y), V_hit, (V_offset, V_x, V_y)
+
+
+    def test_tiles_for_vertical_hit(self, V_hit, V_offset, V_x, V_y, player_rect, tan_radians_angle, tiles):
+
+        tiles_left = [
+            tile for tile in tiles if
+            V_x == tile.rect.left and
+            tile.rect.topleft[1] <= V_y <= tile.rect.bottomleft[1] and
+            player_rect.centerx < tile.rect.left
+        ]
+
+        tiles_right = [
+            tile for tile in tiles if
+            V_x == tile.rect.right and
+            tile.rect.topright[1] <= V_y <= tile.rect.bottomright[1] and
+            player_rect.centerx > tile.rect.right
+        ]
+
+        if len(tiles_left) > 0:
+
+            V_hit, V_offset, V_texture, V_x, V_y = self.set_vertical_hit_values(
+                V_x, V_y, tan_radians_angle, tiles_left[0], False
+            )
+        elif len(tiles_right) > 0:
+
+            V_hit, V_offset, V_texture, V_x, V_y = self.set_vertical_hit_values(
+                V_x, V_y, tan_radians_angle, tiles_right[0], True
+            )
+
+        return V_hit, V_offset, V_x, V_y
+
 
     def test_tile_for_vertical_hit(self, V_hit, V_offset, V_x, V_y, player_rect, tan_radians_angle, tile):
         left_conditions = [
@@ -377,6 +371,32 @@ class Raycast:
                 V_x, V_y, tan_radians_angle, tile, True
             )
         return V_hit, V_offset, V_x, V_y
+
+    def test_tiles_for_horizontal_hit(self, H_hit, H_offset, H_x, H_y, player_rect, tan_radians_angle, tiles):
+
+        bottom_tiles = [
+            tile for tile in tiles if
+            H_y == tile.rect.bottom and
+            tile.rect.bottomleft[0] <= H_x <= tile.rect.bottomright[0] and
+            player_rect.centery > tile.rect.bottom
+        ]
+
+        top_tiles = [
+            tile for tile in tiles if
+            H_y == tile.rect.top and
+            tile.rect.topleft[0] <= H_x <= tile.rect.topright[0] and
+            player_rect.centery < tile.rect.top
+        ]
+
+        if len(bottom_tiles) > 0:
+            H_hit, H_offset, H_texture, H_x, H_y = self.set_horizontal_hit_values(
+                H_x, H_y, tan_radians_angle, bottom_tiles[0], True
+            )
+        elif len(top_tiles) > 0:
+            H_hit, H_offset, H_texture, H_x, H_y = self.set_horizontal_hit_values(
+                H_x, H_y, tan_radians_angle, top_tiles[0], False
+            )
+        return H_hit, H_offset, H_x, H_y
 
     def test_tile_for_horizontal_hit(self, H_hit, H_offset, H_x, H_y, player_rect, tan_radians_angle, tile):
         bottom_conditions = [
