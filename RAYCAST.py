@@ -89,7 +89,6 @@ class Raycast:
     def calculate(self):
         self.res = SETTINGS.resolution
         self.fov = SETTINGS.fov
-        angle = SETTINGS.player_angle
 
         step = self.fov / self.res
         fov = int(self.fov / 2)
@@ -99,9 +98,12 @@ class Raycast:
         for tile in SETTINGS.all_solid_tiles:
             tile.distance = tile.get_dist(SETTINGS.player_rect.center)
             tile.atan = sort_atan(tile)
-
+        
         current_h_tile = None
         current_v_tile = None
+        
+        angle = SETTINGS.player_angle
+        player_pos = SETTINGS.player_map_pos
 
         while ray < fov:
             degree = angle - ray
@@ -111,16 +113,14 @@ class Raycast:
                 degree -= 360
 
             beta = abs(degree - angle)
-            inverse_ray = abs(ray) * -1
-
-            search_lower = abs(ray) - degree
-            search_upper = abs(ray)
-
+            
             search_tiles = SETTINGS.rendered_tiles
-            #search_tiles = [x for x in SETTINGS.rendered_tiles if search_lower <= x.atan <= search_upper]
-            #vertical_search_tiles = [x for x in SETTINGS.rendered_tiles if inverse_ray <= x.atan <= ray]
-            #horizontal_search_tiles = [x for x in SETTINGS.rendered_tiles if x.atan <= ray + step]
-            #search_tiles = vertical_search_tiles + horizontal_search_tiles
+            
+            if current_h_tile is not None:
+                if current_h_tile.map_pos[1] < player_pos[1]:
+                    search_tiles = [x for x in SETTINGS.rendered_tiles if x.map_pos[1] <= player_pos[1]+2]
+                elif current_h_tile.map_pos[1] > player_pos[1]:
+                    search_tiles = [x for x in SETTINGS.rendered_tiles if x.map_pos[1] >= player_pos[1]-2]
 
             cast_horizontal_tile, cast_vertical_tile = self.cast(
                 SETTINGS.player_rect, degree, ray_number, beta,
@@ -129,12 +129,9 @@ class Raycast:
             
             if cast_horizontal_tile is not None:
                 current_h_tile = cast_horizontal_tile
-                #print("current_h_tile", current_h_tile.atan, ray, angle, degree, beta)
+
             if cast_vertical_tile is not None:
                 current_v_tile = cast_vertical_tile
-                #print("current_v_tile", current_v_tile.atan, ray, angle, degree, beta)
-
-                #print(cast_horizontal_tile, cast_search_tiles[cast_horizontal_tile].ID, id(cast_search_tiles[cast_horizontal_tile]))
                 
             ray_number += 1
             ray += step
