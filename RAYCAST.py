@@ -1,10 +1,10 @@
 # This is the script where all the code for raycasting goes. The screen rendering in 2.5D will also go here.
 
-import SETTINGS
 import pygame
 import math
-from GEOM import sort_atan
 
+from GEOM import sort_atan, get_camera_plane_for_angle
+import SETTINGS
 
 pygame.init()
 
@@ -196,8 +196,8 @@ class Raycast:
 
         tile_size = self.tile_size
 
-        H_x, H_y, V_x, V_y, angle, cos_radians_angle, tan_radians_angle = self.get_camera_plane_for_angle(
-            angle, player_rect, tile_size
+        H_x, H_y, V_x, V_y, angle, cos_radians_angle, tan_radians_angle = get_camera_plane_for_angle(
+            angle, player_rect.center, tile_size
         )
 
         search_tiles_for_hit = self.search_tiles_for_hit
@@ -501,33 +501,6 @@ class Raycast:
 
         return current_tile, end_pos, offset, texture, tile_len
 
-    @staticmethod
-    def get_camera_plane_for_angle(angle, player_rect, tile_size):
-        # tan for right angle values result in undefined value
-        # therefore add a tiny amount to the angle to mitigate this
-        angle -= 0.001
-        
-        # Horizontal
-        if angle < 180:
-            H_y = int(player_rect.center[1] / tile_size) * tile_size
-        else:
-            H_y = int(player_rect.center[1] / tile_size) * tile_size + tile_size
-            
-        # numba could shave off some ns on this
-        tan_radians_angle = math.tan(math.radians(angle))
-        cos_radians_angle = math.cos(math.radians(angle))
-        
-        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / tan_radians_angle
-        
-        # Vertical
-        if angle > 270 or angle < 90:
-            V_x = int(player_rect.center[0] / tile_size) * tile_size + tile_size
-        else:
-            V_x = int(player_rect.center[0] / tile_size) * tile_size
-            
-        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * tan_radians_angle
-        
-        return H_x, H_y, V_x, V_y, angle, cos_radians_angle, tan_radians_angle
 
     def control(self, end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh, beta):
         if SETTINGS.mode == 1:
