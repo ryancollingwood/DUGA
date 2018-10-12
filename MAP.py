@@ -123,15 +123,23 @@ class Tile:
     def draw(self, canvas):
         canvas.blit(self.icon, (self.rect.x/4, self.rect.y/4))
 
+    def update(self):
+        if self.state and self.state != 'closed':
+            self.sesam_luk_dig_op()
+
+    def calculate_render_visible(self):
+        self.distance = self.get_dist(SETTINGS.player_rect.center)
+        return self.distance <= SETTINGS.render * SETTINGS.tile_size * 1.2
+
     def get_dist(self, pos, *called):
         xpos = self.rect.center[0] - pos[0]
         ypos = pos[1] - self.rect.center[1]
-        self.distance = straight_line_distance(xpos, ypos)
+        distance = straight_line_distance(xpos, ypos)
 
-        if (self.state and self.state != 'closed') and called != ('npc',): #lol
+        if (self.state and self.state != 'closed') and called != ('npc',):  # lol
             self.sesam_luk_dig_op()
-            
-        return self.distance
+
+        return distance
 
     def sesam_luk_dig_op(self):
         if self.open > SETTINGS.tile_size:

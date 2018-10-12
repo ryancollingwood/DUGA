@@ -96,8 +96,9 @@ class Raycast:
         ray_number = 0
 
         for tile in SETTINGS.all_solid_tiles:
-            tile.distance = tile.get_dist(SETTINGS.player_rect.center)
-            tile.atan = sort_atan(tile)
+            tile.update()
+        # tile.distance = tile.get_dist(SETTINGS.player_rect.center)
+        # tile.atan = sort_atan(tile)
         
         current_h_tile = None
         last_h_tile = None

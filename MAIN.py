@@ -27,6 +27,7 @@ import TUTORIAL
 from GEOM import sort_distance
 from EVENTS import TIMER_PLAYTIME
 from EVENTS import EVENT_NPC_UPDATE
+from EVENTS import EVENT_PLAYER_INPUT
 
 SECONDS_IN_MINUTE = 60
 MILLISECONDS_IN_SECOND = 1000.0
@@ -230,7 +231,7 @@ class Canvas:
 
 def render_screen(canvas):
     '''render_screen(canvas) -> Renders everything but NPC\'s'''
-    SETTINGS.rendered_tiles = []
+    #SETTINGS.rendered_tiles = []
 
     #Get sprite positions
     for sprite in SETTINGS.all_sprites:
@@ -241,16 +242,16 @@ def render_screen(canvas):
     SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
     
     #Calculate which tiles are visible
-    SETTINGS.rendered_tiles = [
-        tile for tile in SETTINGS.all_solid_tiles if
-        tile.distance and SETTINGS.tile_visible[tile.ID] and
-            (
-                (abs(tile.atan) <= SETTINGS.fov and
-                 tile.distance < SETTINGS.render * SETTINGS.tile_size)
-                or
-                (tile.distance <= SETTINGS.tile_size * 1.5)
-            )
-    ]
+    #SETTINGS.rendered_tiles = [
+    #    tile for tile in SETTINGS.all_solid_tiles if
+    #    tile.distance and SETTINGS.tile_visible[tile.ID] and
+    #        (
+    #            (abs(tile.atan) <= SETTINGS.fov and
+    #             tile.distance < SETTINGS.render * SETTINGS.tile_size)
+    #            or
+    #            (tile.distance <= SETTINGS.tile_size * 1.5)
+    #        )
+    #]
 
     #Render all items in zbuffer
     for item in SETTINGS.zbuffer:
@@ -398,6 +399,29 @@ def calculate_statistics():
         pickle.dump(SETTINGS.statistics, saved_stats)
 
 
+from GEOM import sort_atan
+
+
+def rotate_screen():
+    for tile in SETTINGS.all_solid_tiles:
+        tile.atan = sort_atan(tile)
+
+def player_moved():
+    SETTINGS.rendered_tiles = [
+        tile for tile in SETTINGS.all_solid_tiles if
+        tile.calculate_render_visible() and
+        SETTINGS.tile_visible[tile.ID] and
+        (
+            (abs(tile.atan) <= SETTINGS.fov and
+             tile.distance < SETTINGS.render * SETTINGS.tile_size)
+            or
+            (tile.distance <= SETTINGS.tile_size * 1.5)
+        )
+    ]
+    #for tile in SETTINGS.all_solid_tiles:
+    #    tile.distance = tile.get_dist(SETTINGS.player_rect.center)
+
+
 #Main loop
 def main_loop():
     game_exit = False
@@ -424,7 +448,14 @@ def main_loop():
                     calculate_statistics()
                     pygame.quit()
                     sys.exit(0)
-                    
+                elif event.type == EVENT_PLAYER_INPUT:
+                    if event.event == "mouse_move":
+                        if event.value != 0:
+                            rotate_screen()
+                            player_moved()
+                    elif event.event == "player_moved":
+                        player_moved()
+
                 elif event.type == TIMER_PLAYTIME:
                     if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
                         SETTINGS.statistics['playtime'] += 1
