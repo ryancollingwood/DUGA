@@ -7,6 +7,7 @@ import os
 import random
 import math
 import pygame
+from GEOM import straight_line_distance, cos_radians, sin_radians
 #stats format in bottom of script
 #pos is in tiles, face in degrees, frame_interval is seconds between frames, speed is pixels/second
 
@@ -230,7 +231,7 @@ class Npc:
         xpos = SETTINGS.player_rect.centerx - self.rect.centerx
         ypos = SETTINGS.player_rect.centery - self.rect.centery
         
-        self.dist = math.sqrt(xpos*xpos + ypos*ypos)
+        self.dist = straight_line_distance(xpos, ypos)
         
         if self.dist <= SETTINGS.render * SETTINGS.tile_size:
             theta = math.atan2(-ypos, xpos) % (2*math.pi)
@@ -716,8 +717,8 @@ class Npc:
                 self.drop_item()
                 SETTINGS.statistics['last enemies'] += 1
             elif self.knockback > 0:
-                self.collide_update(-math.cos(math.radians(self.postheta))*self.knockback, 0)
-                self.collide_update(0, math.sin(math.radians(self.postheta))*self.knockback)
+                self.collide_update(-cos_radians(self.postheta)*self.knockback, 0)
+                self.collide_update(0, sin_radians(self.postheta)*self.knockback)
                 self.knockback = int(self.knockback*0.8)
                 
         #hurt animation

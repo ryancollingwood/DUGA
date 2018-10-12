@@ -3,7 +3,7 @@
 import pygame
 import math
 
-from GEOM import sort_atan, get_camera_plane_for_angle
+from GEOM import sort_atan, get_camera_plane_for_angle, tan_radians
 import SETTINGS
 
 pygame.init()
@@ -79,7 +79,7 @@ class Raycast:
         self.wall_height = int(SETTINGS.canvas_target_height / self.res)
         self.wall_width_to_height_difference = self.wall_width - self.wall_height
         self.fov_mod = self.fov * 0.8
-        self.wall_height_mod = (360 / math.tan(math.radians(self.fov_mod))) * self.wall_width_to_height_difference
+        self.wall_height_mod = (360 / tan_radians(self.fov_mod)) * self.wall_width_to_height_difference
         self.canvas = canvas
         self.canvas2 = canvas2
 
@@ -516,9 +516,10 @@ class Raycast:
 
     def render_screen(self, ray_number, wall_dist, texture, offset, current_tile, vh, end_pos):
         if wall_dist:
-            # wall_height = int((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))))
             
+            # wall_height = int((self.tile_size / wall_dist) * (360 / tan_radians(SETTINGS.fov * 0.8)))
             wall_height = int((self.tile_size / wall_dist) * self.wall_height_mod)
+            
             SETTINGS.zbuffer.append(Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh))
             SETTINGS.zbuffer[ray_number].distance = wall_dist
             rendered_slice = pygame.transform.scale(SETTINGS.zbuffer[ray_number].slice, (self.wall_width, wall_height))

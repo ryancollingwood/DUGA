@@ -7,6 +7,7 @@ import SOUND
 import pygame
 import math
 import os
+from GEOM import cos_radians, sin_radians
 
 class Player:
 
@@ -55,9 +56,9 @@ class Player:
 
     def direction(self, offset, distance):
         if distance == 0:
-            direction = [math.cos(math.radians(self.angle + offset)), -math.sin(math.radians(self.angle + offset))]
+            direction = [cos_radians(self.angle + offset), -sin_radians(self.angle + offset)]
         else:
-            direction = [(math.cos(math.radians(self.angle + offset))) * distance, (-math.sin(math.radians(self.angle + offset))) * distance]
+            direction = [cos_radians(self.angle + offset) * distance, (-sin_radians(self.angle + offset)) * distance]
         return direction
 
     def control(self, canvas):

@@ -6,6 +6,7 @@ import SEGMENTS
 import SETTINGS
 import TEXTURES
 import LEVELS
+from GEOM import cos_radians, sin_radians
 
 class Generator:
 
@@ -264,8 +265,8 @@ class Generator:
             tempx = item[0][0] - origin[0]
             tempy = item[0][1] - origin[1]
 
-            tempx1 = math.cos(math.radians(90)) * tempx - math.sin(math.radians(90)) * tempy
-            tempy1 = math.sin(math.radians(90)) * tempx + math.cos(math.radians(90)) * tempy
+            tempx1 = cos_radians(90) * tempx - sin_radians(90) * tempy
+            tempy1 = sin_radians(90) * tempx + cos_radians(90) * tempy
 
             tempx1 += origin[0]
             tempy1 += origin[1]
@@ -280,8 +281,8 @@ class Generator:
             tempx = npc[0][0] - origin[0]
             tempy = npc[0][1] - origin[1]
             
-            tempx1 = math.cos(math.radians(90)) * tempx - math.sin(math.radians(90)) * tempy
-            tempy1 = math.sin(math.radians(90)) * tempx + math.cos(math.radians(90)) * tempy
+            tempx1 = cos_radians(90) * tempx - sin_radians(90) * tempy
+            tempy1 = sin_radians(90) * tempx + cos_radians(90) * tempy
 
             tempx1 += origin[0]
             tempy1 += origin[1]
@@ -298,8 +299,8 @@ class Generator:
             tempx = rotseg.player_pos[0] - origin[0]
             tempy = rotseg.player_pos[1] - origin[1]
 
-            tempx1 = math.cos(math.radians(90)) * tempx - math.sin(math.radians(90)) * tempy
-            tempy1 = math.sin(math.radians(90)) * tempx + math.cos(math.radians(90)) * tempy
+            tempx1 = cos_radians(90) * tempx - sin_radians(90) * tempy
+            tempy1 = sin_radians(90) * tempx + cos_radians(90) * tempy
 
             tempx1 += origin[0]
             tempy1 += origin[1]

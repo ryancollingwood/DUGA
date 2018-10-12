@@ -231,16 +231,17 @@ def render_screen(canvas):
     SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
     SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
     
-
     #Calculate which tiles are visible
-    for tile in SETTINGS.all_solid_tiles:
-        if tile.distance and SETTINGS.tile_visible[tile.ID]:
-            if abs(tile.atan) <= SETTINGS.fov:
-                if tile.distance < SETTINGS.render * SETTINGS.tile_size:
-                    SETTINGS.rendered_tiles.append(tile)
-                            
-            elif tile.distance <= SETTINGS.tile_size * 1.5:
-                SETTINGS.rendered_tiles.append(tile)
+    SETTINGS.rendered_tiles = [
+        tile for tile in SETTINGS.all_solid_tiles if
+        tile.distance and SETTINGS.tile_visible[tile.ID] and
+            (
+                (abs(tile.atan) <= SETTINGS.fov and
+                 tile.distance < SETTINGS.render * SETTINGS.tile_size)
+                or
+                (tile.distance <= SETTINGS.tile_size * 1.5)
+            )
+    ]
 
     #Render all items in zbuffer
     for item in SETTINGS.zbuffer:

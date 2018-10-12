@@ -29,6 +29,7 @@ def sort_atan(x):
     if x.type == 'end':
         SETTINGS.end_angle = theta
 
+    # if a consumer requires abs they can abs
     #theta = abs(theta)
     
     return theta
@@ -82,5 +83,32 @@ def get_camera_plane_for_angle(angle, player_rect_center, tile_size):
 
 
 @jit(nopython=True)
+def cos_radians(angle):
+    return math.cos(math.radians(angle))
+
+
+@jit(nopython=True)
+def tan_radians(angle):
+    return math.tan(math.radians(angle))
+
+
+@jit(nopython=True)
+def sin_radians(angle):
+    return math.sin(math.radians(angle))
+
+
+@jit(nopython=True)
 def straight_line_distance(xpos, ypos):
     return math.sqrt(xpos * xpos + ypos * ypos)
+
+    x = point.map_pos[0] + point.map_pos[1]
+    y = end.map_pos[0] + end.map_pos[1]
+    h = abs(x - y)
+    return h
+
+
+@jit(nopython=True)
+def max_grid_distance(map_pos_a, map_pos_b):
+    x = map_pos_a[0] + map_pos_a[1]
+    y = map_pos_b[0] + map_pos_b[1]
+    return abs(x - y)

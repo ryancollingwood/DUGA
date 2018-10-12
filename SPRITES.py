@@ -1,6 +1,7 @@
 import pygame
 import math
 import SETTINGS
+from GEOM import straight_line_distance, tan_radians
 
  # I noticed, that the sprites are not projected correctly. However, I do not have the guts to fix it. Feel free to take a look.
 
@@ -42,7 +43,8 @@ class Sprite:
         xpos = self.rect.centerx - SETTINGS.player_rect[0]
         ypos = SETTINGS.player_rect[1] - self.rect.centery
 
-        dist = math.sqrt(xpos*xpos + ypos*ypos)
+        dist = straight_line_distance(xpos, ypos)
+        
         if dist == 0:
             dist += 0.0001
         self.distance = dist
@@ -62,7 +64,7 @@ class Sprite:
 
         xTmp = yTmp * SETTINGS.canvas_actual_width / fov
                                                     
-        sprite_height = int((self.rect.height / dist) * (100 / math.tan(math.radians(fov * 0.8))))
+        sprite_height = int((self.rect.height / dist) * (100 / tan_radians(fov * 0.8)))
         if sprite_height > 2500:
             sprite_height = 2500
 

@@ -7,6 +7,7 @@ import pygame
 import math
 import random
 import os
+from GEOM import straight_line_distance
 
 class Map:
     '''== Create the map ==\narray -> Level to be loaded'''
@@ -125,7 +126,7 @@ class Tile:
     def get_dist(self, pos, *called):
         xpos = self.rect.center[0] - pos[0]
         ypos = pos[1] - self.rect.center[1]
-        self.distance = math.sqrt(xpos*xpos + ypos*ypos)
+        self.distance = straight_line_distance(xpos, ypos)
 
         if (self.state and self.state != 'closed') and called != ('npc',): #lol
             self.sesam_luk_dig_op()
