@@ -170,16 +170,23 @@ class Canvas:
         self.height = height
         self.res_width = 0
         if SETTINGS.mode == 1:
-            #self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
-            #self.height = SETTINGS.canvas_target_height
-            self.width = SETTINGS.canvas_target_width
+            if SETTINGS.original_aspect:
+                self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+            else:
+                self.width = SETTINGS.canvas_target_width
             self.height = SETTINGS.canvas_target_height
             self.res_width = SETTINGS.canvas_actual_width
 
         if SETTINGS.fullscreen:
-            self.window = pygame.display.set_mode((self.width, self.height) ,pygame.FULLSCREEN)
+            if SETTINGS.original_aspect:
+                self.window = pygame.display.set_mode((self.width, int(self.height + (self.height * 0.15))), pygame.FULLSCREEN)
+            else:
+                self.window = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         else:
-            self.window = pygame.display.set_mode((self.width, self.height))
+            if SETTINGS.original_aspect:
+                self.window = pygame.display.set_mode((self.width, int(self.height + (self.height * 0.15))))
+            else:
+                self.window = pygame.display.set_mode((self.width, self.height))
         self.canvas = pygame.Surface((self.width, self.height))
         
         pygame.display.set_caption("DUGA")
@@ -464,7 +471,7 @@ def main_loop():
         delta_time = clock.tick(SETTINGS.fps)
         SETTINGS.dt = delta_time / MILLISECONDS_IN_SECOND
         SETTINGS.cfps = int(clock.get_fps())
-        #pygame.display.set_caption(SETTINGS.caption % SETTINGS.cfps)
+        pygame.display.set_caption(str(SETTINGS.cfps))
 
        # allfps.append(clock.get_fps())
 

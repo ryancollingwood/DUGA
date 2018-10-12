@@ -14,17 +14,22 @@ class hud:
         self.scale_height = 0
 
         self.sprite = pygame.image.load(os.path.join('graphics', 'hud.png')).convert()
-        self.rect = self.sprite.get_rect()
-        # get the unscaled dimensions for figuring out the scale of the transform once done
-        self.scale_width = self.rect.width
-        self.scale_height = self.rect.height    
-        self.sprite = pygame.transform.scale(self.sprite, (SETTINGS.canvas_target_width, int(self.rect.height * SETTINGS.canvas_aspect_ratio)))
-        self.rect = self.sprite.get_rect()
-        
-        self.scale_width = self.rect.width / self.scale_width
-        self.scale_height = self.rect.height / self.scale_height
-        # use relative postioning to set the actual playable area
-        SETTINGS.canvas_game_area_height = SETTINGS.canvas_target_height - self.rect.height
+        if SETTINGS.original_aspect:
+            self.sprite = pygame.transform.scale(self.sprite, (SETTINGS.canvas_actual_width, SETTINGS.window_height - SETTINGS.canvas_target_height))
+            self.rect = self.sprite.get_rect()
+        else:
+            self.rect = self.sprite.get_rect()
+            # get the unscaled dimensions for figuring out the scale of the transform once done
+            self.scale_width = self.rect.width
+            self.scale_height = self.rect.height
+            self.sprite = pygame.transform.scale(self.sprite, (SETTINGS.canvas_target_width, int(self.rect.height * SETTINGS.canvas_aspect_ratio)))
+            self.rect = self.sprite.get_rect()
+            
+            self.scale_width = self.rect.width / self.scale_width
+            self.scale_height = self.rect.height / self.scale_height
+            # use relative postioning to set the actual playable area
+            SETTINGS.canvas_game_area_height = SETTINGS.canvas_target_height - self.rect.height
+            
         self.rect.topleft = (0, SETTINGS.canvas_game_area_height)
 
         self.text = [TEXT.Text(int(self.rect.width/35), self.rect.y + int(self.rect.height/2.5), 'PLAYER ARMOR', SETTINGS.DARKGRAY, 'DUGAFONT.ttf', 35),
@@ -38,7 +43,10 @@ class hud:
         self.arrow = pygame.transform.scale(self.arrow, (50,50))
         self.original_arrow = self.arrow
         self.arrow_rect = self.arrow.get_rect()
-        self.arrow_rect.center = (self.rect.topright[0] - math.ceil(46 * self.scale_width), self.rect.topright[1] + math.ceil(66 * self.scale_height))
+        if SETTINGS.original_aspect:
+            self.arrow_rect.center = (self.rect.topright[0] - 46, self.rect.topright[1] + 66)
+        else:
+            self.arrow_rect.center = (self.rect.topright[0] - math.ceil(46 * self.scale_width), self.rect.topright[1] + math.ceil(66 * self.scale_height))
         self.arrow_center = (self.arrow_rect.centerx - self.arrow_rect.width / 2,
                              self.arrow_rect.centery - self.arrow_rect.height / 2)
 

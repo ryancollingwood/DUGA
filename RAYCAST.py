@@ -517,8 +517,10 @@ class Raycast:
     def render_screen(self, ray_number, wall_dist, texture, offset, current_tile, vh, end_pos):
         if wall_dist:
             
-            # wall_height = int((self.tile_size / wall_dist) * (360 / tan_radians(SETTINGS.fov * 0.8)))
-            wall_height = int((self.tile_size / wall_dist) * self.wall_height_mod)
+            if SETTINGS.original_aspect:
+                wall_height = int((self.tile_size / wall_dist) * (360 / tan_radians(SETTINGS.fov * 0.8)))
+            else:
+                wall_height = int((self.tile_size / wall_dist) * self.wall_height_mod)
             
             SETTINGS.zbuffer.append(Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh))
             SETTINGS.zbuffer[ray_number].distance = wall_dist

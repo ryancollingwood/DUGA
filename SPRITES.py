@@ -9,9 +9,13 @@ class Sprite:
     '''== Create a sprite ==\ntexture -> loaded texture | ID -> unique\npos -> px coords          | texture_type -> sprite, npc'''
     def __init__(self, texture, ID, pos, texture_type, parent = None):
         self.texture = texture
-        #These constant values should be determined rather than hard coded
-        #self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*2, SETTINGS.tile_size*4)).convert_alpha()
-        self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*4, SETTINGS.tile_size*8)).convert_alpha()
+        
+        #These constant values probably be determinstic rather than hard coded
+        if SETTINGS.original_aspect:
+            self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*2, SETTINGS.tile_size*4)).convert_alpha()
+        else:
+            self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*4, SETTINGS.tile_size*8)).convert_alpha()
+            
         self.texture_type = texture_type
         self.type = texture_type
         self.ID = ID
@@ -84,11 +88,12 @@ class Sprite:
 
         self.new_size = pygame.transform.scale(self.texture, (sprite_width, sprite_height))
         self.new_rect = self.new_size.get_rect()
-        # I think my changes to HUD screwed this up
-        #self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
-        # TODO Fix this
-        self.new_rect.center = (xTmp, (SETTINGS.canvas_target_height/2) )
         
+        if SETTINGS.original_aspect:
+            self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
+        else:
+            self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
+
         if self.parent:
             self.parent.hit_rect = self.new_rect
 

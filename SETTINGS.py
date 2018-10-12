@@ -39,15 +39,17 @@ canvas_target_width = 700    #700
 canvas_target_height = 550    #600
 # Below this point are the non-configurable canvas variables.
 canvas_actual_width = 0
+canvas_map_width = None
+canvas_map_height = None
+window_height = int(canvas_target_height + (canvas_target_height *0.15))
+switch_mode = False
+axes = (0, 0)
+screen_shake = 0
+# attempt to resize HUD and gun relationally
 canvas_actual_height = 0
 # What the height of the gameplay are less the HUD
 canvas_game_area_height = canvas_target_height
 canvas_aspect_ratio = 0
-canvas_map_width = None
-canvas_map_height = None
-switch_mode = False
-axes = (0, 0)
-screen_shake = 0
 
 
 '''Raycasting settings'''
@@ -57,6 +59,8 @@ render = 10
 shade = False
 shade_rgba = (0,0,0,255)
 shade_visibility = 1000
+# to use original wider aspect ratio for walls
+original_aspect = True
 
 #Below this point are the non-configurable raycasting variables.
 zbuffer = []
