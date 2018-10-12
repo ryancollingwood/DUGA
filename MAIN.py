@@ -24,7 +24,10 @@ import GENERATION
 import MENU
 import MUSIC
 import TUTORIAL
-from GEOM import sort_distance, sort_atan
+from GEOM import sort_distance
+from EVENTS import TIMER_PLAYTIME
+from EVENTS import TIMER_GAME_STATE_UPDATE, TIMER_GAME_VISUAL_UPDATE
+from EVENTS import EVENT_NPC_UPDATE
 
 SECONDS_IN_MINUTE = 60
 MILLISECONDS_IN_SECOND = 1000.0
@@ -296,8 +299,46 @@ def render_zbuffer_item(canvas, item):
         if all(draw_rules):
             item.draw(canvas)
 
+def update_game_visual():
+    # Update logic
+    gamePlayer.control(gameCanvas.canvas)
+    
+    if SETTINGS.fov >= FOV_MAX:
+        SETTINGS.fov = FOV_MAX
+    elif SETTINGS.fov <= FOV_MIN:
+        SETTINGS.fov = FOV_MIN
+    
+    if SETTINGS.switch_mode:
+        gameCanvas.change_mode()
 
-def update_game():
+    # Render - Draw
+    gameRaycast.calculate()
+    gameCanvas.draw()
+    
+    if SETTINGS.mode == 1:
+        render_screen(gameCanvas.canvas)
+
+        # BETA
+    #  beta.draw(gameCanvas.window)
+    
+    elif SETTINGS.mode == 0:
+        gameMap.draw(gameCanvas.window)
+        gamePlayer.draw(gameCanvas.window)
+        
+        for x in SETTINGS.raylines:
+            pygame.draw.line(gameCanvas.window, SETTINGS.RED, (x[0][0] / 4, x[0][1] / 4), (x[1][0] / 4, x[1][1] / 4))
+        SETTINGS.raylines = []
+        
+        for i in SETTINGS.npc_list:
+            if i.rect and i.dist <= SETTINGS.render * SETTINGS.tile_size * 1.2:
+                pygame.draw.rect(gameCanvas.window, SETTINGS.RED,
+                                 (i.rect[0] / 4, i.rect[1] / 4, i.rect[2] / 4, i.rect[3] / 4))
+            elif i.rect:
+                pygame.draw.rect(gameCanvas.window, SETTINGS.DARKGREEN,
+                                 (i.rect[0] / 4, i.rect[1] / 4, i.rect[2] / 4, i.rect[3] / 4))
+
+
+def update_game_state():
     if SETTINGS.npc_list:
         for npc in SETTINGS.npc_list:
             if not npc.dead:
@@ -356,7 +397,6 @@ def calculate_statistics():
     #'last' statistics will be cleared when starting new game in menu.
     with open(os.path.join('data', 'statistics.dat'), 'wb') as saved_stats:
         pickle.dump(SETTINGS.statistics, saved_stats)
-    
 
 
 #Main loop
@@ -365,30 +405,52 @@ def main_loop():
     clock = pygame.time.Clock()
     logging.basicConfig(filename = os.path.join('data', 'CrashReport.log'), level=logging.WARNING)
 
-#    allfps = []
+
+    ms_per_frame = int(1000 / SETTINGS.fps)
+    pygame.time.set_timer(TIMER_PLAYTIME, 1000)
+    pygame.time.set_timer(TIMER_GAME_STATE_UPDATE, ms_per_frame)
+    pygame.time.set_timer(TIMER_GAME_VISUAL_UPDATE, ms_per_frame)
+
+    #    allfps = []
     
     while not game_exit:
         SETTINGS.zbuffer = []
-        if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
-            SETTINGS.statistics['playtime'] += 1
-            SETTINGS.play_seconds = 0
-        else:
-            SETTINGS.play_seconds += SETTINGS.dt
-            
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or SETTINGS.quit_game:
-                game_exit = True
-
-##                b = 0
-##                for x in allfps:
-##                    b += x
-##                print(b/len(allfps))
-                menuController.save_settings()
-                calculate_statistics()
-                pygame.quit()
-                sys.exit(0)
-
         try:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or SETTINGS.quit_game:
+                    game_exit = True
+    
+    ##                b = 0
+    ##                for x in allfps:
+    ##                    b += x
+    ##                print(b/len(allfps))
+                    menuController.save_settings()
+                    calculate_statistics()
+                    pygame.quit()
+                    sys.exit(0)
+                    
+                elif event.type == TIMER_PLAYTIME:
+                    if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
+                        SETTINGS.statistics['playtime'] += 1
+                        SETTINGS.play_seconds = 0
+                    else:
+                        SETTINGS.play_seconds += 1
+                        
+                elif event.type == TIMER_GAME_STATE_UPDATE:
+                    if all([
+                            not SETTINGS.menu_showing,
+                            not menuController.current_type == 'main',
+                    ]):
+                        update_game_state()
+                elif event.type == TIMER_GAME_VISUAL_UPDATE:
+                    if all([
+                            not SETTINGS.menu_showing,
+                            not menuController.current_type == 'main',
+                    ]):
+                        update_game_visual()
+                elif event.type == EVENT_NPC_UPDATE:
+                    print(event)
+            
             #Music
             musicController.control_music()
             
@@ -419,44 +481,6 @@ def main_loop():
             elif SETTINGS.menu_showing and menuController.current_type == 'game':
                 menuController.control()
                 
-            else:
-                #Update logic
-                gamePlayer.control(gameCanvas.canvas)
-                
-                if SETTINGS.fov >= FOV_MAX:
-                    SETTINGS.fov = FOV_MAX
-                elif SETTINGS.fov <= FOV_MIN:
-                    SETTINGS.fov = FOV_MIN
-
-                if SETTINGS.switch_mode:
-                    gameCanvas.change_mode()
-
-                #Render - Draw
-                gameRaycast.calculate()
-                gameCanvas.draw()
-                
-                
-                if SETTINGS.mode == 1:
-                    render_screen(gameCanvas.canvas)
-
-                    #BETA
-                  #  beta.draw(gameCanvas.window)
-                
-                elif SETTINGS.mode == 0:
-                    gameMap.draw(gameCanvas.window)                
-                    gamePlayer.draw(gameCanvas.window)
-
-                    for x in SETTINGS.raylines:
-                        pygame.draw.line(gameCanvas.window, SETTINGS.RED, (x[0][0]/4, x[0][1]/4), (x[1][0]/4, x[1][1]/4))
-                    SETTINGS.raylines = []
-
-                    for i in SETTINGS.npc_list:
-                        if i.rect and i.dist <= SETTINGS.render * SETTINGS.tile_size * 1.2:
-                            pygame.draw.rect(gameCanvas.window, SETTINGS.RED, (i.rect[0]/4, i.rect[1]/4, i.rect[2]/4, i.rect[3]/4))
-                        elif i.rect:
-                            pygame.draw.rect(gameCanvas.window, SETTINGS.DARKGREEN, (i.rect[0]/4, i.rect[1]/4, i.rect[2]/4, i.rect[3]/4))
-
-                update_game()
 
         except Exception as e:
             menuController.save_settings()
@@ -466,14 +490,13 @@ def main_loop():
             pygame.quit()
             sys.exit(0)
 
-        #Update Game
+        # Update Game
         pygame.display.update()
         delta_time = clock.tick(SETTINGS.fps)
         SETTINGS.dt = delta_time / MILLISECONDS_IN_SECOND
         SETTINGS.cfps = int(clock.get_fps())
-        pygame.display.set_caption(str(SETTINGS.cfps))
-
-       # allfps.append(clock.get_fps())
+        #pygame.display.set_caption(str(SETTINGS.cfps))
+        # allfps.append(clock.get_fps())
 
 #Probably temporary object init
 #SETTINGS.current_level = 5 #temporary

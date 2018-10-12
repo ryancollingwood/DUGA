@@ -8,6 +8,8 @@ import random
 import math
 import pygame
 from GEOM import straight_line_distance, cos_radians, sin_radians
+from EVENTS import EVENT_NPC_UPDATE
+
 #stats format in bottom of script
 #pos is in tiles, face in degrees, frame_interval is seconds between frames, speed is pixels/second
 
@@ -15,6 +17,7 @@ class Npc:
 
     def __init__(self, stats, sounds, texture):
         #Technical settings
+        self.uid = id(self)
         self.stats = stats #Used for creating new NPCs
         self.sounds = sounds
         self.ID = stats['id']
@@ -429,13 +432,19 @@ class Npc:
                 break
 
     def move(self):
+        if self.path is None:
+            return
+        
+        if len(self.path) == 0:
+            return
+        
         #Make the NPC move according to current state.
         moving_up = False
         moving_down = False
         moving_right = False
         moving_left = False
 
-        if self.path and self.rect.center != self.path[-1].rect.center and self.health > 0 and not self.hurting:
+        if self.rect.center != self.path[-1].rect.center and self.health > 0 and not self.hurting:
             self.moving = True
 
             #Redo path if tile is occupied by another NPC.
