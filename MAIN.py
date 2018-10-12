@@ -26,7 +26,6 @@ import MUSIC
 import TUTORIAL
 from GEOM import sort_distance
 from EVENTS import TIMER_PLAYTIME
-from EVENTS import TIMER_GAME_STATE_UPDATE, TIMER_GAME_VISUAL_UPDATE
 from EVENTS import EVENT_NPC_UPDATE
 
 SECONDS_IN_MINUTE = 60
@@ -406,10 +405,7 @@ def main_loop():
     logging.basicConfig(filename = os.path.join('data', 'CrashReport.log'), level=logging.WARNING)
 
 
-    ms_per_frame = int(1000 / SETTINGS.fps)
     pygame.time.set_timer(TIMER_PLAYTIME, 1000)
-    pygame.time.set_timer(TIMER_GAME_STATE_UPDATE, ms_per_frame)
-    pygame.time.set_timer(TIMER_GAME_VISUAL_UPDATE, ms_per_frame)
 
     #    allfps = []
     
@@ -436,18 +432,6 @@ def main_loop():
                     else:
                         SETTINGS.play_seconds += 1
                         
-                elif event.type == TIMER_GAME_STATE_UPDATE:
-                    if all([
-                            not SETTINGS.menu_showing,
-                            not menuController.current_type == 'main',
-                    ]):
-                        update_game_state()
-                elif event.type == TIMER_GAME_VISUAL_UPDATE:
-                    if all([
-                            not SETTINGS.menu_showing,
-                            not menuController.current_type == 'main',
-                    ]):
-                        update_game_visual()
                 elif event.type == EVENT_NPC_UPDATE:
                     print(event)
             
@@ -480,6 +464,10 @@ def main_loop():
 
             elif SETTINGS.menu_showing and menuController.current_type == 'game':
                 menuController.control()
+
+            else:
+                update_game_state()
+                update_game_visual()
                 
 
         except Exception as e:
