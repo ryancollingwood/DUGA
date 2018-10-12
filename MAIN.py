@@ -239,8 +239,8 @@ def render_screen(canvas):
 
     #Sort zbuffer and solid tiles
     SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
-    SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
-    
+
+    #SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
     #Calculate which tiles are visible
     #SETTINGS.rendered_tiles = [
     #    tile for tile in SETTINGS.all_solid_tiles if
@@ -418,6 +418,7 @@ def player_moved():
             (tile.distance <= SETTINGS.tile_size * 1.5)
         )
     ]
+    SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
     #for tile in SETTINGS.all_solid_tiles:
     #    tile.distance = tile.get_dist(SETTINGS.player_rect.center)
 
