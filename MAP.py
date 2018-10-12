@@ -131,13 +131,15 @@ class Tile:
         self.distance = self.get_dist(SETTINGS.player_rect.center)
         return self.distance <= SETTINGS.render * SETTINGS.tile_size * 1.2
 
-    def get_dist(self, pos, *called):
+    def get_dist(self, pos):
         xpos = self.rect.center[0] - pos[0]
         ypos = pos[1] - self.rect.center[1]
         distance = straight_line_distance(xpos, ypos)
 
-        if (self.state and self.state != 'closed') and called != ('npc',):  # lol
-            self.sesam_luk_dig_op()
+        # this is being handled by npc and no where else seems to need this
+        # TODO remove?
+        # if (self.state and self.state != 'closed') and called != ('npc',):  # lol
+        #    self.sesam_luk_dig_op()
 
         return distance
 

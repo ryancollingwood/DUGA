@@ -427,7 +427,7 @@ class Npc:
                     self.real_y = self.rect.y
 
         for door in SETTINGS.all_doors:
-            if door.get_dist(self.rect.center, 'npc') <= 50:
+            if door.get_dist(self.rect.center) <= 50:
                 door.sesam_luk_dig_op()
                 break
 

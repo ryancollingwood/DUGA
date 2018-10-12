@@ -147,6 +147,10 @@ class Load:
         gameMap.move_inaccessible_entities()
         ENTITIES.spawn_npcs()
         ENTITIES.spawn_items()
+        # to force the rendering to refersh
+        rotate_screen()
+        player_moved()
+
 
 #Texturing
 class Texture:
@@ -416,15 +420,12 @@ def player_moved():
         tile.calculate_render_visible() and
         SETTINGS.tile_visible[tile.ID] and
         (
-            (abs(tile.atan) <= SETTINGS.fov and
-             tile.distance < SETTINGS.render * SETTINGS.tile_size)
+            (abs(tile.atan) <= SETTINGS.fov)
             or
             (tile.distance <= SETTINGS.tile_size * 1.5)
         )
     ]
     SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
-    #for tile in SETTINGS.all_solid_tiles:
-    #    tile.distance = tile.get_dist(SETTINGS.player_rect.center)
 
 
 #Main loop
@@ -455,8 +456,9 @@ def main_loop():
                 elif event.type == EVENT_PLAYER_INPUT:
                     if event.event == "mouse_move":
                         if event.value != 0:
-                            rotate_screen()
+                            # todo figure how much work to do based on the event.value
                             player_moved()
+                            rotate_screen()
                     elif event.event == "player_moved":
                         player_moved()
 

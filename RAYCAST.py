@@ -3,7 +3,7 @@
 import pygame
 import math
 
-from GEOM import get_camera_plane_for_angle, tan_radians, cos_radians
+from GEOM import get_camera_plane_for_angle, tan_radians, cos_radians, max_grid_distance
 from EVENTS import EVENT_RAY_CASTING_CALCULATED
 import SETTINGS
 
@@ -103,6 +103,7 @@ class Raycast:
         last_h_tile = None
         current_v_tile = None
         last_v_tile = None
+        tile_size = SETTINGS.tile_size
         
         angle = SETTINGS.player_angle
 
@@ -115,14 +116,41 @@ class Raycast:
 
             beta = abs(degree - angle)
 
+            search_tiles = SETTINGS.rendered_tiles
+            if len(search_tiles) == 0:
+                return
+
+            h_tile_distance = None
+            v_tile_distance = None
+
+            # using outer grid distance between vhit and hhit tile
+            # find a search square
+            if last_h_tile != current_h_tile and last_h_tile is not None:
+                h_tile_distance = max_grid_distance(last_h_tile.map_pos, current_h_tile.map_pos) * tile_size
+
+            if last_v_tile != current_v_tile and last_v_tile is not None:
+                v_tile_distance = max_grid_distance(last_v_tile.map_pos, current_v_tile.map_pos) * tile_size
+
+            if v_tile_distance is not None and h_tile_distance is not None:
+                search_range = (v_tile_distance + h_tile_distance) / 2
+                search_tiles = [tile for tile in search_tiles if
+                                (tile.get_dist(current_h_tile.rect.center) <= search_range) or
+                                (tile.get_dist(current_v_tile.rect.center) <= search_range)
+                                ]
+
+                if len(search_tiles) == 0:
+                    search_tiles = SETTINGS.rendered_tiles
+                elif len(search_tiles) < len(SETTINGS.rendered_tiles):
+                    # print("searching", len(search_tiles), "instead of", len(SETTINGS.rendered_tiles))
+                    pass
+
+
             cast_horizontal_tile, cast_vertical_tile = self.cast(
                 SETTINGS.player_rect, degree, ray_number, beta,
-                current_h_tile, current_v_tile, SETTINGS.rendered_tiles
+                current_h_tile, current_v_tile, search_tiles
             )
 
-            # not doing anything with these values at the moment :/
-            # still need to work on how to use them to reduce the
-            # search space of tiles rather than SETTINGS.rendered_tiles
+            # keep track current tile hit and last tile hit
             if cast_horizontal_tile is not None:
                 if last_h_tile != current_h_tile:
                     last_h_tile = current_h_tile
