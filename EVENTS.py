@@ -8,3 +8,6 @@ TIMER_PLAYTIME = USEREVENT + 1
 
 # timer for NPC update - NOT YET IMPLEMENTED
 EVENT_NPC_UPDATE = USEREVENT + 2
+
+# event for raycasting caluclations are done
+EVENT_RAY_CASTING_CALCULATED = USEREVENT + 3

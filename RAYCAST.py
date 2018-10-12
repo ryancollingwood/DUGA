@@ -3,7 +3,8 @@
 import pygame
 import math
 
-from GEOM import sort_atan, get_camera_plane_for_angle, tan_radians
+from GEOM import get_camera_plane_for_angle, tan_radians, cos_radians
+from EVENTS import EVENT_RAY_CASTING_CALCULATED
 import SETTINGS
 
 pygame.init()
@@ -97,8 +98,6 @@ class Raycast:
 
         for tile in SETTINGS.all_solid_tiles:
             tile.update()
-        # tile.distance = tile.get_dist(SETTINGS.player_rect.center)
-        # tile.atan = sort_atan(tile)
         
         current_h_tile = None
         last_h_tile = None
@@ -136,6 +135,8 @@ class Raycast:
                 
             ray_number += 1
             ray += step
+
+        pygame.event.post(pygame.event.Event(EVENT_RAY_CASTING_CALCULATED))
 
     @staticmethod
     def find_offset(position, tile, hv):
@@ -506,7 +507,7 @@ class Raycast:
     def control(self, end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh, beta):
         if SETTINGS.mode == 1:
             if tile_len:
-                wall_dist = tile_len * math.cos(math.radians(beta))
+                wall_dist = tile_len * cos_radians(beta)
             else:
                 wall_dist = None
                 

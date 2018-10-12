@@ -28,6 +28,7 @@ from GEOM import sort_distance
 from EVENTS import TIMER_PLAYTIME
 from EVENTS import EVENT_NPC_UPDATE
 from EVENTS import EVENT_PLAYER_INPUT
+from EVENTS import EVENT_RAY_CASTING_CALCULATED
 
 SECONDS_IN_MINUTE = 60
 MILLISECONDS_IN_SECOND = 1000.0
@@ -313,22 +314,25 @@ def update_game_visual():
 
     # Render - Draw
     gameRaycast.calculate()
+
+
+def draw_game_visual():
     gameCanvas.draw()
-    
+
     if SETTINGS.mode == 1:
         render_screen(gameCanvas.canvas)
 
         # BETA
     #  beta.draw(gameCanvas.window)
-    
+
     elif SETTINGS.mode == 0:
         gameMap.draw(gameCanvas.window)
         gamePlayer.draw(gameCanvas.window)
-        
+
         for x in SETTINGS.raylines:
             pygame.draw.line(gameCanvas.window, SETTINGS.RED, (x[0][0] / 4, x[0][1] / 4), (x[1][0] / 4, x[1][1] / 4))
         SETTINGS.raylines = []
-        
+
         for i in SETTINGS.npc_list:
             if i.rect and i.dist <= SETTINGS.render * SETTINGS.tile_size * 1.2:
                 pygame.draw.rect(gameCanvas.window, SETTINGS.RED,
@@ -435,7 +439,6 @@ def main_loop():
     #    allfps = []
     
     while not game_exit:
-        SETTINGS.zbuffer = []
         try:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or SETTINGS.quit_game:
@@ -466,6 +469,8 @@ def main_loop():
                         
                 elif event.type == EVENT_NPC_UPDATE:
                     print(event)
+                elif event.type == EVENT_RAY_CASTING_CALCULATED:
+                    draw_game_visual()
             
             #Music
             musicController.control_music()
