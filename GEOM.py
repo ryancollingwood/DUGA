@@ -112,3 +112,34 @@ def max_grid_distance(map_pos_a, map_pos_b):
     x = map_pos_a[0] + map_pos_a[1]
     y = map_pos_b[0] + map_pos_b[1]
     return abs(x - y)
+
+
+# todo this binary search is kinda fubar
+def find_all_solid_walls_with_in_distance(tiles, distance, tolerance, do_filter = False):
+    if do_filter:
+        tiles = [tile for tile in tiles if tile.type in ["wall", "vdoor", "hdoor"] and abs(tile.atan) >= 0  and abs(tile.atan) <= 180 ]
+
+    min = 0
+    max = len(tiles) - 1
+    if max < min:
+        return list()
+    # int because its a list index
+    avg = int((min + max) / 2)
+    if min > avg or avg > max:
+        return list()
+    # uncomment next line for traces
+    # print(distance, tiles[avg].distance)
+
+    while min < max:
+        if tiles[avg].distance - tolerance <= distance <= tiles[avg].distance + tolerance:
+            return [tile for tile in tiles[:avg+1]]
+        elif tiles[avg].distance < distance:
+            return tiles[avg+1:] + find_all_solid_walls_with_in_distance(tiles[avg + 1:], distance, tolerance)
+        else:
+            return find_all_solid_walls_with_in_distance(tiles[:avg+1], distance, tolerance)
+
+    if avg == 0 and len(tiles) == 0:
+        return [tile for tile in tiles if tile.type in ["wall", "vdoor", "hdoor"]]
+    # avg may be a partial offset so no need to print it here
+    # print "The location of the number in the array is", avg
+    return list()
