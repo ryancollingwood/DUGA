@@ -117,7 +117,7 @@ def max_grid_distance(map_pos_a, map_pos_b):
 # todo this binary search is kinda fubar
 def find_all_solid_walls_with_in_distance(tiles, distance, tolerance, do_filter = False):
     if do_filter:
-        tiles = [tile for tile in tiles if tile.type in ["wall", "vdoor", "hdoor"] and abs(tile.atan) >= 0  and abs(tile.atan) <= 180 ]
+        tiles = [tile for tile in tiles if tile.type in ["wall", "vdoor", "hdoor"] and tile.atan >= 0 and tile.atan <= 180]
 
     min = 0
     max = len(tiles) - 1
