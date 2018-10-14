@@ -27,6 +27,12 @@ class Slice:
         self.other_pos = other_pos
         self.offset = offset
 
+        self.slice = None
+        self.alpha_slice = None
+        self.dark_slice = None
+        self.shade_slice = None
+        self.blit_dest = None
+
     def __eq__(self, other):
         try:
             # self.other_pos is excluded as
@@ -55,20 +61,19 @@ class Slice:
         tile_texture = SETTINGS.tile_texture[self.tile_id].texture
         texture_width = tile_texture.get_rect().width
         slice_texture = tile_texture.subsurface(pygame.Rect(self.location, (1, texture_width))).convert()
-        slice_surface = pygame.transform.scale(slice_texture, (self.wall_width, self.height))
+        self.slice = pygame.transform.scale(slice_texture, (self.wall_width, self.height))
 
-        if SETTINGS.shade:
-            slice_surface = pygame.Surface(slice_surface.get_size()).convert_alpha()
+        if SETTINGS.shade or self.vh == 'v':
+            self.alpha_slice = pygame.Surface(self.slice.get_size()).convert_alpha()
 
-        return slice_surface
-
+        rect = self.slice.get_rect(center=(self.xpos, int(SETTINGS.canvas_target_height / 2)))
+        self.blit_dest = (self.xpos, rect.y)
 
     def get_blit_surface_and_location(self):
-        slice_surface = self.get_slice_surface()
+        self.get_slice_surface()
 
-        #if self.vh == 'v':
-        #    slice_surface = pygame.Surface(slice_surface.get_size()).convert_alpha()
-        #    slice_surface.fill((0, 0, 0, SETTINGS.texture_darken))
+        if self.vh == 'v':
+            self.dark_slice = self.alpha_slice.fill((0, 0, 0, SETTINGS.texture_darken))
 
         if SETTINGS.shade:
             #Shade intensity table
@@ -98,14 +103,12 @@ class Slice:
             else:
                 self.intensity = 1
 
-            slice_surface = pygame.Surface(slice_surface.get_size()).convert_alpha()
-            slice_surface.fill(
+            self.shade_slice = self.alpha_slice_surface.fill(
                 (SETTINGS.shade_rgba[0]*self.intensity, SETTINGS.shade_rgba[1]*self.intensity,
                  SETTINGS.shade_rgba[2]*self.intensity, SETTINGS.shade_rgba[3]*self.intensity)
             )
 
-        rect = slice_surface.get_rect(center=(self.xpos, int(SETTINGS.canvas_target_height / 2)))
-        return slice_surface, (self.xpos, rect.y)
+        return self.slice_surface,
 
 
 class Raycast:
@@ -252,6 +255,7 @@ class Raycast:
                 new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, ray_origin)
                 if new_ray is None and ray_origin is not None:
                     new_ray = self.cast(SETTINGS.player_rect, degree, ray_number)
+                    print("rescan")
                 self.next_zbuffer[i] = new_ray
 
 
