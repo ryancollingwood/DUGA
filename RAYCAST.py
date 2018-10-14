@@ -9,7 +9,7 @@ pygame.init()
 
 class Slice:
 
-    def __init__(self, tile_id, location, vh, pos, ray_number, wall_width, distance, height, other_pos):
+    def __init__(self, tile_id, location, vh, pos, ray_number, wall_width, distance, height, other_pos, offset):
         # tile_id determines which texture we will draw
         self.tile_id = tile_id
         self.location = location
@@ -25,6 +25,7 @@ class Slice:
         self.type = "slice"
         self.intensity = 1
         self.other_pos = other_pos
+        self.offset = offset
 
     def __eq__(self, other):
         try:
@@ -42,6 +43,7 @@ class Slice:
                 self.wall_width == other.wall_width,
                 self.xpos == other.xpos,
                 self.intensity == other.intensity,
+                self.offset == other.offset
              ])
         except AttributeError:
             return False
@@ -128,6 +130,9 @@ class Raycast:
         self.current_vtile = None
         self.current_htile = None
         self.next_zbuffer = None
+        # smaller numbers result in less oddity
+        # smallest effective value is 2
+        self.interpolation = 2
 
     def calculate(self):
         angle = SETTINGS.player_angle
@@ -137,7 +142,7 @@ class Raycast:
         for tile in SETTINGS.all_solid_tiles:
             tile.distance = tile.get_dist(SETTINGS.player_rect.center)
 
-        interpolation = 2
+
         middle_ray_number = int(self.res / 2)
 
         # initialise an array for our rays
@@ -151,10 +156,10 @@ class Raycast:
 
             self.beta = beta
 
-            if ray_number % interpolation != 0:
+            if ray_number % self.interpolation != 0:
                 # need the start and end for filling in blanks
                 # need the middle for player interaction
-                if ray_number not in [0, middle_ray_number, self.res]:
+                if ray_number != middle_ray_number:
                     self.next_zbuffer[ray_number] = None
                     continue
 
@@ -168,6 +173,10 @@ class Raycast:
         return self.next_zbuffer
 
     def get_ray_values_for_angle(self, angle):
+
+        # slightly adjust angle to prevent undefined
+        # results for right angles etc.
+        angle -= 0.001
         step = self.fov / self.res
         fov = int(self.fov / 2)
         ray = -fov
@@ -185,7 +194,7 @@ class Raycast:
             beta = abs(degree - angle)
             ray += step
 
-            values.append((ray_number, degree, ray, beta))
+            values.append((ray_number, degree, ray, beta, angle))
         return values
 
     def fill_in_interpolate_gaps(self, ray_values):
@@ -201,32 +210,44 @@ class Raycast:
                 elif left_slice is not None and right_slice is not None:
                     right_slice = left_slice
                     left_slice = slice
-            elif left_slice is not None and right_slice is not None:
+            else:
                 degree = ray_values[i][1]
                 ray_number = ray_values[i][0]
                 self.beta = ray_values[i][3]
                 ray_origin = None
 
-                if left_slice.vh == right_slice.vh:
-                    if left_slice.vh == "h":
-                        left_H_y = left_slice.pos[1]
-                        left_V_x = left_slice.other_pos[0]
-                        right_H_y = right_slice.pos[1]
-                        right_V_x = right_slice.other_pos[0]
-                    else:
-                        left_H_y = left_slice.other_pos[1]
-                        left_V_x = left_slice.pos[0]
-                        right_H_y = right_slice.other_pos[1]
-                        right_V_x = right_slice.pos[0]
+                if left_slice is not None:
 
-                    H_y = left_H_y
-                    H_x = left_V_x
-                    if right_H_y < H_y:
-                        H_y = right_H_y
-                    if right_V_x < H_x:
-                        H_x = right_V_x
+                    # this covers the case of the very first
+                    # gap where we haven't found a pair
+                    if right_slice is None:
+                        next_right = self.interpolation - i + 1
+                        right_slice = self.next_zbuffer[next_right]
 
-                    ray_origin = (left_slice.vh, H_x, H_y)
+                    if left_slice.vh == right_slice.vh:
+                        if left_slice.vh == "h":
+                            left_H_y = left_slice.pos[1]
+                            left_V_x = left_slice.other_pos[0]
+                            right_H_y = right_slice.pos[1]
+                            right_V_x = right_slice.other_pos[0]
+                        else:
+                            left_H_y = left_slice.other_pos[1]
+                            left_V_x = left_slice.pos[0]
+                            right_H_y = right_slice.other_pos[1]
+                            right_V_x = right_slice.pos[0]
+
+                        H_y = left_H_y
+                        H_x = left_V_x
+                        if right_H_y < H_y:
+                            H_y = right_H_y
+                        if right_V_x < H_x:
+                            H_x = right_V_x
+
+                        offset = left_slice.offset
+                        if right_slice.offset < left_slice.offset:
+                            offset = right_slice.offset
+
+                        ray_origin = (left_slice.vh, H_x, H_y, offset)
 
                 new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, ray_origin)
                 if new_ray is None and ray_origin is not None:
@@ -273,13 +294,14 @@ class Raycast:
         V_hit = False
         H_offset = V_offset = 0
         end_pos = (0, 0)
-        angle -= 0.001
+        passed_offset = None
 
         if ray_origrin is None:
             H_x, H_y, V_x, V_y = self.get_ray_origin(angle, player_rect)
         else:
             V_x, H_y  = ray_origrin[1], ray_origrin[2]
             H_x, V_y = self.get_ray_origin_for_angle(V_x, H_y, angle, player_rect)
+            passed_offset = ray_origrin[3]
 
         #Extend
         for x in range(0, SETTINGS.render):
@@ -304,13 +326,13 @@ class Raycast:
                         if tile.type == 'hdoor':
                             H_y -= self.door_size
                             H_x += self.door_size / math.tan(math.radians(angle))
-                            H_offset = offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
+                            H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                             if H_offset < 0:
                                 H_hit = False
                                 H_y += self.door_size
                                 H_x -= self.door_size / math.tan(math.radians(angle))
                         else:
-                            H_offset = offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
+                            H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                             
                     elif (H_y == tile.rect.top and H_x >= tile.rect.topleft[0] and H_x <= tile.rect.topright[0]) and player_rect.centery < tile.rect.top:
                         H_hit = True
@@ -320,7 +342,7 @@ class Raycast:
                         if tile.type == 'hdoor':
                             H_y += self.door_size
                             H_x -= self.door_size / math.tan(math.radians(angle))
-                            H_offset = offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
+                            H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                             if H_offset < 0:
                                 H_hit = False
                                 H_y -= self.door_size
@@ -430,6 +452,9 @@ class Raycast:
             offset = 0
             current_tile = None
 
+        if offset == SETTINGS.tile_size - 1 and passed_offset is not None:
+            offset = passed_offset
+
         if V_hit:
             vh = 'v'
         else:
@@ -490,7 +515,8 @@ class Raycast:
                 wall_width = self.wall_width,
                 distance = wall_dist,
                 height = wall_height,
-                other_pos = other_pos
+                other_pos = other_pos,
+                offset = offset
             )
 
 
