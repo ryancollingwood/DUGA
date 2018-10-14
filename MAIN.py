@@ -278,17 +278,16 @@ def render_screen(canvas):
                 
 
     #Render all items in zbuffer
-    for item in SETTINGS.zbuffer:
+    last_zbuffer_len = len(SETTINGS.last_zbuffer)
+    for item_index, item in enumerate(SETTINGS.zbuffer):
         if item == None:
             pass
         elif item.type == 'slice':
-            canvas.blit(item.tempslice, (item.xpos, item.rect.y))
-            if item.vh == 'v':
-                #Make vertical walls slightly darker
-                canvas.blit(item.darkslice, (item.xpos, item.rect.y))
-            if SETTINGS.shade:
-                canvas.blit(item.shade_slice, (item.xpos, item.rect.y))
-                
+            #if item_index < last_zbuffer_len:
+            #    if SETTINGS.last_zbuffer[item_index] == SETTINGS.zbuffer[item_index]:
+            #        continue
+            item_slice, item_slice_position = item.get_blit_surface_and_location()
+            canvas.blit(item_slice, item_slice_position)
         else:
             if item.new_rect.right > 0 and item.new_rect.x < SETTINGS.canvas_actual_width and item.distance < (SETTINGS.render * SETTINGS.tile_size):
                 item.draw(canvas)
@@ -304,6 +303,7 @@ def render_screen(canvas):
         gameInv.draw(gameCanvas.canvas)
     EFFECTS.render(gameCanvas.canvas)
 
+    SETTINGS.last_zbuffer = SETTINGS.zbuffer
     SETTINGS.zbuffer = []
 
     #Draw HUD and canvas
@@ -385,7 +385,6 @@ def main_loop():
 #    allfps = []
     
     while not game_exit:
-        SETTINGS.zbuffer = []
         if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
             SETTINGS.statistics['playtime'] += 1
             SETTINGS.play_seconds = 0

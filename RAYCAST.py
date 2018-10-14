@@ -9,58 +9,102 @@ pygame.init()
 
 class Slice:
 
-    def __init__(self, location, surface, width, vh, pos):
-        self.slice = surface.subsurface(pygame.Rect(location, (1, width))).convert()
-        self.rect = self.slice.get_rect(center = (0, SETTINGS.canvas_target_height/2))
-        self.distance = None
-        self.type = 'slice'
+    def __init__(self, tile_id, location, vh, pos, ray_number, wall_width, distance, height, other_pos):
+        # tile_id determines which texture we will draw
+        self.tile_id = tile_id
+        self.location = location
         self.vh = vh
-        self.xpos = 0
+        # the x value where this slice is drawn
+        self.xpos = ray_number * wall_width
+        self.ray_number = ray_number
+        self.wall_width = wall_width
+        # where in the game map is the slice
         self.pos = pos
+        self.distance = distance
+        self.height = height
+        self.type = "slice"
+        self.intensity = 1
+        self.other_pos = other_pos
+
+    def __eq__(self, other):
+        try:
+            # self.other_pos is excluded as
+            # it doesn't define a slice
+            return all([
+                self.distance == other.distance,
+                self.height == other.height,
+                self.location == other.location,
+                self.pos == other.map_pos,
+                self.ray_number == other.ray_number,
+                self.tile_id == other.tile_id,
+                self.type == other.type,
+                self.vh == other.vh,
+                self.wall_width == other.wall_width,
+                self.xpos == other.xpos,
+                self.intensity == other.intensity,
+             ])
+        except AttributeError:
+            return False
+
+    def __str__(self):
+        return str(vars(self))
+
+    def get_slice_surface(self):
+        tile_texture = SETTINGS.tile_texture[self.tile_id].texture
+        texture_width = tile_texture.get_rect().width
+        slice_texture = tile_texture.subsurface(pygame.Rect(self.location, (1, texture_width))).convert()
+        slice_surface = pygame.transform.scale(slice_texture, (self.wall_width, self.height))
 
         if SETTINGS.shade:
-            self.shade_slice = pygame.Surface(self.slice.get_size()).convert_alpha()
-            sv = SETTINGS.shade_visibility / 10
-            self.shade_intensity = [sv*1, sv*2, sv*3, sv*4, sv*5, sv*6, sv*7, sv*8, sv*9, sv*10]
-        
-    def update_rect(self, new_slice):            
-        self.tempslice = new_slice
-        self.rect = new_slice.get_rect(center = (self.xpos, int(SETTINGS.canvas_target_height/2)))
+            slice_surface = pygame.Surface(slice_surface.get_size()).convert_alpha()
+
+        return slice_surface
+
+
+    def get_blit_surface_and_location(self):
+        slice_surface = self.get_slice_surface()
 
         if self.vh == 'v':
-            self.darkslice = pygame.Surface(self.tempslice.get_size()).convert_alpha()
-            self.darkslice.fill((0,0,0,SETTINGS.texture_darken))
+            slice_surface = pygame.Surface(slice_surface.get_size()).convert_alpha()
+            slice_surface.fill((0, 0, 0, SETTINGS.texture_darken))
 
         if SETTINGS.shade:
             #Shade intensity table
-            intensity = 0
-            if self.distance < self.shade_intensity[0]:
-                intensity = 0
-            elif self.distance < self.shade_intensity[1]:
-                intensity = 0.1
-            elif self.distance < self.shade_intensity[2]:
-                intensity = 0.2
-            elif self.distance < self.shade_intensity[3]:
-                intensity = 0.3
-            elif self.distance < self.shade_intensity[4]:
-                intensity = 0.4
-            elif self.distance < self.shade_intensity[5]:
-                intensity = 0.5
-            elif self.distance < self.shade_intensity[6]:
-                intensity = 0.6
-            elif self.distance < self.shade_intensity[7]:
-                intensity = 0.7
-            elif self.distance < self.shade_intensity[8]:
-                intensity = 0.8
-            elif self.distance < self.shade_intensity[9]:
-                intensity = 0.9
+            sv = SETTINGS.shade_visibility / 10
+            shade_intensity = [sv * 1, sv * 2, sv * 3, sv * 4, sv * 5, sv * 6, sv * 7, sv * 8, sv * 9, sv * 10]
+
+            if self.distance < shade_intensity[0]:
+                self.intensity = 0
+            elif self.distance < shade_intensity[1]:
+                self.intensity = 0.1
+            elif self.distance < shade_intensity[2]:
+                self.intensity = 0.2
+            elif self.distance < shade_intensity[3]:
+                self.intensity = 0.3
+            elif self.distance < shade_intensity[4]:
+                self.intensity = 0.4
+            elif self.distance < shade_intensity[5]:
+                self.intensity = 0.5
+            elif self.distance < shade_intensity[6]:
+                self.intensity = 0.6
+            elif self.distance < shade_intensity[7]:
+                self.intensity = 0.7
+            elif self.distance < shade_intensity[8]:
+                self.intensity = 0.8
+            elif self.distance < shade_intensity[9]:
+                self.intensity = 0.9
             else:
-                intensity = 1
-            
-            self.shade_slice = pygame.Surface(self.tempslice.get_size()).convert_alpha()
-            self.shade_slice.fill((SETTINGS.shade_rgba[0]*intensity, SETTINGS.shade_rgba[1]*intensity,
-                                   SETTINGS.shade_rgba[2]*intensity, SETTINGS.shade_rgba[3]*intensity))
-        
+                self.intensity = 1
+
+            slice_surface = pygame.Surface(slice_surface.get_size()).convert_alpha()
+            slice_surface.fill(
+                (SETTINGS.shade_rgba[0]*self.intensity, SETTINGS.shade_rgba[1]*self.intensity,
+                 SETTINGS.shade_rgba[2]*self.intensity, SETTINGS.shade_rgba[3]*self.intensity)
+            )
+
+        rect = slice_surface.get_rect(center=(self.xpos, int(SETTINGS.canvas_target_height / 2)))
+        return slice_surface, (self.xpos, rect.y)
+
 
 class Raycast:
     '''== Raycasting class ==\ncanvas -> Game canvas'''
@@ -83,72 +127,72 @@ class Raycast:
 
         self.current_vtile = None
         self.current_htile = None
-        
+        self.next_zbuffer = None
 
     def calculate(self):
-        self.res = SETTINGS.resolution
-        self.fov = SETTINGS.fov
         angle = SETTINGS.player_angle
 
-        step = self.fov / self.res
-        fov = int(self.fov/2)
-        ray = -fov
-        ray_number = 0
+        ray_values = self.get_ray_values_for_angle(angle)
 
         for tile in SETTINGS.all_solid_tiles:
             tile.distance = tile.get_dist(SETTINGS.player_rect.center)
 
-        interpolation = 10
+        interpolation = 2
         middle_ray_number = int(self.res / 2)
-        total_rays = self.res
-        new_zbuffer = [None for x in range(total_rays + 1)]
-        alternate_ray = False
 
-        while ray < fov:
-            # alternate_ray = not alternate_ray
-            if alternate_ray:
-                backup_ray = ray
-                backup_ray_number = ray_number
+        # initialise an array for our rays
+        self.next_zbuffer = [None for x in range(self.res + 1)]
 
-                ray = fov - ray
-                ray_number = total_rays - ray_number
+        #while ray < fov:
+        for ray_value in ray_values:
+            ray_number = ray_value[0]
+            degree = ray_value[1]
+            beta = ray_value[3]
 
+            self.beta = beta
+
+            if ray_number % interpolation != 0:
+                # need the start and end for filling in blanks
+                # need the middle for player interaction
+                if ray_number not in [0, middle_ray_number, self.res]:
+                    self.next_zbuffer[ray_number] = None
+                    continue
+
+            self.next_zbuffer[ray_number] = self.cast(SETTINGS.player_rect, degree, ray_number)
+
+        # fill in the gaps
+        self.fill_in_interpolate_gaps(ray_values)
+
+        SETTINGS.zbuffer = self.next_zbuffer
+
+        return self.next_zbuffer
+
+    def get_ray_values_for_angle(self, angle):
+        step = self.fov / self.res
+        fov = int(self.fov / 2)
+        ray = -fov
+        # pre calc ray values
+        # could possibly do this for
+        # a number of angles?
+        values = list()
+        for ray_number in range(0, self.res+1):
             degree = angle - ray
             if degree <= 0:
                 degree += 360
             elif degree > 360:
                 degree -= 360
 
-            self.beta = abs(degree - angle)
-
-            if ray_number % interpolation != 0:
-                # need the start and end for filling in blanks
-                # need the middle for player interaction
-                if ray_number not in [0, middle_ray_number, total_rays]:
-                    new_zbuffer[ray_number] = None
-
-                    if alternate_ray:
-                        ray_number = backup_ray_number
-                        ray = backup_ray
-
-                    ray_number += 1
-                    ray += step
-
-                    continue
-
-            new_zbuffer[ray_number] = self.cast(SETTINGS.player_rect, degree, ray_number)
-
-            if alternate_ray:
-                ray = backup_ray
-                ray_number = backup_ray_number
-
-            ray_number += 1
+            beta = abs(degree - angle)
             ray += step
 
-        # fill in the gaps
+            values.append((ray_number, degree, ray, beta))
+        return values
+
+    def fill_in_interpolate_gaps(self, ray_values):
         left_slice = None
         right_slice = None
-        for slice in new_zbuffer:
+
+        for i, slice in enumerate(self.next_zbuffer):
             if slice is not None:
                 if left_slice is None and right_slice is None:
                     left_slice = slice
@@ -157,8 +201,28 @@ class Raycast:
                 elif left_slice is not None and right_slice is not None:
                     right_slice = left_slice
                     left_slice = slice
+            elif left_slice is not None and right_slice is not None:
+                degree = ray_values[i][1]
+                ray_number = ray_values[i][0]
+                ray_origin = None
 
-        SETTINGS.zbuffer = new_zbuffer
+                if left_slice.vh == right_slice.vh:
+                    x, y = left_slice.pos
+                    x2, y2 = left_slice.other_pos
+
+                    #if right_slice.pos[0] < x:
+                    #    x = right_slice.pos[0]
+                    #if right_slice.pos[1] < y:
+                    #    y = right_slice.pos[1]
+                    #if right_slice.other_pos[0] < x2:
+                    #    x2 = right_slice.other_pos[0]
+                    #if right_slice.other_pos[0] < y2:
+                    #    y2 = right_slice.other_pos[1]
+
+                    ray_origin = (left_slice.vh, x, y, x2, y2)
+
+                self.next_zbuffer[i] = self.cast(SETTINGS.player_rect, degree, ray_number, ray_origin)
+
 
     def find_offset(self, position, ray_number, angle, tile, hv):
         #position is H_x or V_y
@@ -194,7 +258,7 @@ class Raycast:
                     return True
             
 
-    def cast(self, player_rect, angle, ray_number, ray_origrin):
+    def cast(self, player_rect, angle, ray_number, ray_origrin = None):
         H_hit = False
         V_hit = False
         H_offset = V_offset = 0
@@ -202,9 +266,16 @@ class Raycast:
         angle -= 0.001
 
         if ray_origrin is None:
-            H_x, H_y, V_x, V_y = self.intialise_ray_origin(angle, player_rect)
+            H_x, H_y, V_x, V_y = self.get_ray_origin(angle, player_rect)
         else:
-            H_x, H_y, V_x, V_y = ray_origrin
+            H_x, V_y = self.get_ray_origin_for_angle(ray_origrin[2], ray_origrin[3], angle, player_rect)
+            V_x =
+            H_y =
+            if ray_origrin[0] == "h":
+
+            else:
+                V_x, V_y = ray_origrin[1], ray_origrin[2]
+                H_x, H_y = ray_origrin[3], ray_origrin[4]
 
         #Extend
         for x in range(0, SETTINGS.render):
@@ -223,8 +294,9 @@ class Raycast:
                 if not H_hit:
                     if (H_y == tile.rect.bottom and H_x >= tile.rect.bottomleft[0] and H_x <= tile.rect.bottomright[0]) and player_rect.centery > tile.rect.bottom:
                         H_hit = True
-                        H_texture = SETTINGS.tile_texture[tile.ID]
+                        H_texture_id = tile.ID
                         self.current_htile = tile
+
                         if tile.type == 'hdoor':
                             H_y -= self.door_size
                             H_x += self.door_size / math.tan(math.radians(angle))
@@ -238,8 +310,9 @@ class Raycast:
                             
                     elif (H_y == tile.rect.top and H_x >= tile.rect.topleft[0] and H_x <= tile.rect.topright[0]) and player_rect.centery < tile.rect.top:
                         H_hit = True
-                        H_texture = SETTINGS.tile_texture[tile.ID]
+                        H_texture_id = tile.ID
                         self.current_htile = tile
+
                         if tile.type == 'hdoor':
                             H_y += self.door_size
                             H_x -= self.door_size / math.tan(math.radians(angle))
@@ -257,8 +330,9 @@ class Raycast:
                 if not V_hit:
                     if (V_x == tile.rect.left and V_y >= tile.rect.topleft[1] and V_y <= tile.rect.bottomleft[1]) and player_rect.centerx < tile.rect.left:
                         V_hit = True
-                        V_texture = SETTINGS.tile_texture[tile.ID]
+                        V_texture_id = tile.ID
                         self.current_vtile = tile
+
                         if tile.type == 'vdoor':
                             V_x += self.door_size
                             V_y -= self.door_size * math.tan(math.radians(angle))
@@ -272,8 +346,9 @@ class Raycast:
                             
                     elif (V_x == tile.rect.right and V_y >= tile.rect.topright[1] and V_y <= tile.rect.bottomright[1]) and player_rect.centerx > tile.rect.right:
                         V_hit = True
-                        V_texture = SETTINGS.tile_texture[tile.ID]
+                        V_texture_id = tile.ID
                         self.current_vtile = tile
+
                         if tile.type == 'vdoor':
                             V_x -= self.door_size
                             V_y += self.door_size * math.tan(math.radians(angle))
@@ -311,14 +386,16 @@ class Raycast:
             H_hit, V_hit = False, False
             if H_distance < V_distance:
                 end_pos = (H_x, H_y)
-                texture = H_texture
+                other_pos = (V_x, V_y)
+                texture_id = H_texture_id
                 tile_len = H_distance
                 offset = H_offset
                 current_tile = self.current_htile
                 H_hit = True
             else:
                 end_pos = (V_x, V_y)
-                texture = V_texture
+                other_pos = (H_x, H_y)
+                texture_id = V_texture_id
                 tile_len = V_distance
                 offset = V_offset
                 current_tile = self.current_vtile
@@ -326,21 +403,25 @@ class Raycast:
 
         elif H_hit and not V_hit:
             end_pos = (H_x, H_y)
-            texture = H_texture
+            other_pos = (V_x, V_y)
+            texture_id = H_texture_id
             tile_len = H_distance
             offset = H_offset
             current_tile = self.current_htile
 
         elif V_hit and not H_hit:
             end_pos = (V_x, V_y)
-            texture = V_texture
+            other_pos = (H_x, H_y)
+            texture_id = V_texture_id
             tile_len = V_distance
             offset = V_offset
             current_tile = self.current_vtile
 
         else:
-            end_pos = (SETTINGS.player_rect[0],SETTINGS.player_rect[1])
+            end_pos = (SETTINGS.player_rect[0], SETTINGS.player_rect[1])
+            other_pos = end_pos
             texture = None
+            texture_id = None
             tile_len = None
             offset = 0
             current_tile = None
@@ -351,44 +432,63 @@ class Raycast:
             vh = 'h'
             
         #Mode
-        return self.control(end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh)
+        return self.control(end_pos, other_pos, ray_number, tile_len, player_rect, texture_id, offset, current_tile, vh)
 
-    def intialise_ray_origin(self, angle, player_rect):
+    def get_ray_origin_for_player_position(self, angle, player_rect):
         # Horizontal
         if angle < 180:
             H_y = int(player_rect.center[1] / self.tile_size) * self.tile_size
         else:
             H_y = int(player_rect.center[1] / self.tile_size) * self.tile_size + self.tile_size
-        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / math.tan(math.radians(angle))
+
         # Vertical
         if angle > 270 or angle < 90:
             V_x = int(player_rect.center[0] / self.tile_size) * self.tile_size + self.tile_size
         else:
             V_x = int(player_rect.center[0] / self.tile_size) * self.tile_size
-        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * math.tan(math.radians(angle))
-        return H_x, H_y, V_x, V_y
 
-    def control(self, end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh):
+        return H_y, V_x
+
+    def get_ray_origin_for_angle(self, H_y, V_x, angle, player_rect):
+        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / math.tan(math.radians(angle))
+        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * math.tan(math.radians(angle))
+        return H_x, V_y
+
+    def get_ray_origin(self, angle, player_rect):
+        H_y, V_x = self.get_ray_origin_for_player_position(angle, player_rect)
+        H_x, V_y = self.get_ray_origin_for_angle(H_y, V_x, angle, player_rect)
+
+    def control(self, end_pos, other_pos, ray_number, tile_len, player_rect, texture_id, offset, current_tile, vh):
         if SETTINGS.mode == 1:
             if tile_len:
                 wall_dist = tile_len * math.cos(math.radians(self.beta))
             else:
                 wall_dist = None
 
-            return self.render_screen(ray_number, wall_dist, texture, int(offset), current_tile, vh, end_pos)
-            
+            return self.render_screen(ray_number, wall_dist, texture_id, int(offset), current_tile, vh, end_pos, other_pos)
+
         else:
             self.draw_line(player_rect, end_pos)
             
-            
 
-    def render_screen(self, ray_number, wall_dist, texture, offset, current_tile, vh, end_pos):
+    def render_screen(self, ray_number, wall_dist, texture_id, offset, current_tile, vh, end_pos, other_pos):
         if wall_dist:
             wall_height = int((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))))
-            new_slice = Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh)
-            new_slice.distance = wall_dist
-            new_slice.update_rect(pygame.transform.scale(new_slice.slice, (self.wall_width, wall_height)))
-            new_slice.xpos = ((ray_number) * self.wall_width)
+            texture = SETTINGS.tile_texture[texture_id]
+
+            new_slice = Slice(
+                tile_id = texture_id,
+                location = (texture.slices[offset], 0),
+                vh = vh,
+                pos = end_pos,
+                ray_number = ray_number,
+                wall_width = self.wall_width,
+                distance = wall_dist,
+                height = wall_height,
+                other_pos = other_pos
+            )
+
+
         else:
             return None
             

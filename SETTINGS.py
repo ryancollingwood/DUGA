@@ -60,6 +60,7 @@ shade_visibility = 1000
 
 #Below this point are the non-configurable raycasting variables.
 zbuffer = []
+last_zbuffer = []
 middle_slice_len = None
 middle_slice = None
 middle_ray_pos = None
