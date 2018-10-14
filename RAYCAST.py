@@ -64,9 +64,9 @@ class Slice:
     def get_blit_surface_and_location(self):
         slice_surface = self.get_slice_surface()
 
-        if self.vh == 'v':
-            slice_surface = pygame.Surface(slice_surface.get_size()).convert_alpha()
-            slice_surface.fill((0, 0, 0, SETTINGS.texture_darken))
+        #if self.vh == 'v':
+        #    slice_surface = pygame.Surface(slice_surface.get_size()).convert_alpha()
+        #    slice_surface.fill((0, 0, 0, SETTINGS.texture_darken))
 
         if SETTINGS.shade:
             #Shade intensity table
@@ -204,24 +204,34 @@ class Raycast:
             elif left_slice is not None and right_slice is not None:
                 degree = ray_values[i][1]
                 ray_number = ray_values[i][0]
+                self.beta = ray_values[i][3]
                 ray_origin = None
 
                 if left_slice.vh == right_slice.vh:
-                    x, y = left_slice.pos
-                    x2, y2 = left_slice.other_pos
+                    if left_slice.vh == "h":
+                        left_H_y = left_slice.pos[1]
+                        left_V_x = left_slice.other_pos[0]
+                        right_H_y = right_slice.pos[1]
+                        right_V_x = right_slice.other_pos[0]
+                    else:
+                        left_H_y = left_slice.other_pos[1]
+                        left_V_x = left_slice.pos[0]
+                        right_H_y = right_slice.other_pos[1]
+                        right_V_x = right_slice.pos[0]
 
-                    #if right_slice.pos[0] < x:
-                    #    x = right_slice.pos[0]
-                    #if right_slice.pos[1] < y:
-                    #    y = right_slice.pos[1]
-                    #if right_slice.other_pos[0] < x2:
-                    #    x2 = right_slice.other_pos[0]
-                    #if right_slice.other_pos[0] < y2:
-                    #    y2 = right_slice.other_pos[1]
+                    H_y = left_H_y
+                    H_x = left_V_x
+                    if right_H_y < H_y:
+                        H_y = right_H_y
+                    if right_V_x < H_x:
+                        H_x = right_V_x
 
-                    ray_origin = (left_slice.vh, x, y, x2, y2)
+                    ray_origin = (left_slice.vh, H_x, H_y)
 
-                self.next_zbuffer[i] = self.cast(SETTINGS.player_rect, degree, ray_number, ray_origin)
+                new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, ray_origin)
+                if new_ray is None and ray_origin is not None:
+                    new_ray = self.cast(SETTINGS.player_rect, degree, ray_number)
+                self.next_zbuffer[i] = new_ray
 
 
     def find_offset(self, position, ray_number, angle, tile, hv):
@@ -268,14 +278,8 @@ class Raycast:
         if ray_origrin is None:
             H_x, H_y, V_x, V_y = self.get_ray_origin(angle, player_rect)
         else:
-            H_x, V_y = self.get_ray_origin_for_angle(ray_origrin[2], ray_origrin[3], angle, player_rect)
-            V_x =
-            H_y =
-            if ray_origrin[0] == "h":
-
-            else:
-                V_x, V_y = ray_origrin[1], ray_origrin[2]
-                H_x, H_y = ray_origrin[3], ray_origrin[4]
+            V_x, H_y  = ray_origrin[1], ray_origrin[2]
+            H_x, V_y = self.get_ray_origin_for_angle(V_x, H_y, angle, player_rect)
 
         #Extend
         for x in range(0, SETTINGS.render):
@@ -449,14 +453,15 @@ class Raycast:
 
         return H_y, V_x
 
-    def get_ray_origin_for_angle(self, H_y, V_x, angle, player_rect):
+    def get_ray_origin_for_angle(self, V_x, H_y, angle, player_rect):
         H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / math.tan(math.radians(angle))
         V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * math.tan(math.radians(angle))
         return H_x, V_y
 
     def get_ray_origin(self, angle, player_rect):
         H_y, V_x = self.get_ray_origin_for_player_position(angle, player_rect)
-        H_x, V_y = self.get_ray_origin_for_angle(H_y, V_x, angle, player_rect)
+        H_x, V_y = self.get_ray_origin_for_angle(V_x, H_y, angle, player_rect)
+        return H_x, H_y, V_x, V_y
 
     def control(self, end_pos, other_pos, ray_number, tile_len, player_rect, texture_id, offset, current_tile, vh):
         if SETTINGS.mode == 1:
