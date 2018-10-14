@@ -8,9 +8,7 @@ class Sprite:
     '''== Create a sprite ==\ntexture -> loaded texture | ID -> unique\npos -> px coords          | texture_type -> sprite, npc'''
     def __init__(self, texture, ID, pos, texture_type, parent = None):
         self.texture = texture
-        #These constant values should be determined rather than hard coded
-        #self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*2, SETTINGS.tile_size*4)).convert_alpha()
-        self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*4, SETTINGS.tile_size*8)).convert_alpha()
+        self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size*2, SETTINGS.tile_size*4)).convert_alpha()
         self.texture_type = texture_type
         self.type = texture_type
         self.ID = ID
@@ -24,6 +22,11 @@ class Sprite:
         self.distance = None
 
         self.theta = None
+
+        self.current_frame = 0
+        self.last_frame = 0
+        self.drawn_width = None
+        self.drawn_height = None
         
 
         #If this sprite belongs to an NPC, make the NPC a parent of this sprite
@@ -34,6 +37,9 @@ class Sprite:
             self.parent = None
 
         SETTINGS.all_sprites.append(self)
+
+    def __str__(self):
+        return str(vars(self))
 
     def get_pos(self, canvas):
         angle = SETTINGS.player_angle
@@ -67,7 +73,7 @@ class Sprite:
             sprite_height = 2500
 
         sprite_width = int(self.rect.width / self.rect.height * sprite_height)
-        
+
         if xTmp > (0 - sprite_width) and xTmp < (SETTINGS.canvas_actual_width + sprite_width):
             SETTINGS.zbuffer.append(self)
             
@@ -77,16 +83,16 @@ class Sprite:
             if self.parent:
                 self.parent.in_canvas = False
 
-        # todo does this help?
-        sprite_height = int(sprite_height * SETTINGS.canvas_aspect_ratio) 
+        # if the height and width are the same no need to transform
+        if (self.drawn_height != sprite_height and self.drawn_width != sprite_width) or (self.current_frame != self.last_frame):
+            self.drawn_height = sprite_height
+            self.drawn_width = sprite_width
 
-        self.new_size = pygame.transform.scale(self.texture, (sprite_width, sprite_height))
-        self.new_rect = self.new_size.get_rect()
-        # I think my changes to HUD screwed this up
-        #self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
-        # TODO Fix this
-        self.new_rect.center = (xTmp, (SETTINGS.canvas_target_height/2) )
-        
+            self.new_size = pygame.transform.scale(self.texture, (sprite_width, sprite_height))
+            self.new_rect = self.new_size.get_rect()
+
+        self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
+
         if self.parent:
             self.parent.hit_rect = self.new_rect
 

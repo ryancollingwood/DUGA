@@ -119,11 +119,13 @@ class Npc:
         self.die_texture = [self.texture.subsurface(0,768,64,128).convert_alpha(), self.texture.subsurface(64,768,64,128).convert_alpha(), self.texture.subsurface(128,768,64,128).convert_alpha(), self.texture.subsurface(192,768,64,128).convert_alpha(), self.texture.subsurface(256,768,64,128).convert_alpha(), self.texture.subsurface(320,768,64,128).convert_alpha(), self.texture.subsurface(384,768,64,128).convert_alpha(), self.texture.subsurface(448,768,64,128).convert_alpha(), self.texture.subsurface(512,768,64,128).convert_alpha(), self.texture.subsurface(576,768,64,128).convert_alpha(), self.texture.subsurface(640,768,64,128).convert_alpha()]
         self.hit_texture = [self.texture.subsurface(0,896,64,128).convert_alpha(), self.texture.subsurface(64,896,64,128).convert_alpha(), self.texture.subsurface(128,896,64,128).convert_alpha(), self.texture.subsurface(192,896,64,128).convert_alpha(), self.texture.subsurface(256,896,64,128).convert_alpha(), self.texture.subsurface(320,896,64,128).convert_alpha()]
         self.hurt_texture = [self.die_texture[0]]
-        self.current_frame = 1
         self.update_timer = 0
 
         #Creating the sprite rect is awful, I know. Keeps it from entering walls.
         self.sprite = SPRITES.Sprite(self.front_texture[1], self.ID, [self.rect.centerx - int(SETTINGS.tile_size / 12), self.rect.centery - int(SETTINGS.tile_size / 10)], 'npc', self)
+        # perhaps move this to sprite?
+        self.current_frame = 1
+
 
         #The position in SETTINGS.all_sprites of this NPC
         self.num = len(SETTINGS.all_sprites)-1
@@ -251,7 +253,7 @@ class Npc:
                 self.player_in_view = True
                 if (self.side != 'front' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
-                        self.sprite.texture = self.front_texture[self.current_frame]
+                        self.sprite.texture = self.front_texture[self.sprite.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[0]
                 self.side = 'front'
@@ -260,7 +262,7 @@ class Npc:
                 self.player_in_view = True
                 if (self.side != 'frontleft' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
-                        self.sprite.texture = self.frontleft_texture[self.current_frame]
+                        self.sprite.texture = self.frontleft_texture[self.sprite.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[7]
                 self.side = 'frontleft'
@@ -269,7 +271,7 @@ class Npc:
                 self.player_in_view = False
                 if (self.side != 'left' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
-                        self.sprite.texture = self.left_texture[self.current_frame]
+                        self.sprite.texture = self.left_texture[self.sprite.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[6]
                 self.side = 'left'
@@ -278,7 +280,7 @@ class Npc:
                 self.player_in_view = False
                 if (self.side != 'backleft' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
-                        self.sprite.texture = self.backleft_texture[self.current_frame]
+                        self.sprite.texture = self.backleft_texture[self.sprite.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[5]
                 self.side = 'backleft'
@@ -287,7 +289,7 @@ class Npc:
                 self.player_in_view = False
                 if (self.side != 'back' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
-                        self.sprite.texture = self.back_texture[self.current_frame]
+                        self.sprite.texture = self.back_texture[self.sprite.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[4]
                 self.side = 'back'
@@ -296,7 +298,7 @@ class Npc:
                 self.player_in_view = False
                 if (self.side != 'backright' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
-                        self.sprite.texture = self.backright_texture[self.current_frame]
+                        self.sprite.texture = self.backright_texture[self.sprite.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[3]
                 self.side = 'backright'
@@ -305,7 +307,7 @@ class Npc:
                 self.player_in_view = False
                 if (self.side != 'right' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
-                        self.sprite.texture = self.right_texture[self.current_frame]
+                        self.sprite.texture = self.right_texture[self.sprite.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[2]
                 self.side = 'right'
@@ -314,7 +316,7 @@ class Npc:
                 self.player_in_view = True
                 if (self.side != 'frontright' and not self.dead and not self.hurting and not self.attacking and self.in_canvas) or not self.side:
                     if self.moving:
-                        self.sprite.texture = self.frontright_texture[self.current_frame]
+                        self.sprite.texture = self.frontright_texture[self.sprite.current_frame]
                     else:
                         self.sprite.texture = self.stand_texture[1]
                 self.side = 'frontright'
@@ -674,44 +676,45 @@ class Npc:
     def animate(self, animation):
         '''== Animate NPC ==\nanimation -> dying, walking, attacking, hurting'''
         if self.running_animation != animation:
-            self.current_frame = 0
+            self.sprite.current_frame = 0
             self.running_animation = animation
             
         #walk animation
         if animation == 'walking':
             if self.side == 'front':
-                self.sprite.texture = self.front_texture[self.current_frame]
+                self.sprite.texture = self.front_texture[self.sprite.current_frame]
             elif self.side == 'frontleft':
-                self.sprite.texture = self.frontleft_texture[self.current_frame]
+                self.sprite.texture = self.frontleft_texture[self.sprite.current_frame]
             elif self.side == 'left':
-                self.sprite.texture = self.left_texture[self.current_frame]
+                self.sprite.texture = self.left_texture[self.sprite.current_frame]
             elif self.side == 'backleft':
-                self.sprite.texture = self.backleft_texture[self.current_frame]
+                self.sprite.texture = self.backleft_texture[self.sprite.current_frame]
             elif self.side == 'back':
-                self.sprite.texture = self.back_texture[self.current_frame]
+                self.sprite.texture = self.back_texture[self.sprite.current_frame]
             elif self.side == 'backright':
-                self.sprite.texture = self.backright_texture[self.current_frame]
+                self.sprite.texture = self.backright_texture[self.sprite.current_frame]
             elif self.side == 'right':
-                self.sprite.texture = self.right_texture[self.current_frame]
+                self.sprite.texture = self.right_texture[self.sprite.current_frame]
             elif self.side == 'frontright':
-                self.sprite.texture = self.frontright_texture[self.current_frame]
+                self.sprite.texture = self.frontright_texture[self.sprite.current_frame]
 
             if self.timer >= self.frame_interval:
-                self.current_frame += 1
+                self.sprite.last_frame = self.sprite.current_frame
+                self.sprite.current_frame += 1
                 self.timer = 0
-                if self.current_frame == len(self.front_texture)-1:
-                    self.current_frame = 0
+                if self.sprite.current_frame == len(self.front_texture)-1:
+                    self.sprite.current_frame = 0
         
         #die animation
         elif animation == 'dying':
-            self.sprite.texture = self.die_texture[self.current_frame]
-            if self.current_frame == 0 and not self.mein_leben:
+            self.sprite.texture = self.die_texture[self.sprite.current_frame]
+            if self.sprite.current_frame == 0 and not self.mein_leben:
                 self.mein_leben = True
                 SOUND.play_sound(random.choice(self.sounds['die']), self.dist)
-            if self.timer >= self.frame_interval and self.current_frame < len(self.die_texture)-1:
-                self.current_frame += 1
+            if self.timer >= self.frame_interval and self.sprite.current_frame < len(self.die_texture)-1:
+                self.sprite.current_frame += 1
                 self.timer = 0
-            elif self.current_frame == len(self.die_texture)-1 and self.knockback == 0:
+            elif self.sprite.current_frame == len(self.die_texture)-1 and self.knockback == 0:
                 self.dead = True
                 self.drop_item()
                 SETTINGS.statistics['last enemies'] += 1
@@ -737,15 +740,15 @@ class Npc:
         
         #attack animation
         elif animation == 'attacking':
-            self.sprite.texture = self.hit_texture[self.current_frame]
+            self.sprite.texture = self.hit_texture[self.sprite.current_frame]
             self.moving = False
             if self.timer >= self.frame_interval:
-                self.current_frame += 1
+                self.sprite.current_frame += 1
                 self.timer = 0
-                if self.current_frame == len(self.hit_texture):
+                if self.sprite.current_frame == len(self.hit_texture):
                     SOUND.play_sound(self.sounds['attack'], self.dist)
                     self.sprite.texture = self.stand_texture[0]
-                    self.current_frame = 0
+                    self.sprite.current_frame = 0
                     self.attacking = False
                     if random.randint(0,8) != 8: #A chance to miss
                         if SETTINGS.player_armor > 0:
