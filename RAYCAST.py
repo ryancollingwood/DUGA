@@ -108,7 +108,7 @@ class Slice:
                  SETTINGS.shade_rgba[2]*self.intensity, SETTINGS.shade_rgba[3]*self.intensity)
             )
 
-        return self.slice_surface,
+        return self.slice_surface, self.blit_dest
 
 
 class Raycast:

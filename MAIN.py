@@ -286,6 +286,7 @@ def render_screen(canvas):
             #if item_index < last_zbuffer_len:
             #    if SETTINGS.last_zbuffer[item_index] == SETTINGS.zbuffer[item_index]:
             #        continue
+            # TODO reimplement shade and vh shasing
             item_slice, item_slice_position = item.get_blit_surface_and_location()
             canvas.blit(item_slice, item_slice_position)
         else:
