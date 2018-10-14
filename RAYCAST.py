@@ -9,7 +9,7 @@ pygame.init()
 
 class Slice:
 
-    def __init__(self, tile_id, location, vh, pos, ray_number, wall_width, distance, height, origin_pos, other_pos, offset):
+    def __init__(self, tile_id, location, vh, pos, ray_number, wall_width, distance, height, origin_pos, other_pos, offset, map_pos):
         # tile_id determines which texture we will draw
         self.tile_id = tile_id
         self.location = location
@@ -23,6 +23,7 @@ class Slice:
         self.distance = distance
         self.height = height
         self.type = "slice"
+        self.map_pos = map_pos
         self.intensity = 1
         self.other_pos = other_pos
         self.origin_pos = origin_pos
@@ -50,7 +51,8 @@ class Slice:
                 self.wall_width == other.wall_width,
                 self.xpos == other.xpos,
                 self.intensity == other.intensity,
-                self.offset == other.offset
+                self.offset == other.offset,
+                self.map_pos == other.map_pos
              ])
         except AttributeError:
             return False
@@ -64,8 +66,8 @@ class Slice:
         slice_texture = tile_texture.subsurface(pygame.Rect(self.location, (1, texture_width))).convert()
         self.slice = pygame.transform.scale(slice_texture, (self.wall_width, self.height))
 
-        if SETTINGS.shade or self.vh == 'v':
-            self.alpha_slice = pygame.Surface(self.slice.get_size()).convert_alpha()
+        #if SETTINGS.shade or self.vh == 'v':
+        self.alpha_slice = pygame.Surface(self.slice.get_size()).convert_alpha()
 
         rect = self.slice.get_rect(center=(self.xpos, int(SETTINGS.canvas_target_height / 2)))
         self.blit_dest = (self.xpos, rect.y)
@@ -73,9 +75,9 @@ class Slice:
     def prepare_slice(self):
         self.get_slice_surface()
 
-        if self.vh == 'v':
-            self.dark_slice = self.alpha_slice
-            self.dark_slice.fill((0, 0, 0, SETTINGS.texture_darken))
+        #if self.vh == 'v':
+        self.dark_slice = self.alpha_slice
+        self.dark_slice.fill((0, 0, 0, SETTINGS.texture_darken))
 
         if SETTINGS.shade:
             #Shade intensity table
@@ -220,7 +222,7 @@ class Raycast:
                 degree = ray_values[i][1]
                 ray_number = ray_values[i][0]
                 self.beta = ray_values[i][3]
-                ray_origin = None
+                new_ray = None
 
                 if left_slice is not None:
 
@@ -229,47 +231,17 @@ class Raycast:
                     if right_slice is None:
                         next_right = abs(self.interpolation - i) + 1
                         right_slice = self.next_zbuffer[next_right]
-
-                    if left_slice.vh == right_slice.vh:
-                        # TODO do we want the origin here?
-                        if left_slice.vh == "h":
-                            #left_H_y = left_slice.origin_pos[1]
-                            left_H_y = left_slice.pos[1]
-                            left_V_x = left_slice.other_pos[0]
-                            #right_H_y = right_slice.origin_pos[1]
-                            right_H_y = right_slice.pos[1]
-                            right_V_x = right_slice.other_pos[0]
-                        else:
-                            left_H_y = left_slice.other_pos[1]
-                            #left_V_x = left_slice.origin_pos[0]
-                            left_V_x = left_slice.pos[0]
-                            right_H_y = right_slice.other_pos[1]
-                            #right_V_x = right_slice.origin_pos[0]
-                            right_V_x = right_slice.pos[0]
-
-                        H_y = left_H_y
-                        H_x = left_V_x
-                        if right_H_y < H_y:
-                            H_y = right_H_y
-                        if right_V_x < H_x:
-                            H_x = right_V_x
-
-                        offset = left_slice.offset
-                        if right_slice.offset < left_slice.offset:
-                            offset = right_slice.offset
-
-                        # TODO based on the vh adjust these accordingly
-                        if left_slice.vh == "h":
-                            H_x -= offset
-                        else:
-                            H_y -= offset
-
-                        ray_origin = (left_slice.vh, H_x, H_y, offset)
-
-                new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, ray_origin)
-                if new_ray is None and ray_origin is not None:
+                    
+                    search_tiles = [tile for tile in SETTINGS.rendered_tiles if tile.map_pos in [left_slice.map_pos, right_slice.map_pos]]
+                    if len(search_tiles) > 0:
+                        new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, search_tiles = search_tiles)
+                    else:
+                        print("tile was rendered by in rednered?", left_slice.map_pos)
+                            
+                if new_ray is None:
                     new_ray = self.cast(SETTINGS.player_rect, degree, ray_number)
-                    print("rescan", ray_number)
+                    #print("rescan", ray_number, degree)
+                    
                 self.next_zbuffer[i] = new_ray
 
 
@@ -293,7 +265,7 @@ class Raycast:
         return(offset)
 
     def check_hit(self, V_hit, H_hit, H_distance, V_distance, full_check):
-        #Break loop if any ray has hit a wall            
+        #Break loop if any ray has hit a wall
         if H_hit and V_hit:
             return True
 
@@ -307,12 +279,15 @@ class Raycast:
                     return True
             
 
-    def cast(self, player_rect, angle, ray_number, ray_origrin = None):
+    def cast(self, player_rect, angle, ray_number, search_tiles = None, ray_origrin = None):
         H_hit = False
         V_hit = False
         H_offset = V_offset = 0
         end_pos = (0, 0)
         passed_offset = None
+        
+        if search_tiles is None:
+            search_tiles = SETTINGS.rendered_tiles
 
         if ray_origrin is None:
             H_x, H_y, V_x, V_y = self.get_ray_origin(angle, player_rect)
@@ -335,7 +310,7 @@ class Raycast:
             if self.check_hit(V_hit, H_hit, H_distance, V_distance, True):
                 break
                 
-            for tile in SETTINGS.rendered_tiles:
+            for tile in search_tiles:
                 
                 if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):
                     break
@@ -539,6 +514,7 @@ class Raycast:
             new_slice = Slice(
                 tile_id = texture_id,
                 location = (texture.slices[offset], 0),
+                map_pos = current_tile.map_pos,
                 vh = vh,
                 pos = end_pos,
                 ray_number = ray_number,
