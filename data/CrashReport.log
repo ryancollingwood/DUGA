@@ -1,0 +1,334 @@
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 452, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 139, in calculate
+    new_zbuffer[ray_number] = self.cast(SETTINGS.player_rect, degree, ray_number)
+TypeError: cast() missing 1 required positional argument: 'ray_origrin'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 452, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 139, in calculate
+    new_zbuffer[ray_number] = self.cast(SETTINGS.player_rect, degree, ray_number)
+  File "D:\Projects\DUGA\RAYCAST.py", line 354, in cast
+    return self.control(end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh)
+  File "D:\Projects\DUGA\RAYCAST.py", line 378, in control
+    return self.render_screen(ray_number, wall_dist, texture, int(offset), current_tile, vh, end_pos)
+  File "D:\Projects\DUGA\RAYCAST.py", line 388, in render_screen
+    new_slice = Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh)
+TypeError: __init__() missing 1 required positional argument: 'pos'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 452, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 285, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:\Projects\DUGA\RAYCAST.py", line 38, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:\Projects\DUGA\RAYCAST.py", line 28, in get_slice_surface
+    slice_surface = surface.subsurface(pygame.Rect(self.location, (1, self.width))).convert()
+AttributeError: 'Texture' object has no attribute 'subsurface'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 452, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 285, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:\Projects\DUGA\RAYCAST.py", line 39, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:\Projects\DUGA\RAYCAST.py", line 29, in get_slice_surface
+    slice_surface = texture.subsurface(pygame.Rect(self.location, (1, self.width))).convert()
+AttributeError: 'Texture' object has no attribute 'subsurface'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 452, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 285, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:\Projects\DUGA\RAYCAST.py", line 37, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:\Projects\DUGA\RAYCAST.py", line 28, in get_slice_surface
+    slice_surface.update_rect(pygame.transform.scale(slice_surface, (self.width, self.height)))
+AttributeError: 'pygame.Surface' object has no attribute 'update_rect'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 447, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 158, in calculate
+    new_zbuffer[ray_number] = self.cast(SETTINGS.player_rect, degree, ray_number)
+  File "D:\Projects\DUGA\RAYCAST.py", line 378, in cast
+    return self.control(end_pos, ray_number, tile_len, player_rect, texture_id, offset, current_tile, vh)
+  File "D:\Projects\DUGA\RAYCAST.py", line 402, in control
+    return self.render_screen(ray_number, wall_dist, texture_id, int(offset), current_tile, vh, end_pos)
+  File "D:\Projects\DUGA\RAYCAST.py", line 419, in render_screen
+    wall_width = wall_width,
+NameError: name 'wall_width' is not defined
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 452, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 285, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:\Projects\DUGA\RAYCAST.py", line 40, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:\Projects\DUGA\RAYCAST.py", line 29, in get_slice_surface
+    texture_width = slice_texture.rect.width,
+AttributeError: 'pygame.Surface' object has no attribute 'rect'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 452, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 285, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:/Projects/DUGA\RAYCAST.py", line 40, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:/Projects/DUGA\RAYCAST.py", line 29, in get_slice_surface
+    texture_width = tile_texture.texture.rect.width
+AttributeError: 'pygame.Surface' object has no attribute 'rect'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 452, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 285, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:\Projects\DUGA\RAYCAST.py", line 40, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:\Projects\DUGA\RAYCAST.py", line 30, in get_slice_surface
+    slice_texture = tile_texture.subsurface(pygame.Rect(self.location, (1, texture_width))).convert()
+AttributeError: 'Texture' object has no attribute 'subsurface'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 188, in calculate
+    self.fill_in_interpolate_gaps()
+  File "D:\Projects\DUGA\RAYCAST.py", line 197, in fill_in_interpolate_gaps
+    for slice in self.new_zbuffer:
+AttributeError: 'Raycast' object has no attribute 'new_zbuffer'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 188, in calculate
+    self.fill_in_interpolate_gaps()
+  File "D:\Projects\DUGA\RAYCAST.py", line 207, in fill_in_interpolate_gaps
+    print(left_slice, right_slice)
+TypeError: __str__ returned non-string (type dict)
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 132, in calculate
+    ray_values = self.get_ray_values_for_angle(angle)
+  File "D:\Projects\DUGA\RAYCAST.py", line 185, in get_ray_values_for_angle
+    values.append(ray_number, degree, ray, beta)
+TypeError: append() takes exactly one argument (4 given)
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 161, in calculate
+    self.fill_in_interpolate_gaps()
+TypeError: fill_in_interpolate_gaps() missing 1 required positional argument: 'ray_values'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 161, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:\Projects\DUGA\RAYCAST.py", line 205, in fill_in_interpolate_gaps
+    if left_slice.vh == right_slice.vh:
+AttributeError: 'NoneType' object has no attribute 'vh'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 161, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:\Projects\DUGA\RAYCAST.py", line 207, in fill_in_interpolate_gaps
+    if right_slice[0] < x:
+TypeError: 'Slice' object does not support indexing
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 161, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:\Projects\DUGA\RAYCAST.py", line 201, in fill_in_interpolate_gaps
+    degree = ray_values[i][1]
+IndexError: list index out of range
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:/Projects/DUGA\RAYCAST.py", line 161, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:/Projects/DUGA\RAYCAST.py", line 202, in fill_in_interpolate_gaps
+    degree = ray_values[i][1]
+IndexError: list index out of range
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 456, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 289, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:\Projects\DUGA\RAYCAST.py", line 62, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:\Projects\DUGA\RAYCAST.py", line 53, in get_slice_surface
+    slice_surface = pygame.transform.scale(slice_texture, (self.wall_width, self.height))
+pygame.error: Width or height is too large
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 456, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 289, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:\Projects\DUGA\RAYCAST.py", line 65, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:\Projects\DUGA\RAYCAST.py", line 56, in get_slice_surface
+    slice_surface = pygame.transform.scale(slice_texture, (self.wall_width, self.height))
+pygame.error: Width or height is too large
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 456, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 289, in render_screen
+    item_slice, item_slice_position = item.get_blit_surface_and_location()
+  File "D:\Projects\DUGA\RAYCAST.py", line 65, in get_blit_surface_and_location
+    slice_surface = self.get_slice_surface()
+  File "D:\Projects\DUGA\RAYCAST.py", line 56, in get_slice_surface
+    slice_surface = pygame.transform.scale(slice_texture, (self.wall_width, self.height))
+pygame.error: Width or height is too large
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 166, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:\Projects\DUGA\RAYCAST.py", line 248, in fill_in_interpolate_gaps
+    new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, ray_origin)
+UnboundLocalError: local variable 'ray_origin' referenced before assignment
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 167, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:\Projects\DUGA\RAYCAST.py", line 225, in fill_in_interpolate_gaps
+    if left_slice.vh == right_slice.vh:
+AttributeError: 'NoneType' object has no attribute 'vh'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 451, in main_loop
+    gameRaycast.calculate()
+  File "D:/Projects/DUGA\RAYCAST.py", line 169, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:/Projects/DUGA\RAYCAST.py", line 227, in fill_in_interpolate_gaps
+    if left_slice.vh == right_slice.vh:
+AttributeError: 'NoneType' object has no attribute 'vh'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 466, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 297, in render_screen
+    canvas.blit(item.darkslice, blit_dest)
+AttributeError: 'Slice' object has no attribute 'darkslice'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 466, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 297, in render_screen
+    canvas.blit(item.dark_slice, blit_dest)
+TypeError: argument 1 must be pygame.Surface, not pygame.Rect
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 466, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 293, in render_screen
+    canvas.blit(item.slice, blit_dest)
+TypeError: argument 1 must be pygame.Surface, not None
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 468, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 295, in render_screen
+    canvas.blit(item.slice, blit_dest)
+TypeError: argument 1 must be pygame.Surface, not None
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 469, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 282, in render_screen
+    if item.type == 'slice':
+AttributeError: 'NoneType' object has no attribute 'type'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 466, in main_loop
+    gameRaycast.calculate()
+  File "D:/Projects/DUGA\RAYCAST.py", line 174, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:/Projects/DUGA\RAYCAST.py", line 232, in fill_in_interpolate_gaps
+    if left_slice.vh == right_slice.vh:
+AttributeError: 'NoneType' object has no attribute 'vh'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 466, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 174, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:\Projects\DUGA\RAYCAST.py", line 232, in fill_in_interpolate_gaps
+    if left_slice.vh == right_slice.vh:
+AttributeError: 'NoneType' object has no attribute 'vh'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 466, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 174, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:\Projects\DUGA\RAYCAST.py", line 232, in fill_in_interpolate_gaps
+    if left_slice.vh == right_slice.vh:
+AttributeError: 'NoneType' object has no attribute 'vh'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 462, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 178, in calculate
+    self.fill_in_interpolate_gaps(ray_values)
+  File "D:\Projects\DUGA\RAYCAST.py", line 236, in fill_in_interpolate_gaps
+    search_tiles = [tile for tile in SETTINGS.rendered_tiles if tile.map_pos in [left_slice.map_pos, right_slice.map_pos]]
+  File "D:\Projects\DUGA\RAYCAST.py", line 236, in <listcomp>
+    search_tiles = [tile for tile in SETTINGS.rendered_tiles if tile.map_pos in [left_slice.map_pos, right_slice.map_pos]]
+AttributeError: 'NoneType' object has no attribute 'map_pos'

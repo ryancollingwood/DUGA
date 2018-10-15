@@ -232,8 +232,14 @@ class Raycast:
                     if right_slice is None:
                         next_right = abs(self.interpolation - i) + 1
                         right_slice = self.next_zbuffer[next_right]
-                    
-                    search_tiles = [tile for tile in SETTINGS.rendered_tiles if tile.map_pos in [left_slice.map_pos, right_slice.map_pos]]
+
+                    if right_slice is not None:
+                        search_tiles = [tile for tile in SETTINGS.rendered_tiles if
+                                        tile.map_pos in [left_slice.map_pos, right_slice.map_pos]]
+                    else:
+                        search_tiles = [tile for tile in SETTINGS.rendered_tiles if
+                                        tile.map_pos == left_slice.map_pos]
+
                     if len(search_tiles) > 0:
                         new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, search_tiles = search_tiles)
                     else:
@@ -241,6 +247,7 @@ class Raycast:
                             
                 if new_ray is None:
                     new_ray = self.cast(SETTINGS.player_rect, degree, ray_number)
+                    #print("recast", ray_number)
                 else:
                     # tile corners aren't shading correctly
                     if left_slice.vh == right_slice.vh != new_ray.vh:
