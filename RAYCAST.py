@@ -260,8 +260,9 @@ class Raycast:
                     #print("recast", ray_number)
                 else:
                     # tile corners aren't shading correctly
-                    if left_slice.vh == right_slice.vh != new_ray.vh:
-                        new_ray.vh = left_slice.vh
+                    if right_slice is not None:
+                        if left_slice.vh == right_slice.vh != new_ray.vh:
+                            new_ray.vh = left_slice.vh
 
                 self.next_zbuffer[i] = new_ray
 
@@ -324,12 +325,17 @@ class Raycast:
         if search_tiles is None:
             search_tiles = SETTINGS.rendered_tiles
 
+        # TODO could probably precompute this in get_ray_values_for_angle
+        cos_radians_angle = cos_radians(angle)
+        tan_radians_angle = tan_radians(angle)
+
         if ray_origrin is None:
-            H_x, H_y, V_x, V_y = self.get_ray_origin(angle, player_rect)
+            H_x, H_y, V_x, V_y = self.get_ray_origin(angle, player_rect, tan_radians_angle)
         else:
             V_x, H_y  = ray_origrin[1], ray_origrin[2]
-            H_x, V_y = self.get_ray_origin_for_angle(V_x, H_y, angle, player_rect)
+            H_x, V_y = self.get_ray_origin_for_angle(V_x, H_y, player_rect, tan_radians_angle)
             passed_offset = ray_origrin[3]
+
 
         #Extend
         for x in range(0, SETTINGS.render):
@@ -339,8 +345,8 @@ class Raycast:
             iteration_V_x = V_x
             iteration_H_y = H_y
 
-            H_distance = abs((player_rect.center[0] - H_x) / math.cos(math.radians(angle)))
-            V_distance = abs((player_rect.center[0] - V_x) / math.cos(math.radians(angle)))
+            H_distance = abs((player_rect.center[0] - H_x) / cos_radians_angle)
+            V_distance = abs((player_rect.center[0] - V_x) / cos_radians_angle)
 
             if self.check_hit(V_hit, H_hit, H_distance, V_distance, True):
                 break
@@ -358,12 +364,12 @@ class Raycast:
 
                         if tile.type == 'hdoor':
                             H_y -= self.door_size
-                            H_x += self.door_size / math.tan(math.radians(angle))
+                            H_x += self.door_size / tan_radians_angle
                             H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                             if H_offset < 0:
                                 H_hit = False
                                 H_y += self.door_size
-                                H_x -= self.door_size / math.tan(math.radians(angle))
+                                H_x -= self.door_size / tan_radians_angle
                         else:
                             H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
 
@@ -374,12 +380,12 @@ class Raycast:
 
                         if tile.type == 'hdoor':
                             H_y += self.door_size
-                            H_x -= self.door_size / math.tan(math.radians(angle))
+                            H_x -= self.door_size / tan_radians_angle
                             H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
                             if H_offset < 0:
                                 H_hit = False
                                 H_y -= self.door_size
-                                H_x += self.door_size / math.tan(math.radians(angle))
+                                H_x += self.door_size / tan_radians_angle
                         else:
                             H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
 
@@ -394,12 +400,12 @@ class Raycast:
 
                         if tile.type == 'vdoor':
                             V_x += self.door_size
-                            V_y -= self.door_size * math.tan(math.radians(angle))
+                            V_y -= self.door_size * tan_radians_angle
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
                             if V_offset < 0:
                                V_hit = False
                                V_x -= self.door_size
-                               V_y += self.door_size * math.tan(math.radians(angle))
+                               V_y += self.door_size * tan_radians_angle
                         else:
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
 
@@ -410,12 +416,12 @@ class Raycast:
 
                         if tile.type == 'vdoor':
                             V_x -= self.door_size
-                            V_y += self.door_size * math.tan(math.radians(angle))
+                            V_y += self.door_size * tan_radians_angle
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
                             if V_offset < 0:
                                V_hit = False
                                V_x += self.door_size
-                               V_y -= self.door_size * math.tan(math.radians(angle))
+                               V_y -= self.door_size * tan_radians_angle
                         else:
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
                                
@@ -426,9 +432,9 @@ class Raycast:
                 else:
                     H_y += self.tile_size
                 if angle >= 180:
-                    H_x -= self.tile_size / math.tan(math.radians(angle))
+                    H_x -= self.tile_size / tan_radians_angle
                 else:
-                    H_x += self.tile_size / math.tan(math.radians(angle))                
+                    H_x += self.tile_size / tan_radians_angle
 
             if not V_hit:
                 if angle > 270 or angle < 90: # ->
@@ -436,9 +442,9 @@ class Raycast:
                 else:
                     V_x -= self.tile_size
                 if angle >= 270 or angle < 90: # <-
-                    V_y -= self.tile_size * math.tan(math.radians(angle))
+                    V_y -= self.tile_size * tan_radians_angle
                 else:
-                    V_y += self.tile_size * math.tan(math.radians(angle))
+                    V_y += self.tile_size * tan_radians_angle
 
 
         if V_hit and H_hit:
@@ -518,20 +524,20 @@ class Raycast:
 
         return H_y, V_x
 
-    def get_ray_origin_for_angle(self, V_x, H_y, angle, player_rect):
-        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / math.tan(math.radians(angle))
-        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * math.tan(math.radians(angle))
+    def get_ray_origin_for_angle(self, V_x, H_y, player_rect, tan_radians_angle):
+        H_x = player_rect.center[0] + (player_rect.center[1] - H_y) / tan_radians_angle
+        V_y = player_rect.center[1] + (player_rect.center[0] - V_x) * tan_radians_angle
         return H_x, V_y
 
-    def get_ray_origin(self, angle, player_rect):
+    def get_ray_origin(self, angle, player_rect, tan_radians_angle):
         H_y, V_x = self.get_ray_origin_for_player_position(angle, player_rect)
-        H_x, V_y = self.get_ray_origin_for_angle(V_x, H_y, angle, player_rect)
+        H_x, V_y = self.get_ray_origin_for_angle(V_x, H_y, player_rect, tan_radians_angle)
         return H_x, H_y, V_x, V_y
 
     def control(self, end_pos, origin_pos, other_pos, ray_number, tile_len, player_rect, texture_id, offset, current_tile, vh):
         if SETTINGS.mode == 1:
             if tile_len:
-                wall_dist = tile_len * math.cos(math.radians(self.beta))
+                wall_dist = tile_len * cos_radians(self.beta)
             else:
                 wall_dist = None
 
@@ -543,7 +549,7 @@ class Raycast:
 
     def render_screen(self, ray_number, wall_dist, texture_id, offset, current_tile, vh, end_pos, origin_pos, other_pos):
         if wall_dist:
-            wall_height = int((self.tile_size / wall_dist) * (360 / math.tan(math.radians(SETTINGS.fov * 0.8))))
+            wall_height = int((self.tile_size / wall_dist) * (360 / tan_radians(SETTINGS.fov * 0.8)))
             texture = SETTINGS.tile_texture[texture_id]
 
             new_slice = Slice(

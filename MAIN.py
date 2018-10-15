@@ -480,8 +480,8 @@ def main_loop():
                     if event.event == "mouse_move":
                         if event.value != 0:
                             # todo figure how much work to do based on the event.value
-                            player_moved()
                             rotate_screen()
+                            player_moved()
                     elif event.event == "player_moved":
                         player_moved()
 
