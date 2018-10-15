@@ -7,6 +7,7 @@ import pygame
 import math
 import random
 import os
+from GEOM import straight_line_distance
 
 class Map:
     '''== Create the map ==\narray -> Level to be loaded'''
@@ -74,6 +75,8 @@ class Map:
 
         #print("This level has %s items and %s NPC's" % (len(SETTINGS.levels_list[SETTINGS.current_level].items), len(SETTINGS.levels_list[SETTINGS.current_level].npcs)))
 
+from GEOM import sort_atan
+
 class Tile:
     
     def __init__(self, ID, pos, map_pos):
@@ -114,19 +117,31 @@ class Tile:
 
                 SETTINGS.all_doors.append(self)
 
+        self.atan = sort_atan(self)
+
 
     def draw(self, canvas):
         canvas.blit(self.icon, (self.rect.x/4, self.rect.y/4))
 
-    def get_dist(self, pos, *called):
+    def update(self):
+        if self.state and self.state != 'closed':
+            self.sesam_luk_dig_op()
+
+    def calculate_render_visible(self):
+        self.distance = self.get_dist(SETTINGS.player_rect.center)
+        return self.distance <= SETTINGS.render * SETTINGS.tile_size * 1.2
+
+    def get_dist(self, pos):
         xpos = self.rect.center[0] - pos[0]
         ypos = pos[1] - self.rect.center[1]
-        self.distance = math.sqrt(xpos*xpos + ypos*ypos)
+        distance = straight_line_distance(xpos, ypos)
 
-        if (self.state and self.state != 'closed') and called != ('npc',): #lol
-            self.sesam_luk_dig_op()
-            
-        return self.distance
+        # this is being handled by npc and no where else seems to need this
+        # TODO remove?
+        # if (self.state and self.state != 'closed') and called != ('npc',):  # lol
+        #    self.sesam_luk_dig_op()
+
+        return distance
 
     def sesam_luk_dig_op(self):
         if self.open > SETTINGS.tile_size:

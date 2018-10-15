@@ -5,11 +5,15 @@ import PLAYER
 import pygame
 import math
 
+from GEOM import get_camera_plane_for_angle, tan_radians, cos_radians, max_grid_distance
+from EVENTS import EVENT_RAY_CASTING_CALCULATED
+import SETTINGS
+
 pygame.init()
 
 class Slice:
 
-    def __init__(self, tile_id, location, vh, pos, ray_number, wall_width, distance, height, origin_pos, other_pos, offset, map_pos):
+    def __init__(self, tile_id, location, vh, pos, ray_number, wall_width, distance, height, origin_pos, other_pos, offset, map_pos, tile_type):
         # tile_id determines which texture we will draw
         self.tile_id = tile_id
         self.location = location
@@ -28,6 +32,9 @@ class Slice:
         self.other_pos = other_pos
         self.origin_pos = origin_pos
         self.offset = offset
+
+        # TODO this is a bandaid for doors WHAT if we want to support animated tiles
+        self.tile_type = tile_type
 
         self.slice = None
         self.alpha_slice = None
@@ -52,7 +59,8 @@ class Slice:
                 self.xpos == other.xpos,
                 self.intensity == other.intensity,
                 self.offset == other.offset,
-                self.map_pos == other.map_pos
+                self.map_pos == other.map_pos,
+                self.tile_type == other.tile_type,
              ])
         except AttributeError:
             return False
@@ -131,14 +139,14 @@ class Raycast:
         self.wall_height = int(SETTINGS.canvas_target_height / self.res)
         self.wall_width_to_height_difference = self.wall_width - self.wall_height
         self.fov_mod = self.fov * 0.8
-        self.wall_height_mod = (360 / math.tan(math.radians(self.fov_mod))) * (self.wall_width_to_height_difference)        
+        self.wall_height_mod = (360 / tan_radians(self.fov_mod)) * self.wall_width_to_height_difference
         self.canvas = canvas
         self.canvas2 = canvas2
 
         self.current_vtile = None
         self.current_htile = None
         self.next_zbuffer = None
-        
+
         # greater numbers result in oddities on tile edges
         # smallest effective value is 2
         self.interpolation = 2
@@ -178,6 +186,8 @@ class Raycast:
         self.fill_in_interpolate_gaps(ray_values)
 
         SETTINGS.zbuffer = self.next_zbuffer
+
+        pygame.event.post(pygame.event.Event(EVENT_RAY_CASTING_CALCULATED))
 
         return self.next_zbuffer
 
@@ -244,7 +254,7 @@ class Raycast:
                         new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, search_tiles = search_tiles)
                     else:
                         print("tile was rendered by in rednered?", left_slice.map_pos)
-                            
+
                 if new_ray is None:
                     new_ray = self.cast(SETTINGS.player_rect, degree, ray_number)
                     #print("recast", ray_number)
@@ -252,12 +262,12 @@ class Raycast:
                     # tile corners aren't shading correctly
                     if left_slice.vh == right_slice.vh != new_ray.vh:
                         new_ray.vh = left_slice.vh
-                    
+
                 self.next_zbuffer[i] = new_ray
 
 
     def find_offset(self, position, ray_number, angle, tile, hv):
-        #position is H_x or V_y
+        # position is H_x or V_y
         if hv == 'v':
             if tile.type == 'vdoor':
                 offset = abs(int(position - tile.rect.y)) - tile.open
@@ -270,13 +280,14 @@ class Raycast:
             else:
                 offset = abs(int(position - tile.rect.x))
 
-        #Fuck it. Catch all the crashes.
+        # Fuck it. Catch all the crashes.
         if offset >= SETTINGS.tile_size:
             offset = SETTINGS.tile_size - 1
-        return(offset)
+
+        return offset
 
     def check_hit(self, V_hit, H_hit, H_distance, V_distance, full_check):
-        #Break loop if any ray has hit a wall
+        # Break loop if any ray has hit a wall
         if H_hit and V_hit:
             return True
 
@@ -288,7 +299,20 @@ class Raycast:
             elif V_hit:
                 if V_distance < H_distance:
                     return True
-            
+
+    def set_current_tile(self, tile, is_horizontal):
+        if is_horizontal:
+            self.current_htile = tile
+        else:
+            self.current_vtile = tile
+
+    @staticmethod
+    # TODO probably can remove this as not resorting tiles
+    def resort_tiles(index, tiles):
+        if index:
+            if index > 0:
+                return tiles[index:] + tiles[:index + 1]
+        return tiles
 
     def cast(self, player_rect, angle, ray_number, search_tiles = None, ray_origrin = None):
         H_hit = False
@@ -296,7 +320,7 @@ class Raycast:
         H_offset = V_offset = 0
         end_pos = (0, 0)
         passed_offset = None
-        
+
         if search_tiles is None:
             search_tiles = SETTINGS.rendered_tiles
 
@@ -342,7 +366,7 @@ class Raycast:
                                 H_x -= self.door_size / math.tan(math.radians(angle))
                         else:
                             H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
-                            
+
                     elif (H_y == tile.rect.top and H_x >= tile.rect.topleft[0] and H_x <= tile.rect.topright[0]) and player_rect.centery < tile.rect.top:
                         H_hit = True
                         H_texture_id = tile.ID
@@ -358,10 +382,10 @@ class Raycast:
                                 H_x += self.door_size / math.tan(math.radians(angle))
                         else:
                             H_offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
-                                
+
                 if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):
                     break
-                        
+
                 if not V_hit:
                     if (V_x == tile.rect.left and V_y >= tile.rect.topleft[1] and V_y <= tile.rect.bottomleft[1]) and player_rect.centerx < tile.rect.left:
                         V_hit = True
@@ -378,7 +402,7 @@ class Raycast:
                                V_y += self.door_size * math.tan(math.radians(angle))
                         else:
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
-                            
+
                     elif (V_x == tile.rect.right and V_y >= tile.rect.topright[1] and V_y <= tile.rect.bottomright[1]) and player_rect.centerx > tile.rect.right:
                         V_hit = True
                         V_texture_id = tile.ID
@@ -515,7 +539,7 @@ class Raycast:
 
         else:
             self.draw_line(player_rect, end_pos)
-            
+
 
     def render_screen(self, ray_number, wall_dist, texture_id, offset, current_tile, vh, end_pos, origin_pos, other_pos):
         if wall_dist:
@@ -534,7 +558,8 @@ class Raycast:
                 height = wall_height,
                 other_pos = other_pos,
                 origin_pos = origin_pos,
-                offset = offset
+                offset = offset,
+                tile_type = current_tile.type
             )
 
 
@@ -548,7 +573,7 @@ class Raycast:
             SETTINGS.middle_ray_pos = end_pos
 
         return new_slice
-            
+
 
     def draw_line(self, player_rect, end_pos):
         SETTINGS.raylines.append((player_rect.center, end_pos))

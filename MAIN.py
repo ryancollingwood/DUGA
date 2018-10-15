@@ -30,6 +30,11 @@ import GENERATION
 import MENU
 import MUSIC
 import TUTORIAL
+from GEOM import sort_distance
+from EVENTS import TIMER_PLAYTIME
+from EVENTS import EVENT_NPC_UPDATE
+from EVENTS import EVENT_PLAYER_INPUT
+from EVENTS import EVENT_RAY_CASTING_CALCULATED
 
 SECONDS_IN_MINUTE = 60
 MILLISECONDS_IN_SECOND = 1000.0
@@ -83,7 +88,9 @@ class Load:
     def get_canvas_size(self):
         SETTINGS.canvas_map_width = len(SETTINGS.levels_list[SETTINGS.current_level].array[0])*SETTINGS.tile_size
         SETTINGS.canvas_map_height = len(SETTINGS.levels_list[SETTINGS.current_level].array)*SETTINGS.tile_size
-        SETTINGS.canvas_actual_width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+        SETTINGS.canvas_actual_width = SETTINGS.canvas_target_width
+        SETTINGS.canvas_actual_height = SETTINGS.canvas_target_height
+        SETTINGS.canvas_aspect_ratio = SETTINGS.canvas_actual_width / SETTINGS.canvas_actual_height
         SETTINGS.player_map_pos = SETTINGS.levels_list[SETTINGS.current_level].player_pos
         SETTINGS.player_pos[0] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[0] * SETTINGS.tile_size) + SETTINGS.tile_size/2)
         SETTINGS.player_pos[1] = int((SETTINGS.levels_list[SETTINGS.current_level].player_pos[1] * SETTINGS.tile_size) + SETTINGS.tile_size/2)
@@ -146,6 +153,10 @@ class Load:
         gameMap.move_inaccessible_entities()
         ENTITIES.spawn_npcs()
         ENTITIES.spawn_items()
+        # to force the rendering to refersh
+        rotate_screen()
+        player_moved()
+
 
 #Texturing
 class Texture:
@@ -173,14 +184,23 @@ class Canvas:
         self.height = height
         self.res_width = 0
         if SETTINGS.mode == 1:
-            self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+            if SETTINGS.original_aspect:
+                self.width = int(SETTINGS.canvas_target_width / SETTINGS.resolution) * SETTINGS.resolution
+            else:
+                self.width = SETTINGS.canvas_target_width
             self.height = SETTINGS.canvas_target_height
             self.res_width = SETTINGS.canvas_actual_width
 
         if SETTINGS.fullscreen:
-            self.window = pygame.display.set_mode((self.width, int(self.height+(self.height*0.15))) ,pygame.FULLSCREEN)
+            if SETTINGS.original_aspect:
+                self.window = pygame.display.set_mode((self.width, int(self.height + (self.height * 0.15))), pygame.FULLSCREEN)
+            else:
+                self.window = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
         else:
-            self.window = pygame.display.set_mode((self.width, int(self.height+(self.height*0.15))))
+            if SETTINGS.original_aspect:
+                self.window = pygame.display.set_mode((self.width, int(self.height + (self.height * 0.15))))
+            else:
+                self.window = pygame.display.set_mode((self.width, self.height))
         self.canvas = pygame.Surface((self.width, self.height))
         
         pygame.display.set_caption("DUGA")
@@ -219,40 +239,10 @@ class Canvas:
         else:
             self.window.fill(SETTINGS.WHITE)
 
-def sort_distance(x):
-    if x == None:
-        return 0
-    else:
-        return x.distance
-
-def sort_atan(x):
-    if SETTINGS.middle_ray_pos:
-        pos = SETTINGS.middle_ray_pos
-    else:
-        pos = SETTINGS.player_rect.center
-        
-    #find the position on each tile that is closest to middle_ray_pos
-    xpos = max(x.rect.left, min(pos[0], x.rect.right)) - SETTINGS.player_rect.centerx
-    ypos = SETTINGS.player_rect.centery - max(x.rect.top, min(pos[1], x.rect.bottom))
-    theta = math.atan2(ypos, xpos)
-    theta = math.degrees(theta)
-    theta -= SETTINGS.player_angle
-
-    if theta < 0:
-        theta += 360
-    if theta > 180:
-        theta -= 360
-
-    if x.type == 'end':
-        SETTINGS.end_angle = theta
-
-    theta = abs(theta)
-    
-    return(theta)
 
 def render_screen(canvas):
     '''render_screen(canvas) -> Renders everything but NPC\'s'''
-    SETTINGS.rendered_tiles = []
+    #SETTINGS.rendered_tiles = []
 
     #Get sprite positions
     for sprite in SETTINGS.all_sprites:
@@ -262,17 +252,20 @@ def render_screen(canvas):
     SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
     SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, sort_atan(x), x.distance))
 
+    #SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
     #Calculate which tiles are visible
-    for tile in SETTINGS.all_solid_tiles:
-        if tile.distance and SETTINGS.tile_visible[tile.ID]:
-            if sort_atan(tile) <= SETTINGS.fov:
-                if tile.distance < SETTINGS.render * SETTINGS.tile_size:
-                    SETTINGS.rendered_tiles.append(tile)
-                            
-            elif tile.distance <= SETTINGS.tile_size * 1.5:
-                SETTINGS.rendered_tiles.append(tile)
-                
-    #prepare zbuffer transforming only what we need to:
+    #SETTINGS.rendered_tiles = [
+    #    tile for tile in SETTINGS.all_solid_tiles if
+    #    tile.distance and SETTINGS.tile_visible[tile.ID] and
+    #        (
+    #            (abs(tile.atan) <= SETTINGS.fov and
+    #             tile.distance < SETTINGS.render * SETTINGS.tile_size)
+    #            or
+    #            (tile.distance <= SETTINGS.tile_size * 1.5)
+    #        )
+    #]
+
+    # prepare zbuffer transforming only what we need to:
     zbuffer_len = len(SETTINGS.zbuffer)
     for item_index, item in enumerate(SETTINGS.last_zbuffer):
         if item is None:
@@ -284,25 +277,8 @@ def render_screen(canvas):
 
     #Render all items in zbuffer
     for item_index, item in enumerate(SETTINGS.zbuffer):
-        if item == None:
-            pass
-        elif item.type == 'slice':
-            if item.slice is None:
-                SETTINGS.zbuffer[item_index].prepare_slice()
+        render_zbuffer_item(canvas, item_index, item)
 
-            blit_dest = item.blit_dest
-            canvas.blit(item.slice, blit_dest)
-
-            if item.vh == 'v':
-                # Make vertical walls slightly darker
-                canvas.blit(item.dark_slice, blit_dest)
-            if SETTINGS.shade:
-                canvas.blit(item.shade_slice, blit_dest)
-
-        else:
-            if item.new_rect.right > 0 and item.new_rect.x < SETTINGS.canvas_actual_width and item.distance < (SETTINGS.render * SETTINGS.tile_size):
-                item.draw(canvas)
-                
     #Draw weapon if it is there
     if SETTINGS.current_gun:
         SETTINGS.current_gun.draw(gameCanvas.canvas)
@@ -325,7 +301,72 @@ def render_screen(canvas):
     if SETTINGS.levels_list == SETTINGS.tlevels_list:
             tutorialController.control(gameCanvas.window)
 
-def update_game():
+
+def render_zbuffer_item(canvas, item_index, item):
+    if item == None:
+        pass
+    elif item.type == 'slice':
+        if item.slice is None:
+            SETTINGS.zbuffer[item_index].prepare_slice()
+
+        blit_dest = item.blit_dest
+        canvas.blit(item.slice, blit_dest)
+
+        if item.vh == 'v':
+            # Make vertical walls slightly darker
+            canvas.blit(item.dark_slice, blit_dest)
+        if SETTINGS.shade:
+            canvas.blit(item.shade_slice, blit_dest)
+
+    else:
+        if item.new_rect.right > 0 and item.new_rect.x < SETTINGS.canvas_actual_width and item.distance < (
+            SETTINGS.render * SETTINGS.tile_size):
+            item.draw(canvas)
+
+
+def update_game_visual():
+    # Update logic
+    gamePlayer.control(gameCanvas.canvas)
+
+    if SETTINGS.fov >= FOV_MAX:
+        SETTINGS.fov = FOV_MAX
+    elif SETTINGS.fov <= FOV_MIN:
+        SETTINGS.fov = FOV_MIN
+
+    if SETTINGS.switch_mode:
+        gameCanvas.change_mode()
+
+    # Render - Draw
+    gameRaycast.calculate()
+
+
+def draw_game_visual():
+    gameCanvas.draw()
+
+    if SETTINGS.mode == 1:
+        render_screen(gameCanvas.canvas)
+
+        # BETA
+    #  beta.draw(gameCanvas.window)
+
+    elif SETTINGS.mode == 0:
+        gameMap.draw(gameCanvas.window)
+        gamePlayer.draw(gameCanvas.window)
+
+        for x in SETTINGS.raylines:
+            pygame.draw.line(gameCanvas.window, SETTINGS.RED, (x[0][0] / 4, x[0][1] / 4), (x[1][0] / 4, x[1][1] / 4))
+        SETTINGS.raylines = []
+
+        for i in SETTINGS.npc_list:
+            if i.rect and i.dist <= SETTINGS.render * SETTINGS.tile_size * 1.2:
+                pygame.draw.rect(gameCanvas.window, SETTINGS.RED,
+                                 (i.rect[0] / 4, i.rect[1] / 4, i.rect[2] / 4, i.rect[3] / 4))
+            elif i.rect:
+                pygame.draw.rect(gameCanvas.window, SETTINGS.DARKGREEN,
+                                 (i.rect[0] / 4, i.rect[1] / 4, i.rect[2] / 4, i.rect[3] / 4))
+
+
+def update_game_state():
     if SETTINGS.npc_list:
         for npc in SETTINGS.npc_list:
             if not npc.dead:
@@ -334,6 +375,9 @@ def update_game():
     SETTINGS.ground_weapon = None
     for item in SETTINGS.all_items:
         item.update()
+
+    for tile in SETTINGS.all_solid_tiles:
+        tile.update()
 
     if (SETTINGS.changing_level and SETTINGS.player_states['black']) or SETTINGS.player_states['dead']:
         if SETTINGS.current_level < len(SETTINGS.levels_list)-1 and SETTINGS.changing_level:
@@ -384,7 +428,27 @@ def calculate_statistics():
     #'last' statistics will be cleared when starting new game in menu.
     with open(os.path.join('data', 'statistics.dat'), 'wb') as saved_stats:
         pickle.dump(SETTINGS.statistics, saved_stats)
-    
+
+
+from GEOM import sort_atan
+
+
+def rotate_screen():
+    for tile in SETTINGS.all_solid_tiles:
+        tile.atan = sort_atan(tile)
+
+def player_moved():
+    SETTINGS.rendered_tiles = [
+        tile for tile in SETTINGS.all_solid_tiles if
+        tile.calculate_render_visible() and
+        SETTINGS.tile_visible[tile.ID] and
+        (
+            (abs(tile.atan) <= SETTINGS.fov)
+            or
+            (tile.distance <= SETTINGS.tile_size * 1.5)
+        )
+    ]
+    SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
 
 
 #Main loop
@@ -393,29 +457,46 @@ def main_loop():
     clock = pygame.time.Clock()
     logging.basicConfig(filename = os.path.join('data', 'CrashReport.log'), level=logging.WARNING)
 
-#    allfps = []
+
+    pygame.time.set_timer(TIMER_PLAYTIME, 1000)
+
+    #    allfps = []
     
     while not game_exit:
-        if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
-            SETTINGS.statistics['playtime'] += 1
-            SETTINGS.play_seconds = 0
-        else:
-            SETTINGS.play_seconds += SETTINGS.dt
-            
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or SETTINGS.quit_game:
-                game_exit = True
-
-##                b = 0
-##                for x in allfps:
-##                    b += x
-##                print(b/len(allfps))
-                menuController.save_settings()
-                calculate_statistics()
-                pygame.quit()
-                sys.exit(0)
-
         try:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or SETTINGS.quit_game:
+                    game_exit = True
+
+    ##                b = 0
+    ##                for x in allfps:
+    ##                    b += x
+    ##                print(b/len(allfps))
+                    menuController.save_settings()
+                    calculate_statistics()
+                    pygame.quit()
+                    sys.exit(0)
+                elif event.type == EVENT_PLAYER_INPUT:
+                    if event.event == "mouse_move":
+                        if event.value != 0:
+                            # todo figure how much work to do based on the event.value
+                            player_moved()
+                            rotate_screen()
+                    elif event.event == "player_moved":
+                        player_moved()
+
+                elif event.type == TIMER_PLAYTIME:
+                    if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
+                        SETTINGS.statistics['playtime'] += 1
+                        SETTINGS.play_seconds = 0
+                    else:
+                        SETTINGS.play_seconds += 1
+
+                elif event.type == EVENT_NPC_UPDATE:
+                    print(event)
+                elif event.type == EVENT_RAY_CASTING_CALCULATED:
+                    draw_game_visual()
+
             #Music
             musicController.control_music()
             
@@ -445,45 +526,11 @@ def main_loop():
 
             elif SETTINGS.menu_showing and menuController.current_type == 'game':
                 menuController.control()
-                
+
             else:
-                #Update logic
-                gamePlayer.control(gameCanvas.canvas)
-                
-                if SETTINGS.fov >= FOV_MAX:
-                    SETTINGS.fov = FOV_MAX
-                elif SETTINGS.fov <= FOV_MIN:
-                    SETTINGS.fov = FOV_MIN
+                update_game_state()
+                update_game_visual()
 
-                if SETTINGS.switch_mode:
-                    gameCanvas.change_mode()
-
-                #Render - Draw
-                gameRaycast.calculate()
-                gameCanvas.draw()
-                
-                
-                if SETTINGS.mode == 1:
-                    render_screen(gameCanvas.canvas)
-
-                    #BETA
-                  #  beta.draw(gameCanvas.window)
-                
-                elif SETTINGS.mode == 0:
-                    gameMap.draw(gameCanvas.window)                
-                    gamePlayer.draw(gameCanvas.window)
-
-                    for x in SETTINGS.raylines:
-                        pygame.draw.line(gameCanvas.window, SETTINGS.RED, (x[0][0]/4, x[0][1]/4), (x[1][0]/4, x[1][1]/4))
-                    SETTINGS.raylines = []
-
-                    for i in SETTINGS.npc_list:
-                        if i.rect and i.dist <= SETTINGS.render * SETTINGS.tile_size * 1.2:
-                            pygame.draw.rect(gameCanvas.window, SETTINGS.RED, (i.rect[0]/4, i.rect[1]/4, i.rect[2]/4, i.rect[3]/4))
-                        elif i.rect:
-                            pygame.draw.rect(gameCanvas.window, SETTINGS.DARKGREEN, (i.rect[0]/4, i.rect[1]/4, i.rect[2]/4, i.rect[3]/4))
-
-                update_game()
 
         except Exception as e:
             menuController.save_settings()
@@ -493,14 +540,13 @@ def main_loop():
             pygame.quit()
             sys.exit(0)
 
-        #Update Game
+        # Update Game
         pygame.display.update()
         delta_time = clock.tick(SETTINGS.fps)
         SETTINGS.dt = delta_time / MILLISECONDS_IN_SECOND
         SETTINGS.cfps = int(clock.get_fps())
-        #pygame.display.set_caption(SETTINGS.caption % SETTINGS.cfps)
-
-       # allfps.append(clock.get_fps())
+        #pygame.display.set_caption(str(SETTINGS.cfps))
+        # allfps.append(clock.get_fps())
 
 #Probably temporary object init
 #SETTINGS.current_level = 5 #temporary

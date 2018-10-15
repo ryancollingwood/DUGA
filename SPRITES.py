@@ -1,6 +1,7 @@
 import pygame
 import math
 import SETTINGS
+from GEOM import straight_line_distance, tan_radians
 
  # I noticed, that the sprites are not projected correctly. However, I do not have the guts to fix it. Feel free to take a look.
 
@@ -27,7 +28,7 @@ class Sprite:
         self.last_frame = 0
         self.drawn_width = None
         self.drawn_height = None
-        
+
 
         #If this sprite belongs to an NPC, make the NPC a parent of this sprite
         #This will help calculating the position of the NPC
@@ -68,12 +69,12 @@ class Sprite:
 
         xTmp = yTmp * SETTINGS.canvas_actual_width / fov
                                                     
-        sprite_height = int((self.rect.height / dist) * (100 / math.tan(math.radians(fov * 0.8))))
+        sprite_height = int((self.rect.height / dist) * (100 / tan_radians(fov * 0.8)))
         if sprite_height > 2500:
             sprite_height = 2500
 
         sprite_width = int(self.rect.width / self.rect.height * sprite_height)
-
+        
         if xTmp > (0 - sprite_width) and xTmp < (SETTINGS.canvas_actual_width + sprite_width):
             SETTINGS.zbuffer.append(self)
             
@@ -83,7 +84,9 @@ class Sprite:
             if self.parent:
                 self.parent.in_canvas = False
 
-        # if the height and width are the same no need to transform
+        # todo does this help?
+        sprite_height = int(sprite_height * SETTINGS.canvas_aspect_ratio) 
+
         if (self.drawn_height != sprite_height and self.drawn_width != sprite_width) or (self.current_frame != self.last_frame):
             self.drawn_height = sprite_height
             self.drawn_width = sprite_width
@@ -91,7 +94,10 @@ class Sprite:
             self.new_size = pygame.transform.scale(self.texture, (sprite_width, sprite_height))
             self.new_rect = self.new_size.get_rect()
 
-        self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
+        if SETTINGS.original_aspect:
+            self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
+        else:
+            self.new_rect.center = (xTmp, SETTINGS.canvas_target_height/2)
 
         if self.parent:
             self.parent.hit_rect = self.new_rect

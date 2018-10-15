@@ -1,5 +1,6 @@
 import SETTINGS
 import random
+from GEOM import max_grid_distance
 
 #There is some whack error handling. This is because this might be used manually by a human and therefore it needs some human-friendly feedback.
 #This is the A* pathfinding algorithm for NPC movement and more
@@ -55,7 +56,7 @@ def pathfind(start, end):
 
     if not error:
         #f_value has to be determined after creation of node.
-        openlist[start_point] = [0, find_distance(start_point, end_point), 0, None]
+        openlist[start_point] = [0, max_grid_distance(start_point.map_pos, end_point.map_pos), 0, None]
         openlist[start_point][2] = f_value(start_point, openlist)
         current_point = start_point
 
@@ -91,7 +92,7 @@ def pathfind(start, end):
                 
                 if (adj.type == 'hdoor' or adj.type == 'vdoor' or not SETTINGS.tile_solid[adj.ID]) and adj not in closedlist:
                     if (adj in openlist and openlist[adj][0] > closedlist[current_point][0]+1) or adj not in openlist:
-                        openlist[adj] = [closedlist[current_point][0]+1, find_distance(adj, end_point), 0, current_point]
+                        openlist[adj] = [closedlist[current_point][0]+1, max_grid_distance(adj.map_pos, end_point.map_pos), 0, current_point]
                         openlist[adj][2] = f_value(adj, openlist)
         
         try:
@@ -119,14 +120,7 @@ def find_near_position(position):
         return random.choice(chosen_tiles)
     else:
         return None
-    
-        
-def find_distance(point, end):
-    x = point.map_pos[0] + point.map_pos[1]
-    y = end.map_pos[0] + end.map_pos[1]
-    h = abs(x - y)
-    return h
-    
+
 
 def f_value(point, openlist):
     f = openlist[point][2] = openlist[point][0] + openlist[point][1]

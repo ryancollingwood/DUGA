@@ -7,6 +7,9 @@ import os
 import random
 import math
 import pygame
+from GEOM import straight_line_distance, cos_radians, sin_radians
+from EVENTS import EVENT_NPC_UPDATE
+
 #stats format in bottom of script
 #pos is in tiles, face in degrees, frame_interval is seconds between frames, speed is pixels/second
 
@@ -14,6 +17,7 @@ class Npc:
 
     def __init__(self, stats, sounds, texture):
         #Technical settings
+        self.uid = id(self)
         self.stats = stats #Used for creating new NPCs
         self.sounds = sounds
         self.ID = stats['id']
@@ -123,9 +127,6 @@ class Npc:
 
         #Creating the sprite rect is awful, I know. Keeps it from entering walls.
         self.sprite = SPRITES.Sprite(self.front_texture[1], self.ID, [self.rect.centerx - int(SETTINGS.tile_size / 12), self.rect.centery - int(SETTINGS.tile_size / 10)], 'npc', self)
-        # perhaps move this to sprite?
-        self.current_frame = 1
-
 
         #The position in SETTINGS.all_sprites of this NPC
         self.num = len(SETTINGS.all_sprites)-1
@@ -232,7 +233,7 @@ class Npc:
         xpos = SETTINGS.player_rect.centerx - self.rect.centerx
         ypos = SETTINGS.player_rect.centery - self.rect.centery
         
-        self.dist = math.sqrt(xpos*xpos + ypos*ypos)
+        self.dist = straight_line_distance(xpos, ypos)
         
         if self.dist <= SETTINGS.render * SETTINGS.tile_size:
             theta = math.atan2(-ypos, xpos) % (2*math.pi)
@@ -425,18 +426,24 @@ class Npc:
                     self.real_y = self.rect.y
 
         for door in SETTINGS.all_doors:
-            if door.get_dist(self.rect.center, 'npc') <= 50:
+            if door.get_dist(self.rect.center) <= 50:
                 door.sesam_luk_dig_op()
                 break
 
     def move(self):
+        if self.path is None:
+            return
+        
+        if len(self.path) == 0:
+            return
+        
         #Make the NPC move according to current state.
         moving_up = False
         moving_down = False
         moving_right = False
         moving_left = False
 
-        if self.path and self.rect.center != self.path[-1].rect.center and self.health > 0 and not self.hurting:
+        if self.rect.center != self.path[-1].rect.center and self.health > 0 and not self.hurting:
             self.moving = True
 
             #Redo path if tile is occupied by another NPC.
@@ -719,8 +726,8 @@ class Npc:
                 self.drop_item()
                 SETTINGS.statistics['last enemies'] += 1
             elif self.knockback > 0:
-                self.collide_update(-math.cos(math.radians(self.postheta))*self.knockback, 0)
-                self.collide_update(0, math.sin(math.radians(self.postheta))*self.knockback)
+                self.collide_update(-cos_radians(self.postheta)*self.knockback, 0)
+                self.collide_update(0, sin_radians(self.postheta)*self.knockback)
                 self.knockback = int(self.knockback*0.8)
                 
         #hurt animation

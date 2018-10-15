@@ -7,6 +7,8 @@ import SOUND
 import pygame
 import math
 import os
+from GEOM import cos_radians, sin_radians
+from EVENTS import EVENT_PLAYER_INPUT
 
 class Player:
 
@@ -55,9 +57,9 @@ class Player:
 
     def direction(self, offset, distance):
         if distance == 0:
-            direction = [math.cos(math.radians(self.angle + offset)), -math.sin(math.radians(self.angle + offset))]
+            direction = [cos_radians(self.angle + offset), -sin_radians(self.angle + offset)]
         else:
-            direction = [(math.cos(math.radians(self.angle + offset))) * distance, (-math.sin(math.radians(self.angle + offset))) * distance]
+            direction = [cos_radians(self.angle + offset) * distance, (-sin_radians(self.angle + offset)) * distance]
         return direction
 
     def control(self, canvas):
@@ -181,6 +183,10 @@ class Player:
                     madd = -38
                 self.angle -= madd
                 SETTINGS.player_angle = self.angle
+
+                pygame.event.post(
+                    pygame.event.Event(EVENT_PLAYER_INPUT, {'event': 'mouse_move', 'value': madd})
+                )
                 
         #Open inventory
             if key[pygame.K_i] and self.inventory < 1:
@@ -253,6 +259,10 @@ class Player:
     #======================================================
             
     def move(self, pos):
+        pygame.event.post(
+            pygame.event.Event(EVENT_PLAYER_INPUT, {'event': 'player_moved', 'value': pos})
+        )
+
         if SETTINGS.cfps > 5:
             if pos[0] != 0:
                 self.update(pos[0], 0)
