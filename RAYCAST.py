@@ -138,7 +138,8 @@ class Raycast:
         self.current_vtile = None
         self.current_htile = None
         self.next_zbuffer = None
-        # smaller numbers result in less oddity
+        
+        # greater numbers result in oddities on tile edges
         # smallest effective value is 2
         self.interpolation = 2
 
@@ -240,7 +241,10 @@ class Raycast:
                             
                 if new_ray is None:
                     new_ray = self.cast(SETTINGS.player_rect, degree, ray_number)
-                    #print("rescan", ray_number, degree)
+                else:
+                    # tile corners aren't shading correctly
+                    if left_slice.vh == right_slice.vh != new_ray.vh:
+                        new_ray.vh = left_slice.vh
                     
                 self.next_zbuffer[i] = new_ray
 
@@ -541,5 +545,3 @@ class Raycast:
 
     def draw_line(self, player_rect, end_pos):
         SETTINGS.raylines.append((player_rect.center, end_pos))
-
-
