@@ -10,3 +10,6 @@ data/CrashReport.log
 data/settings.dat
 data/statistics.dat
 profiling_results
+*.log
+*.dat
+*.ipynb
