@@ -5,7 +5,7 @@ import PLAYER
 import pygame
 import math
 
-from GEOM import get_camera_plane_for_angle, tan_radians, cos_radians, max_grid_distance
+from GEOM import tan_radians, cos_radians, max_grid_distance
 from EVENTS import EVENT_RAY_CASTING_CALCULATED
 import SETTINGS
 
@@ -176,7 +176,7 @@ class Raycast:
             if ray_number % self.interpolation != 0:
                 # need the start and end for filling in blanks
                 # need the middle for player interaction
-                if ray_number != middle_ray_number:
+                if ray_number not in [1, middle_ray_number, self.res]:
                     self.next_zbuffer[ray_number] = None
                     continue
 
@@ -220,54 +220,48 @@ class Raycast:
         return values
 
     def fill_in_interpolate_gaps(self, ray_values):
-        left_slice = None
-        right_slice = None
+        anchor_slice = None
+        max_index_next_zbuffer = len(self.next_zbuffer) - 1
 
         for i, zbuffer_slice in enumerate(self.next_zbuffer):
             if zbuffer_slice is not None:
-                if left_slice is None and right_slice is None:
-                    left_slice = zbuffer_slice
-                elif left_slice is not None and right_slice is None:
-                    right_slice = zbuffer_slice
-                elif left_slice is not None and right_slice is not None:
-                    right_slice = left_slice
-                    left_slice = zbuffer_slice
+                anchor_slice = zbuffer_slice
             else:
+                search_tiles = None
                 degree = ray_values[i][1]
                 ray_number = ray_values[i][0]
                 self.beta = ray_values[i][3]
-                new_ray = None
+                new_slice = None
 
-                if left_slice is not None:
+                if anchor_slice is not None:
+                    next_right = i + abs(self.interpolation - i)
+                    if next_right > max_index_next_zbuffer:
+                        next_right = max_index_next_zbuffer
+                    next_anchor_slice = self.next_zbuffer[next_right]
 
-                    # this covers the case of the very first
-                    # gap where we haven't found a pair
-                    if right_slice is None:
-                        next_right = abs(self.interpolation - i) + 1
-                        right_slice = self.next_zbuffer[next_right]
+                    if next_anchor_slice is not None:
+                        if anchor_slice.map_pos == next_anchor_slice.map_pos:
+                            search_tiles = [tile for tile in SETTINGS.rendered_tiles if
+                                            tile.map_pos == anchor_slice.map_pos]
+                        else:
+                            distance = (max_grid_distance(anchor_slice.map_pos, next_anchor_slice.map_pos) * self.tile_size)
+                            search_tiles = [tile for tile in SETTINGS.rendered_tiles if
+                                            tile.get_dist_from_map_pos(anchor_slice.map_pos) <= distance]
 
-                    if right_slice is not None:
-                        search_tiles = [tile for tile in SETTINGS.rendered_tiles if
-                                        tile.map_pos in [left_slice.map_pos, right_slice.map_pos]]
-                    else:
-                        search_tiles = [tile for tile in SETTINGS.rendered_tiles if
-                                        tile.map_pos == left_slice.map_pos]
+                    if search_tiles is not None:
+                        new_slice = self.cast(SETTINGS.player_rect, degree, ray_number, search_tiles = search_tiles)
 
-                    if len(search_tiles) > 0:
-                        new_ray = self.cast(SETTINGS.player_rect, degree, ray_number, search_tiles = search_tiles)
-                    else:
-                        print("tile was rendered by in rednered?", left_slice.map_pos)
-
-                if new_ray is None:
-                    new_ray = self.cast(SETTINGS.player_rect, degree, ray_number)
+                if new_slice is None:
+                    new_slice = self.cast(SETTINGS.player_rect, degree, ray_number)
                     #print("recast", ray_number)
                 else:
                     # tile corners aren't shading correctly
-                    if right_slice is not None:
-                        if left_slice.vh == right_slice.vh != new_ray.vh:
-                            new_ray.vh = left_slice.vh
+                    if next_anchor_slice is not None:
+                        if anchor_slice.vh == next_anchor_slice.vh != new_slice.vh:
+                            new_slice.vh = anchor_slice.vh
 
-                self.next_zbuffer[i] = new_ray
+                self.next_zbuffer[i] = new_slice
+                anchor_slice = new_slice
 
 
     def find_offset(self, position, ray_number, angle, tile, hv):
@@ -314,6 +308,8 @@ class Raycast:
         if search_tiles is None:
             search_tiles = SETTINGS.rendered_tiles
 
+        # search_tiles = sorted(search_tiles, key=lambda x: (x.type, x.atan, x.distance))
+
         # TODO could probably precompute this in get_ray_values_for_angle
         cos_radians_angle = cos_radians(angle)
         tan_radians_angle = tan_radians(angle)
@@ -350,7 +346,8 @@ class Raycast:
                 ]
             else:
                 reduced_search_tiles = search_tiles
-            
+                #reduced_search_tiles = sorted(search_tiles, key=lambda x: (x.type, x.atan, x.distance))
+
             for tile in reduced_search_tiles:
                 
                 if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):

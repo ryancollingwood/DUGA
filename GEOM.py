@@ -29,8 +29,7 @@ def sort_atan(x):
     if x.type == 'end':
         SETTINGS.end_angle = theta
 
-    # if a consumer requires abs they can abs
-    #theta = abs(theta)
+    theta = abs(theta)
     
     return theta
 
@@ -100,11 +99,6 @@ def sin_radians(angle):
 @jit(nopython=True)
 def straight_line_distance(xpos, ypos):
     return math.sqrt(xpos * xpos + ypos * ypos)
-
-    x = point.map_pos[0] + point.map_pos[1]
-    y = end.map_pos[0] + end.map_pos[1]
-    h = abs(x - y)
-    return h
 
 
 @jit(nopython=True)

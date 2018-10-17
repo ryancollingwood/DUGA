@@ -131,6 +131,12 @@ class Tile:
         self.distance = self.get_dist(SETTINGS.player_rect.center)
         return self.distance <= SETTINGS.render * SETTINGS.tile_size * 1.2
 
+    def get_dist_from_map_pos(self, map_pos):
+        xpos = (self.map_pos[0] - map_pos[0]) * SETTINGS.tile_size
+        ypos = (map_pos[1] - self.map_pos[1]) * SETTINGS.tile_size
+
+        return straight_line_distance(xpos, ypos)
+
     def get_dist(self, pos):
         xpos = self.rect.center[0] - pos[0]
         ypos = pos[1] - self.rect.center[1]
