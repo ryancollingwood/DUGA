@@ -287,7 +287,8 @@ class Raycast:
 
         return offset
 
-    def check_hit(self, V_hit, H_hit, H_distance, V_distance, full_check):
+    @staticmethod
+    def check_hit(V_hit, H_hit, H_distance, V_distance, full_check):
         # Break loop if any ray has hit a wall
         if H_hit and V_hit:
             return True
@@ -350,8 +351,19 @@ class Raycast:
 
             if self.check_hit(V_hit, H_hit, H_distance, V_distance, True):
                 break
-                
-            for tile in search_tiles:
+            
+            if len(search_tiles) > 3:
+                reduced_search_tiles = [
+                        tile for tile in search_tiles if
+                            (H_y == tile.rect.bottom and H_x >= tile.rect.bottomleft[0] and H_x <= tile.rect.bottomright[0] and player_rect.centery > tile.rect.bottom) or
+                            (H_y == tile.rect.top and H_x >= tile.rect.topleft[0] and H_x <= tile.rect.topright[0] and player_rect.centery < tile.rect.top) or
+                            (V_x == tile.rect.left and V_y >= tile.rect.topleft[1] and V_y <= tile.rect.bottomleft[1] and player_rect.centerx < tile.rect.left) or
+                            (V_x == tile.rect.right and V_y >= tile.rect.topright[1] and V_y <= tile.rect.bottomright[1] and player_rect.centerx > tile.rect.right)
+                ]
+            else:
+                reduced_search_tiles = search_tiles
+            
+            for tile in reduced_search_tiles:
                 
                 if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):
                     break
@@ -431,16 +443,19 @@ class Raycast:
                     H_y -= self.tile_size
                 else:
                     H_y += self.tile_size
+                    
                 if angle >= 180:
                     H_x -= self.tile_size / tan_radians_angle
                 else:
                     H_x += self.tile_size / tan_radians_angle
 
             if not V_hit:
+                
                 if angle > 270 or angle < 90: # ->
                     V_x += self.tile_size
                 else:
                     V_x -= self.tile_size
+                    
                 if angle >= 270 or angle < 90: # <-
                     V_y -= self.tile_size * tan_radians_angle
                 else:

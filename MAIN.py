@@ -248,22 +248,8 @@ def render_screen(canvas):
     for sprite in SETTINGS.all_sprites:
         sprite.get_pos(canvas)
 
-    #Sort zbuffer and solid tiles
+    #Sort zbuffer
     SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
-    SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, sort_atan(x), x.distance))
-
-    #SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
-    #Calculate which tiles are visible
-    #SETTINGS.rendered_tiles = [
-    #    tile for tile in SETTINGS.all_solid_tiles if
-    #    tile.distance and SETTINGS.tile_visible[tile.ID] and
-    #        (
-    #            (abs(tile.atan) <= SETTINGS.fov and
-    #             tile.distance < SETTINGS.render * SETTINGS.tile_size)
-    #            or
-    #            (tile.distance <= SETTINGS.tile_size * 1.5)
-    #        )
-    #]
 
     # prepare zbuffer transforming only what we need to:
     zbuffer_len = len(SETTINGS.zbuffer)
@@ -448,7 +434,7 @@ def player_moved():
             (tile.distance <= SETTINGS.tile_size * 1.5)
         )
     ]
-    SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
+    # SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, x.atan, x.distance))
 
 
 #Main loop
