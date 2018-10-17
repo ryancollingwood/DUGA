@@ -443,21 +443,13 @@ def main_loop():
     clock = pygame.time.Clock()
     logging.basicConfig(filename = os.path.join('data', 'CrashReport.log'), level=logging.WARNING)
 
-
-    pygame.time.set_timer(TIMER_PLAYTIME, 1000)
-
-    #    allfps = []
+    pygame.time.set_timer(TIMER_PLAYTIME, int(SECONDS_IN_MINUTE * MILLISECONDS_IN_SECOND))
     
     while not game_exit:
         try:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or SETTINGS.quit_game:
                     game_exit = True
-
-    ##                b = 0
-    ##                for x in allfps:
-    ##                    b += x
-    ##                print(b/len(allfps))
                     menuController.save_settings()
                     calculate_statistics()
                     pygame.quit()

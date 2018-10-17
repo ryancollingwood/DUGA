@@ -74,8 +74,8 @@ class Slice:
         slice_texture = tile_texture.subsurface(pygame.Rect(self.location, (1, texture_width))).convert()
         self.slice = pygame.transform.scale(slice_texture, (self.wall_width, self.height))
 
-        #if SETTINGS.shade or self.vh == 'v':
-        self.alpha_slice = pygame.Surface(self.slice.get_size()).convert_alpha()
+        if SETTINGS.shade or self.vh == 'v':
+            self.alpha_slice = pygame.Surface(self.slice.get_size()).convert_alpha()
 
         rect = self.slice.get_rect(center=(self.xpos, int(SETTINGS.canvas_target_height / 2)))
         self.blit_dest = (self.xpos, rect.y)
@@ -83,9 +83,9 @@ class Slice:
     def prepare_slice(self):
         self.get_slice_surface()
 
-        #if self.vh == 'v':
-        self.dark_slice = self.alpha_slice
-        self.dark_slice.fill((0, 0, 0, SETTINGS.texture_darken))
+        if self.vh == 'v':
+            self.dark_slice = self.alpha_slice
+            self.dark_slice.fill((0, 0, 0, SETTINGS.texture_darken))
 
         if SETTINGS.shade:
             #Shade intensity table
@@ -115,7 +115,7 @@ class Slice:
             else:
                 self.intensity = 1
 
-            self.shade_slice = self.alpha_slice_surface
+            self.shade_slice = self.alpha_slice
             self.shade_slice.fill(
                 (SETTINGS.shade_rgba[0]*self.intensity, SETTINGS.shade_rgba[1]*self.intensity,
                  SETTINGS.shade_rgba[2]*self.intensity, SETTINGS.shade_rgba[3]*self.intensity)
@@ -185,9 +185,12 @@ class Raycast:
         # fill in the gaps
         self.fill_in_interpolate_gaps(ray_values)
 
-        SETTINGS.zbuffer = self.next_zbuffer
+        if not pygame.event.peek(EVENT_RAY_CASTING_CALCULATED):
+            pygame.event.post(pygame.event.Event(EVENT_RAY_CASTING_CALCULATED))
 
-        pygame.event.post(pygame.event.Event(EVENT_RAY_CASTING_CALCULATED))
+        # TODO this is making more redraws than required
+        # lets cache this output and do the work only when needed
+        SETTINGS.zbuffer = self.next_zbuffer
 
         return self.next_zbuffer
 
@@ -220,15 +223,15 @@ class Raycast:
         left_slice = None
         right_slice = None
 
-        for i, slice in enumerate(self.next_zbuffer):
-            if slice is not None:
+        for i, zbuffer_slice in enumerate(self.next_zbuffer):
+            if zbuffer_slice is not None:
                 if left_slice is None and right_slice is None:
-                    left_slice = slice
+                    left_slice = zbuffer_slice
                 elif left_slice is not None and right_slice is None:
-                    right_slice = slice
+                    right_slice = zbuffer_slice
                 elif left_slice is not None and right_slice is not None:
                     right_slice = left_slice
-                    left_slice = slice
+                    left_slice = zbuffer_slice
             else:
                 degree = ray_values[i][1]
                 ray_number = ray_values[i][0]
@@ -302,26 +305,11 @@ class Raycast:
                 if V_distance < H_distance:
                     return True
 
-    def set_current_tile(self, tile, is_horizontal):
-        if is_horizontal:
-            self.current_htile = tile
-        else:
-            self.current_vtile = tile
-
-    @staticmethod
-    # TODO probably can remove this as not resorting tiles
-    def resort_tiles(index, tiles):
-        if index:
-            if index > 0:
-                return tiles[index:] + tiles[:index + 1]
-        return tiles
-
     def cast(self, player_rect, angle, ray_number, search_tiles = None, ray_origrin = None):
         H_hit = False
         V_hit = False
         H_offset = V_offset = 0
         end_pos = (0, 0)
-        passed_offset = None
 
         if search_tiles is None:
             search_tiles = SETTINGS.rendered_tiles
@@ -451,12 +439,12 @@ class Raycast:
 
             if not V_hit:
                 
-                if angle > 270 or angle < 90: # ->
+                if angle > 270 or angle < 90:  # ->
                     V_x += self.tile_size
                 else:
                     V_x -= self.tile_size
                     
-                if angle >= 270 or angle < 90: # <-
+                if angle >= 270 or angle < 90:  # <-
                     V_y -= self.tile_size * tan_radians_angle
                 else:
                     V_y += self.tile_size * tan_radians_angle
