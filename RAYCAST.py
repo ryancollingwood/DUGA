@@ -7,6 +7,7 @@ import math
 
 from GEOM import tan_radians, cos_radians, max_grid_distance
 from EVENTS import EVENT_RAY_CASTING_CALCULATED
+from EVENTS import add_event_single
 import SETTINGS
 
 pygame.init()
@@ -185,8 +186,7 @@ class Raycast:
         # fill in the gaps
         self.fill_in_interpolate_gaps(ray_values)
 
-        if not pygame.event.peek(EVENT_RAY_CASTING_CALCULATED):
-            pygame.event.post(pygame.event.Event(EVENT_RAY_CASTING_CALCULATED))
+        add_event_single(EVENT_RAY_CASTING_CALCULATED)
 
         # TODO this is making more redraws than required
         # lets cache this output and do the work only when needed
@@ -246,7 +246,10 @@ class Raycast:
                         else:
                             distance = (max_grid_distance(anchor_slice.map_pos, next_anchor_slice.map_pos) * self.tile_size)
                             search_tiles = [tile for tile in SETTINGS.rendered_tiles if
-                                            tile.get_dist_from_map_pos(anchor_slice.map_pos) <= distance]
+                                            tile.type in ["vdoor", "hdoor", "wall"] and
+                                            tile.solid and
+                                            tile.get_dist_from_map_pos(anchor_slice.map_pos) <= distance
+                                            ]
 
                     if search_tiles is not None:
                         new_slice = self.cast(SETTINGS.player_rect, degree, ray_number, search_tiles = search_tiles)

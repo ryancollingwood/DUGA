@@ -31,9 +31,12 @@ import MENU
 import MUSIC
 import TUTORIAL
 from GEOM import sort_distance
+from EVENTS import add_event_single
 from EVENTS import TIMER_PLAYTIME
 from EVENTS import EVENT_NPC_UPDATE
 from EVENTS import EVENT_PLAYER_INPUT
+from EVENTS import EVENT_PLAYER_LOCATION_CHANGED
+from EVENTS import EVENT_PLAYER_VIEW_CHANGED
 from EVENTS import EVENT_RAY_CASTING_CALCULATED
 
 SECONDS_IN_MINUTE = 60
@@ -454,18 +457,13 @@ def main_loop():
                     calculate_statistics()
                     pygame.quit()
                     sys.exit(0)
-                elif event.type == EVENT_PLAYER_INPUT:
-                    if event.event == "mouse_move":
-                        if event.value != 0:
-                            # todo figure how much work to do based on the event.value
-                            rotate_screen()
-                            player_moved()
-                    elif event.event == "player_moved":
-                        player_moved()
-                    elif event.event == "player_move_backwards":
+                elif event.type == EVENT_PLAYER_VIEW_CHANGED:
+                    if event.value != 0:
+                        # todo figure how much work to do based on the event.value
                         rotate_screen()
                         player_moved()
-
+                elif event.type == EVENT_PLAYER_LOCATION_CHANGED:
+                    player_moved()
                 elif event.type == TIMER_PLAYTIME:
                     if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:
                         SETTINGS.statistics['playtime'] += 1

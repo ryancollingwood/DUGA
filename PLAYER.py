@@ -8,7 +8,8 @@ import pygame
 import math
 import os
 from GEOM import cos_radians, sin_radians
-from EVENTS import EVENT_PLAYER_INPUT
+from EVENTS import add_event_single, add_event
+from EVENTS import EVENT_PLAYER_LOCATION_CHANGED, EVENT_PLAYER_VIEW_CHANGED
 
 class Player:
 
@@ -182,12 +183,10 @@ class Player:
                 elif madd < -38:
                     madd = -38
                 self.angle -= madd
-                SETTINGS.player_angle = self.angle
 
-                pygame.event.post(
-                    pygame.event.Event(EVENT_PLAYER_INPUT, {'event': 'mouse_move', 'value': madd})
-                )
-                
+                SETTINGS.player_angle = self.angle
+                add_event_single(EVENT_PLAYER_VIEW_CHANGED, {'value': self.angle})
+
         #Open inventory
             if key[pygame.K_i] and self.inventory < 1:
                 if SETTINGS.player_states['invopen']:
@@ -259,14 +258,6 @@ class Player:
     #======================================================
             
     def move(self, pos):
-        if self.last_call == 3:
-            pygame.event.post(
-                pygame.event.Event(EVENT_PLAYER_INPUT, {'event': 'player_moved_backwards', 'value': pos})
-            )
-        else:
-            pygame.event.post(
-                pygame.event.Event(EVENT_PLAYER_INPUT, {'event': 'player_moved', 'value': pos})
-            )
 
         if SETTINGS.cfps > 5:
             if pos[0] != 0:
@@ -326,6 +317,15 @@ class Player:
                 SETTINGS.player_rect = self.rect
                 self.real_x = self.rect.x
                 self.real_y = self.rect.y
+
+        # if moving backwards we need to force the rays again to cull
+        # far away rays
+        if self.last_call == 3:
+            add_event(EVENT_PLAYER_VIEW_CHANGED, {'value': self.angle})
+            add_event_single(EVENT_PLAYER_LOCATION_CHANGED)
+        else:
+            add_event_single(EVENT_PLAYER_LOCATION_CHANGED)
+
             
             
             
