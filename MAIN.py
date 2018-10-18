@@ -462,6 +462,9 @@ def main_loop():
                             player_moved()
                     elif event.event == "player_moved":
                         player_moved()
+                    elif event.event == "player_move_backwards":
+                        rotate_screen()
+                        player_moved()
 
                 elif event.type == TIMER_PLAYTIME:
                     if SETTINGS.play_seconds >= SECONDS_IN_MINUTE:

@@ -259,9 +259,14 @@ class Player:
     #======================================================
             
     def move(self, pos):
-        pygame.event.post(
-            pygame.event.Event(EVENT_PLAYER_INPUT, {'event': 'player_moved', 'value': pos})
-        )
+        if self.last_call == 3:
+            pygame.event.post(
+                pygame.event.Event(EVENT_PLAYER_INPUT, {'event': 'player_moved_backwards', 'value': pos})
+            )
+        else:
+            pygame.event.post(
+                pygame.event.Event(EVENT_PLAYER_INPUT, {'event': 'player_moved', 'value': pos})
+            )
 
         if SETTINGS.cfps > 5:
             if pos[0] != 0:
