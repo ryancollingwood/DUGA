@@ -6,6 +6,7 @@ import pygame
 import random
 import math
 import os
+from NPC import NpcState
 
 class Gun:
     '''== Create a weapon ==\nspritesheet -> .png | stats -> explained in GUNS.py\nsounds -> explained in GUNS.py | aim_pos = Sight pos in px'''
@@ -216,14 +217,14 @@ class Gun:
                     if self.hit_rect.width < 120 or (npc.hit_rect.centerx > self.hit_rect.left + self.hit_rect.width/3 and npc.hit_rect.centerx < self.hit_rect.right - self.hit_rect.width/3):
                         #Critical hit
             
-                        if (npc.state == 'idle' or npc.state == 'patrouling') and not npc.player_in_view:
+                        if (npc.state == NpcState.IDLE or npc.state == NpcState.PATROLLING) and not npc.player_in_view:
                             npc.health -= self.dmg * 2
                             SETTINGS.statistics['last ddealt'] += self.dmg*2
                         else:
                             npc.health -= self.dmg
                             SETTINGS.statistics['last ddealt'] += self.dmg
                     else:
-                        if (npc.state == 'idle' or npc.state == 'patrouling') and not npc.player_in_view:
+                        if (npc.state == NpcState.IDLE or npc.state == NpcState.PATROLLING) and not npc.player_in_view:
                             npc.health -= self.dmg
                             SETTINGS.statistics['last ddealt'] += self.dmg*2
                         else:

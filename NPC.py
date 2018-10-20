@@ -9,6 +9,21 @@ import math
 import pygame
 #stats format in bottom of script
 #pos is in tiles, face in degrees, frame_interval is seconds between frames, speed is pixels/second
+from duga_enum import DugaEnum
+
+
+class NpcState(DugaEnum):
+    ATTACKING = "attacking"
+    FLEEING = "fleeing"
+    IDLE = "idle"
+    PATROLLING = "patrolling"
+
+
+class NpcMind(DugaEnum):
+    PASSIVE = "passive"
+    HOSTILE = "hostile"
+    SHY = "shy"
+
 
 class Npc:
 
@@ -54,8 +69,8 @@ class Npc:
         self.health = stats['health']    
         self.speed = stats['speed']
         self.OG_speed = self.speed
-        self.mind = stats['mind']
-        self.state = stats['state']
+        self.mind = NpcMind[stats['mind']]
+        self.state = NpcState[stats['state']]
         self.OG_state = self.state
         self.atcktype = stats['atcktype']
         self.name = stats['name']
@@ -130,7 +145,7 @@ class Npc:
 
     def think(self):
         self.map_pos = [int(self.rect.centerx / SETTINGS.tile_size), int(self.rect.centery / SETTINGS.tile_size)]
-        if self.state == 'attacking' or self.state == 'fleeing':
+        if self.state == NpcState.ATTACKING or self.state == NpcState.FLEEING:
             self.speed = self.OG_speed * 2
 
         if not self.dead:
@@ -145,65 +160,65 @@ class Npc:
             if self.dist and self.dist <= SETTINGS.render * SETTINGS.tile_size * 1.2:
 
                 #PASSIVE
-                if self.mind == 'passive':
-                    if self.state == 'idle':
+                if self.mind == NpcMind.PASSIVE:
+                    if self.state == NpcState.IDLE:
                         self.idle()
                         
-                    elif self.state == 'patrouling':
+                    elif self.state == NpcState.PATROLLING:
                         self.move()
 
                 #HOSTILE
-                elif self.mind == 'hostile':
-                    if self.state == 'idle':
+                elif self.mind == NpcMind.HOSTILE:
+                    if self.state == NpcState.IDLE:
                         self.idle()
                         if not SETTINGS.ignore_player:
                             if self.player_in_view:
                                 if self.detect_player():
                                     self.path = []
                                     SOUND.play_sound(self.sounds['spot'], self.dist)
-                                    self.state = 'attacking'
+                                    self.state = NpcState.ATTACKING
                     
-                    elif self.state == 'patrouling':
+                    elif self.state == NpcState.PATROLLING:
                         if self.player_in_view and not SETTINGS.ignore_player and self.detect_player():
                             self.path = []
                             SOUND.play_sound(self.sounds['spot'], self.dist)
-                            self.state = 'attacking'
+                            self.state = NpcState.ATTACKING
                         elif self.dist <= SETTINGS.tile_size / 2 and not SETTINGS.ignore_player:
-                            state = 'attacking'
+                            state = NpcState.ATTACKING
                         else:
                             self.move()
 
-                    elif self.state == 'attacking':
+                    elif self.state == NpcState.ATTACKING:
                         self.attack()
 
 
                 #SHY
-                elif self.mind == 'shy':
-                    if self.state == 'idle':
+                elif self.mind == NpcMind.SHY:
+                    if self.state == NpcState.IDLE:
                         self.idle()
                         if not SETTINGS.ignore_player:
                             if self.player_in_view:
                                 if self.detect_player():
                                     self.path = []
                                     SOUND.play_sound(self.sounds['spot'], self.dist)
-                                    self.state = 'fleeing'
+                                    self.state = NpcState.FLEEING
                             elif self.dist <= SETTINGS.tile_size / 2:
-                                state = 'attacking'
+                                state = NpcState.ATTACKING
                         
-                    elif self.state == 'patrouling':
+                    elif self.state == NpcState.PATROLLING:
                         if self.player_in_view:
                             if not SETTINGS.ignore_player:
                                 if self.detect_player():
                                     self.path = []
                                     SOUND.play_sound(self.sounds['spot'], self.dist)
-                                    self.state = 'fleeing'
+                                    self.state = NpcState.FLEEING
                         elif self.dist <= SETTINGS.tile_size / 2:
                             if not SETTINGS.ignore_player:
-                                state = 'attacking'
+                                state = NpcState.ATTACKING
                         else:
                             self.move()
                     
-                    elif self.state == 'fleeing':
+                    elif self.state == NpcState.FLEEING:
                         self.move()
 
             #Run animations
@@ -511,17 +526,17 @@ class Npc:
                 self.path = []
                 self.path_progress = 0
 
-        if self.state == 'patrouling':
+        if self.state == NpcState.PATROLLING:
             if self.path == []:
                 if random.randint(0,3) == 3:
-                    self.state = 'idle'
+                    self.state = NpcState.IDLE
                     self.sprite.texture = self.stand_texture[4]
                 else:
                     #Make the NPC not walk too far.
                     available_pos = [x for x in SETTINGS.walkable_area if abs(x.map_pos[0]-self.map_pos[0]) <= 3 and abs(x.map_pos[1]-self.map_pos[1]) <= 3]
                     self.path = PATHFINDING.pathfind(self.map_pos, random.choice(available_pos).map_pos)
 
-        elif self.state == 'fleeing':
+        elif self.state == NpcState.FLEEING:
             if self.dist <= SETTINGS.tile_size * 4:
                 flee_pos = random.choice(SETTINGS.walkable_area)
                 player_tile = [x for x in SETTINGS.walkable_area if x.map_pos == SETTINGS.player_map_pos]
@@ -548,10 +563,10 @@ class Npc:
                 self.face -= 360
             self.idle_timer = 0
 
-            #Do only change to patrouling if it was that in the first place.
-            if self.OG_state != 'idle':
+            #Do only change to patrolling if it was that in the first place.
+            if self.OG_state != NpcState.IDLE:
                 if random.randint(0, 2) == 2:
-                    self.state = 'patrouling'
+                    self.state = NpcState.PATROLLING
 
         #Make NPC react to gunshot if close. Or just if the player is too close.
         if (self.dist <= SETTINGS.tile_size * 4 and SETTINGS.mouse_btn_active and SETTINGS.current_gun) or self.dist <= self.rect.width:
@@ -729,7 +744,7 @@ class Npc:
                 self.hurting = False
                 self.timer = 0
                 SOUND.play_sound(random.choice(self.sounds['damage']), self.dist)
-                if self.state == 'idle' or self.state == 'patrouling' or self.state == 'fleeing':
+                if self.state == NpcState.IDLE or self.state == NpcState.PATROLLING or self.state == NpcState.FLEEING:
                     self.face = self.face + self.theta
                     if self.face >= 360:
                         self.face -= 360
@@ -788,7 +803,7 @@ class Npc:
 #    'health' : health points,
 #    'speed': pixels per second,
 #    'mind': string -> hostile, passive, shy,
-#    'state': string -> idle, patrouling,
+#    'state': string -> idle, patrolling,
 #    'atcktype': string -> melee, hitscan,
 #    'atckrate': chance of attacking - lower = faster
 #    'id' : unique ID for npcs,
