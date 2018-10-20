@@ -25,6 +25,13 @@ class NpcMind(DugaEnum):
     SHY = "shy"
 
 
+class NpcAnimation(DugaEnum):
+    ATTACKING = "attack"
+    WALKING = "walking"
+    DYING = "dying"
+    HURTING = "hurting"
+
+
 class Npc:
 
     def __init__(self, stats, sounds, texture):
@@ -178,13 +185,13 @@ class Npc:
                         self.idle()
                         if not SETTINGS.ignore_player:
                             if self.player_in_view:
-                                if self.detect_player():
+                                if self.detect_player:
                                     self.path = []
                                     SOUND.play_sound(self.sounds['spot'], self.dist)
                                     self.state = NpcState.ATTACKING
                     
                     elif self.state == NpcState.PATROLLING:
-                        if self.player_in_view and not SETTINGS.ignore_player and self.detect_player():
+                        if self.player_in_view and not SETTINGS.ignore_player and self.detect_player:
                             self.path = []
                             SOUND.play_sound(self.sounds['spot'], self.dist)
                             self.state = NpcState.ATTACKING
@@ -203,7 +210,7 @@ class Npc:
                         self.idle()
                         if not SETTINGS.ignore_player:
                             if self.player_in_view:
-                                if self.detect_player():
+                                if self.detect_player:
                                     self.path = []
                                     SOUND.play_sound(self.sounds['spot'], self.dist)
                                     self.state = NpcState.FLEEING
@@ -213,7 +220,7 @@ class Npc:
                     elif self.state == NpcState.PATROLLING:
                         if self.player_in_view:
                             if not SETTINGS.ignore_player:
-                                if self.detect_player():
+                                if self.detect_player:
                                     self.path = []
                                     SOUND.play_sound(self.sounds['spot'], self.dist)
                                     self.state = NpcState.FLEEING
@@ -228,9 +235,9 @@ class Npc:
 
             #Run animations
             if self.hurting:
-                self.animate('hurting')
+                self.animate(NpcAnimation.HURTING)
             elif self.moving:
-                self.animate('walking')
+                self.animate(NpcAnimation.WALKING)
 
         if SETTINGS.player_states['dead']:
             self.face += 10
@@ -239,7 +246,7 @@ class Npc:
             self.render()
             
         elif self.health <= 0 and not self.dead:
-            self.animate('dying')
+            self.animate(NpcAnimation.DYING)
             self.render()
 
     def render(self):
@@ -362,7 +369,8 @@ class Npc:
         """
         == Is player visible from NPC position? ==
         detect_player(self) -> boolean
-        :return:
+
+        :return: bool
         """
 
         own_tile = self.map_pos
@@ -569,7 +577,7 @@ class Npc:
                     player_tile = PATHFINDING.find_near_position(SETTINGS.player_map_pos)
                     
                 if self.player_in_view:
-                    if self.detect_player() and player_tile:
+                    if self.detect_player and player_tile:
                         if ((SETTINGS.walkable_area.index(flee_pos) < SETTINGS.walkable_area.index(player_tile) + int(SETTINGS.current_level_size[0] / 5)) or (SETTINGS.walkable_area.index(flee_pos) > SETTINGS.walkable_area.index(player_tile) - int(SETTINGS.current_level_size[0] / 5))) and self.path == []:
                             self.path_progress = 0
                             self.path = PATHFINDING.pathfind(self.map_pos, flee_pos.map_pos)
@@ -624,12 +632,12 @@ class Npc:
                         #Make the NPC not flinch when attacking
                         if self.hurting:
                             if random.randint(0,2) != 2 or self.attacking:
-                                self.animate('attacking')
+                                self.animate(NpcAnimation.ATTACKING)
                                 self.hurting = False
                                 if random.randint(0,2) == 2:
                                     SOUND.play_sound(random.choice(self.sounds['damage']), self.dist)
                         else:
-                            self.animate('attacking')
+                            self.animate(NpcAnimation.ATTACKING)
 
                 else:
                     if self.dist > SETTINGS.tile_size*0.7 and self.path == []:
@@ -656,7 +664,7 @@ class Npc:
                     self.path = []
                     self.moving = False
                     if not self.attacking:
-                        if random.randint(0, self.atckchance) == 5 and self.detect_player():
+                        if random.randint(0, self.atckchance) == 5 and self.detect_player:
                                 self.attacking = True
                                 self.atckchance += int(self.atckrate)
                                 self.movechance = 10
@@ -675,27 +683,27 @@ class Npc:
                     elif self.attacking:
                         if self.hurting:
                             if random.randint(0,5) >= 3:
-                                self.animate('attacking')
+                                self.animate(NpcAnimation.ATTACKING)
                                 self.hurting = False
                                 if random.randint(0,2) == 2:
                                     SOUND.play_sound(random.choice(self.sounds['damage']), self.dist)
                         else:
-                            self.animate('attacking')
+                            self.animate(NpcAnimation.ATTACKING)
                             
                 #Move away from player if too close            
                 elif self.dist < SETTINGS.tile_size * 1.5 and self.health <= 6:
                     if self.rect.centerx > SETTINGS.player_rect.centerx:
                         self.collide_update(self.speed, 0)
-                        self.animate('walking')
+                        self.animate(NpcAnimation.WALKING)
                     elif self.rect.centerx < SETTINGS.player_rect.centerx:
                         self.collide_update(-self.speed, 0)
-                        self.animate('walking')
+                        self.animate(NpcAnimation.WALKING)
                     if self.rect.centery > SETTINGS.player_rect.centery:
                         self.collide_update(0, self.speed)
-                        self.animate('walking')
+                        self.animate(NpcAnimation.WALKING)
                     elif self.rect.centery < SETTINGS.player_rect.centery:
                         self.collide_update(0, -self.speed)
-                        self.animate('walking')
+                        self.animate(NpcAnimation.WALKING)
                     
                         
                 else:
@@ -733,7 +741,7 @@ class Npc:
             self.running_animation = animation
             
         #walk animation
-        if animation == 'walking':
+        if animation == NpcAnimation.WALKING:
             if self.side == 'front':
                 self.sprite.texture = self.front_texture[self.current_frame]
             elif self.side == 'frontleft':
@@ -758,7 +766,7 @@ class Npc:
                     self.current_frame = 0
         
         #die animation
-        elif animation == 'dying':
+        elif animation == NpcAnimation.DYING:
             self.sprite.texture = self.die_texture[self.current_frame]
             if self.current_frame == 0 and not self.mein_leben:
                 self.mein_leben = True
@@ -776,7 +784,7 @@ class Npc:
                 self.knockback = int(self.knockback*0.8)
                 
         #hurt animation
-        elif animation == 'hurting':
+        elif animation == NpcAnimation.HURTING:
             self.sprite.texture = self.hurt_texture[0]
             self.moving = False
             if self.timer >= self.frame_interval*2:
@@ -791,7 +799,7 @@ class Npc:
                     self.face = min([0,90,180,270,359], key=lambda x:abs(x-self.face))
         
         #attack animation
-        elif animation == 'attacking':
+        elif animation == NpcAnimation.ATTACKING:
             self.sprite.texture = self.hit_texture[self.current_frame]
             self.moving = False
             if self.timer >= self.frame_interval:

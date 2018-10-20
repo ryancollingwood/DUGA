@@ -485,39 +485,43 @@ def main_loop():
 #Probably temporary object init
 #SETTINGS.current_level = 5 #temporary
 if __name__ == '__main__':
-    gameLoad = Load()
-    gameLoad.load_resources()
-    gameLoad.load_entities()
-    gameLoad.load_custom_levels()
+    try:
+        gameLoad = Load()
+        gameLoad.load_resources()
+        gameLoad.load_entities()
+        gameLoad.load_custom_levels()
 
-    mapGenerator = GENERATION.Generator()
-    mapGenerator.generate_levels(1,2)
-    SETTINGS.levels_list = SETTINGS.glevels_list
+        mapGenerator = GENERATION.Generator()
+        mapGenerator.generate_levels(1,2)
+        SETTINGS.levels_list = SETTINGS.glevels_list
 
-    gameLoad.get_canvas_size()
+        gameLoad.get_canvas_size()
 
-    #Setup and classes
+        #Setup and classes
 
-    text = TEXT.Text(0,0,"YOU  WON", SETTINGS.WHITE, "DUGAFONT.ttf", 48)
-    beta = TEXT.Text(5,5,"DUGA  BETA  BUILD  V. 1.3", SETTINGS.WHITE, "DUGAFONT.ttf", 20)
-    text.update_pos(SETTINGS.canvas_actual_width/2 - text.layout.get_width()/2, SETTINGS.canvas_target_height/2 - text.layout.get_height()/2)
+        text = TEXT.Text(0,0,"YOU  WON", SETTINGS.WHITE, "DUGAFONT.ttf", 48)
+        beta = TEXT.Text(5,5,"DUGA  BETA  BUILD  V. 1.3", SETTINGS.WHITE, "DUGAFONT.ttf", 20)
+        text.update_pos(SETTINGS.canvas_actual_width/2 - text.layout.get_width()/2, SETTINGS.canvas_target_height/2 - text.layout.get_height()/2)
 
-    #Classes for later use
-    gameMap = MAP.Map(SETTINGS.levels_list[SETTINGS.current_level].array)
-    gameCanvas = Canvas(SETTINGS.canvas_map_width, SETTINGS.canvas_map_height)
-    gamePlayer = PLAYER.Player(SETTINGS.player_pos)
-    gameRaycast = RAYCAST.Raycast(gameCanvas.canvas, gameCanvas.window)
-    gameInv = INVENTORY.inventory({'bullet': 150, 'shell':25, 'ferromag' : 50})
-    gameHUD = HUD.hud()
+        #Classes for later use
+        gameMap = MAP.Map(SETTINGS.levels_list[SETTINGS.current_level].array)
+        gameCanvas = Canvas(SETTINGS.canvas_map_width, SETTINGS.canvas_map_height)
+        gamePlayer = PLAYER.Player(SETTINGS.player_pos)
+        gameRaycast = RAYCAST.Raycast(gameCanvas.canvas, gameCanvas.window)
+        gameInv = INVENTORY.inventory({'bullet': 150, 'shell':25, 'ferromag' : 50})
+        gameHUD = HUD.hud()
 
-    #More loading - Level specific
-    gameLoad.load_new_level()
+        #More loading - Level specific
+        gameLoad.load_new_level()
 
-    #Controller classes
-    menuController = MENU.Controller(gameCanvas.window)
-    musicController = MUSIC.Music()
-    tutorialController = TUTORIAL.Controller()
-
+        #Controller classes
+        menuController = MENU.Controller(gameCanvas.window)
+        musicController = MUSIC.Music()
+        tutorialController = TUTORIAL.Controller()
+    except Exception as e:
+        print("Exception in startup!")
+        print(e)
+        raise e
     #Run at last
     main_loop()
 
