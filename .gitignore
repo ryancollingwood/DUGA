@@ -6,3 +6,5 @@ dist/
 .venv/
 pyinstaller.exe
 *.dat
+*.log
+profiling_results
