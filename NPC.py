@@ -144,6 +144,11 @@ class Npc:
         self.num = len(SETTINGS.all_sprites)-1
 
     def think(self):
+        """
+        Choose a state to transition to it (or stay on current state) and
+        act upon the chosen state
+        :return:
+        """
         self.map_pos = [int(self.rect.centerx / SETTINGS.tile_size), int(self.rect.centery / SETTINGS.tile_size)]
         if self.state == NpcState.ATTACKING or self.state == NpcState.FLEEING:
             self.speed = self.OG_speed * 2
@@ -238,7 +243,10 @@ class Npc:
             self.render()
 
     def render(self):
-        '''== Draw the NPC =='''
+        """
+        == Draw the NPC ==
+        :return:
+        """
         if self.dead:
             self.solid = False
             
@@ -351,7 +359,12 @@ class Npc:
         return int(a + 0.5)            
 
     def detect_player(self):
-        '''== Is player visible from NPC position? ==\ndetect_player(self) -> boolean'''
+        """
+        == Is player visible from NPC position? ==
+        detect_player(self) -> boolean
+        :return:
+        """
+
         own_tile = self.map_pos
         #front_tile = [own_tile[0] + self.front_tile[0], own_tile[1] + self.front_tile[1]]
         player_tile = SETTINGS.player_map_pos
@@ -408,8 +421,14 @@ class Npc:
         if self.dist <= SETTINGS.tile_size/3:
             return True
 
-    def collide_update(self, x, y):
-        #make sure the NPC doesn't walk inside stuff
+    def collide_update(self, x: float, y: float):
+        """
+        Make sure the NPC doesn't walk inside stuff
+        :param x:
+        :param y:
+        :return:
+        """
+
         self.real_x += x * SETTINGS.dt
         self.real_y += y * SETTINGS.dt
         self.rect.x = self.real_x
@@ -443,7 +462,11 @@ class Npc:
                 break
 
     def move(self):
-        #Make the NPC move according to current state.
+        """
+        Make the NPC move according to current state.
+        :return:
+        """
+
         moving_up = False
         moving_down = False
         moving_right = False
@@ -552,7 +575,11 @@ class Npc:
                             self.path = PATHFINDING.pathfind(self.map_pos, flee_pos.map_pos)
 
     def idle(self):
-        #Make the NPC rotate randomly as it stands still.
+        """
+        Make the NPC rotate randomly as it stands still.
+        :return:
+        """
+
         self.idle_timer += SETTINGS.dt
         if self.idle_timer >= 3:
             if random.randint(0,2) == 2:
@@ -576,6 +603,11 @@ class Npc:
             self.face = min([0,90,180,270,359], key=lambda x:abs(x-self.face))
 
     def attack(self):
+        """
+        Attack current target (player). Includes moving into position for attack
+        :return:
+        """
+
         if self.attack_move:
             self.move()
         else:
@@ -687,7 +719,15 @@ class Npc:
                                 pass
 
     def animate(self, animation):
-        '''== Animate NPC ==\nanimation -> dying, walking, attacking, hurting'''
+        """
+        == Animate NPC ==
+        animation -> dying, walking, attacking, hurting
+
+        :param animation:
+        :return:
+        """
+        # TODO: create/use animation enum
+
         if self.running_animation != animation:
             self.current_frame = 0
             self.running_animation = animation
@@ -773,6 +813,12 @@ class Npc:
                             SETTINGS.player_health -= self.dmg
 
     def drop_item(self):
+        """
+        Drop an item an add it to the game map
+        :return:
+        """
+        # TODO: Move this out of NPC
+
         texture = 'none.png'
         possible_drops = ['bullet', 'bullet', 'bullet',
                           'shell', 'shell',
@@ -804,7 +850,7 @@ class Npc:
 #    'speed': pixels per second,
 #    'mind': string -> hostile, passive, shy,
 #    'state': string -> idle, patrolling,
-#    'atcktype': string -> melee, hitscan,
+#    'atcktype': string -> melee, hitscan, # TODO: create attacktype enum
 #    'atckrate': chance of attacking - lower = faster
 #    'id' : unique ID for npcs,
 #    'filepath' : ('folder', 'folder', 'file.ext'),
