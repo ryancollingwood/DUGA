@@ -1,0 +1,36 @@
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "MAIN.py", line 444, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 102, in calculate
+    self.cast(SETTINGS.player_rect, degree, ray_number)
+  File "D:\Projects\DUGA\RAYCAST.py", line 310, in cast
+    self.control(end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh)
+  File "D:\Projects\DUGA\RAYCAST.py", line 319, in control
+    self.render_screen(ray_number, wall_dist, texture, int(offset), current_tile, vh, end_pos)
+  File "D:\Projects\DUGA\RAYCAST.py", line 329, in render_screen
+    SETTINGS.zbuffer.append(Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh))
+AttributeError: 'pygame.Surface' object has no attribute 'slices'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 444, in main_loop
+    gameRaycast.calculate()
+  File "D:\Projects\DUGA\RAYCAST.py", line 102, in calculate
+    self.cast(SETTINGS.player_rect, degree, ray_number)
+  File "D:\Projects\DUGA\RAYCAST.py", line 310, in cast
+    self.control(end_pos, ray_number, tile_len, player_rect, texture, offset, current_tile, vh)
+  File "D:\Projects\DUGA\RAYCAST.py", line 319, in control
+    self.render_screen(ray_number, wall_dist, texture, int(offset), current_tile, vh, end_pos)
+  File "D:\Projects\DUGA\RAYCAST.py", line 329, in render_screen
+    SETTINGS.zbuffer.append(Slice((texture.slices[offset], 0), texture.texture, texture.rect.width, vh))
+AttributeError: 'pygame.Surface' object has no attribute 'slices'
+WARNING:root:DUGA has crashed. Please send this report to MaxwellSalmon, so he can fix it.
+ERROR:root:Error message: 
+Traceback (most recent call last):
+  File "D:/Projects/DUGA/MAIN.py", line 460, in main_loop
+    render_screen(gameCanvas.canvas)
+  File "D:/Projects/DUGA/MAIN.py", line 281, in render_screen
+    assert (list(temp) == SETTINGS.rendered_tiles)
+AssertionError
