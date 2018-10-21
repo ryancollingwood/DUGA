@@ -241,12 +241,13 @@ def sort_atan(x):
         SETTINGS.end_angle = theta
 
     theta = abs(theta)
+    x.atan = theta
     
     return(theta)
 
 def render_screen(canvas):
     '''render_screen(canvas) -> Renders everything but NPC\'s'''
-    SETTINGS.rendered_tiles = []
+    del SETTINGS.rendered_tiles
 
     #Get sprite positions
     for sprite in SETTINGS.all_sprites:
@@ -256,16 +257,25 @@ def render_screen(canvas):
     SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
     SETTINGS.all_solid_tiles = sorted(SETTINGS.all_solid_tiles, key=lambda x: (x.type, sort_atan(x), x.distance))
 
-    #Calculate which tiles are visible
-    for tile in SETTINGS.all_solid_tiles:
-        if tile.distance and SETTINGS.tile_visible[tile.ID]:
-            if sort_atan(tile) <= SETTINGS.fov:
-                if tile.distance < SETTINGS.render * SETTINGS.tile_size:
-                    SETTINGS.rendered_tiles.append(tile)
-                            
-            elif tile.distance <= SETTINGS.tile_size * 1.5:
-                SETTINGS.rendered_tiles.append(tile)
-                
+    # Calculate which tiles are visible for raycasting
+    # We can use a tuple here as SETTINGS.rendered_tiles
+    # wont change until we hit this again - tuple iteration
+    # if faster than list iteration
+    SETTINGS.rendered_tiles = tuple(
+        tile for tile in SETTINGS.all_solid_tiles if
+        tile.type in ["hdoor", "vdoor", "wall"] and
+        tile.distance and SETTINGS.tile_visible[tile.ID] and
+        (
+            (
+                tile.atan <= SETTINGS.fov and
+                tile.distance < SETTINGS.render * SETTINGS.tile_size
+            ) or
+            (
+                tile.distance <= SETTINGS.tile_size * 1.5
+            )
+        )
+    )
+
 
     #Render all items in zbuffer
     for item in SETTINGS.zbuffer:

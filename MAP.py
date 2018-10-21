@@ -88,6 +88,7 @@ class Tile:
         #For doors opening
         self.state = None
         self.timer = 0
+        self.atan = 0
         
         if self.type == 'sprite':
             current_number = len(SETTINGS.all_sprites)
