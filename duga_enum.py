@@ -18,5 +18,7 @@ class DugaEnum(Enum, metaclass=DugaEnumMeta):
     def __eq__(self, other):
         if isinstance(other, str):
             return self.value == other
-
-        return self.value == other.value
+        try:
+            return self.value == other.value
+        except AttributeError:
+            return False

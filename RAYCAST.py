@@ -5,7 +5,7 @@ import PLAYER
 import pygame
 import math
 
-pygame.init()
+pygame.display.init()
 
 class Slice:
 

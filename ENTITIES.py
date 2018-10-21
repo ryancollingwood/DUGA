@@ -2,6 +2,7 @@ import SETTINGS
 import GUNS
 import NPC
 import ITEMS
+from DIRECTIONAL_SPRITE import DirectionalSprite
 
 from os import *
 import pygame
@@ -970,6 +971,11 @@ def spawn_npcs():
             print("Error loading NPC! No soundpack with name ", stats['soundpack'])
         stats['pos'] = npc[0]
         stats['face'] = npc[1]
+
+        texture_path = path.join(*stats['filepath'])
+        if texture_path not in SETTINGS.directional_sprites:
+            SETTINGS.directional_sprites[texture_path] = DirectionalSprite(texture_path)
+
         SETTINGS.npc_list.append(NPC.Npc(stats, sounds, path.join(*stats['filepath'])))
 
 

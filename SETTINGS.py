@@ -239,6 +239,7 @@ texture_type = { #air, wall, trigger, sprite
 
 '''Sprite settings'''
 all_sprites = []
+directional_sprites = dict()
 
 '''Item settings'''
 all_items = []

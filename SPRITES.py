@@ -22,6 +22,7 @@ class Sprite:
         self.distance = None
 
         self.theta = None
+        self.current_frame = 0
         
 
         #If this sprite belongs to an NPC, make the NPC a parent of this sprite
