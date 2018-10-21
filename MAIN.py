@@ -250,7 +250,7 @@ def render_screen(canvas):
 
     #Get sprite positions
     for sprite in SETTINGS.all_sprites:
-        sprite.get_pos(canvas)
+        sprite.get_pos()
 
     #Sort zbuffer and solid tiles
     SETTINGS.zbuffer = sorted(SETTINGS.zbuffer, key=sort_distance, reverse=True)
