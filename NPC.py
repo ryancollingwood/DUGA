@@ -250,39 +250,6 @@ class Npc:
             self.animate(NpcAnimation.DYING)
             self.render()
 
-    def render(self) -> None:
-        """
-        == Draw the NPC ==
-        :return:
-        """
-        if self.dead:
-            self.solid = False
-
-        xpos = SETTINGS.player_rect.centerx - self.rect.centerx
-        ypos = SETTINGS.player_rect.centery - self.rect.centery
-
-        self.dist = math.sqrt(xpos * xpos + ypos * ypos)
-
-        if self.dist <= SETTINGS.render * SETTINGS.tile_size:
-            theta = self.get_theta(xpos, ypos)
-
-            self.set_side(self.directional_sprite.get_side_for_theta(theta))
-
-            self.sprite.update_pos([self.rect.x, self.rect.y])
-
-        if SETTINGS.all_sprites[self.num] != self.sprite:
-            SETTINGS.all_sprites[self.num] = self.sprite
-
-        # Find out what x and y coordinates would change
-        if self.face == 90:
-            self.front_tile = (0, -1)
-        elif self.face == 180:
-            self.front_tile = (-1, 0)
-        elif self.face == 270:
-            self.front_tile = (0, 1)
-        elif self.face == 0 or self.face == 360:
-            self.front_tile = (1, 0)
-
     def get_theta(self, xpos: float, ypos: float):
         """
         Calculate the theta, postheta, and side for the NPC
@@ -324,12 +291,6 @@ class Npc:
 
         if all(change_sprite_rules) or not self.side:
             self.side = side
-
-            # self.sprite.texture = self.directional_sprite.animate(
-            #    self.running_animation,
-            #    self.side,
-            #    self.sprite.current_frame
-            # )
 
         return self.side
 
@@ -712,6 +673,70 @@ class Npc:
                             except:
                                 pass
 
+    def drop_item(self) -> None:
+        """
+        Drop an item an add it to the game map
+        :return:
+        """
+        # TODO: Move this out of NPC
+
+        texture = 'none.png'
+        possible_drops = ['bullet', 'bullet', 'bullet',
+                          'shell', 'shell',
+                          'health',
+                          'armor',
+                          'ferromag', 'ferromag', ]
+        drop = random.choice(possible_drops)
+        effect = random.randint(4, 12)
+        if drop == 'bullet':
+            texture = 'bullet.png'
+        elif drop == 'shell':
+            texture = 'shell.png'
+        elif drop == 'health':
+            texture = 'firstaid.png'
+        elif drop == 'armor':
+            texture = 'kevlar.png'
+        elif drop == 'ferromag':
+            texture = 'ferromag.png'
+        else:
+            print("Error: No texture with name ", drop)
+        SETTINGS.all_items.append(ITEMS.Item(self.map_pos, os.path.join('graphics', 'items', texture), drop, effect))
+
+    # Rendering Code from here below to be moved to a new class?
+
+    def render(self) -> None:
+        """
+        == Draw the NPC ==
+        :return:
+        """
+        if self.dead:
+            self.solid = False
+
+        xpos = SETTINGS.player_rect.centerx - self.rect.centerx
+        ypos = SETTINGS.player_rect.centery - self.rect.centery
+
+        self.dist = math.sqrt(xpos * xpos + ypos * ypos)
+
+        if self.dist <= SETTINGS.render * SETTINGS.tile_size:
+            theta = self.get_theta(xpos, ypos)
+
+            self.set_side(self.directional_sprite.get_side_for_theta(theta))
+
+            self.sprite.update_pos([self.rect.x, self.rect.y])
+
+        if SETTINGS.all_sprites[self.num] != self.sprite:
+            SETTINGS.all_sprites[self.num] = self.sprite
+
+        # Find out what x and y coordinates would change
+        if self.face == 90:
+            self.front_tile = (0, -1)
+        elif self.face == 180:
+            self.front_tile = (-1, 0)
+        elif self.face == 270:
+            self.front_tile = (0, 1)
+        elif self.face == 0 or self.face == 360:
+            self.front_tile = (1, 0)
+
     def animate(self, animation: NpcAnimation) -> None:
         """
         == Animate NPC ==
@@ -790,35 +815,6 @@ class Npc:
                                 SETTINGS.player_armor = 0
                         else:
                             SETTINGS.player_health -= self.dmg
-
-    def drop_item(self) -> None:
-        """
-        Drop an item an add it to the game map
-        :return:
-        """
-        # TODO: Move this out of NPC
-
-        texture = 'none.png'
-        possible_drops = ['bullet', 'bullet', 'bullet',
-                          'shell', 'shell',
-                          'health',
-                          'armor',
-                          'ferromag', 'ferromag', ]
-        drop = random.choice(possible_drops)
-        effect = random.randint(4, 12)
-        if drop == 'bullet':
-            texture = 'bullet.png'
-        elif drop == 'shell':
-            texture = 'shell.png'
-        elif drop == 'health':
-            texture = 'firstaid.png'
-        elif drop == 'armor':
-            texture = 'kevlar.png'
-        elif drop == 'ferromag':
-            texture = 'ferromag.png'
-        else:
-            print("Error: No texture with name ", drop)
-        SETTINGS.all_items.append(ITEMS.Item(self.map_pos, os.path.join('graphics', 'items', texture), drop, effect))
 
 # pos is in tiles, face in degrees, frame_interval is seconds between frames, speed is pixels/second
 
