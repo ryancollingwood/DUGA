@@ -7,6 +7,7 @@ import pygame
 import math
 import random
 import os
+from typing import Tuple
 
 class Map:
     '''== Create the map ==\narray -> Level to be loaded'''
@@ -38,7 +39,7 @@ class Map:
     def move_inaccessible_entities(self):      
         wa = []
         for i in SETTINGS.walkable_area:
-            if i.type != 'hdoor' and i.type != 'vdoor':
+            if i.type != TileType.H_DOOR and i.type != TileType.V_DOOR:
                 wa.append(i.map_pos)
             
         move_items = [x for x in SETTINGS.levels_list[SETTINGS.current_level].items if list(x[0]) not in wa]
@@ -74,9 +75,32 @@ class Map:
 
         #print("This level has %s items and %s NPC's" % (len(SETTINGS.levels_list[SETTINGS.current_level].items), len(SETTINGS.levels_list[SETTINGS.current_level].npcs)))
 
+from typing import List
+from duga_enum import DugaEnum
+
+
+class TileType(DugaEnum):
+    SPRITE = "sprite"
+    V_DOOR = "vdoor"
+    H_DOOR = "hdoor"
+
+
+class TileState(DugaEnum):
+    CLOSED = "closed"
+    CLOSING = "closing"
+    OPENING = "opening"
+    OPEN = "open"
+
+
 class Tile:
     
-    def __init__(self, ID, pos, map_pos):
+    def __init__(self, ID: int, pos: List[float], map_pos: List[int]):
+        """
+        Create a tile
+        :param ID:
+        :param pos: Pixel Distance
+        :param map_pos: Map Grid Position
+        """
         self.ID = ID
         #position in pixels
         self.pos = pos
@@ -90,7 +114,7 @@ class Tile:
         self.timer = 0
         self.atan = 0
         
-        if self.type == 'sprite':
+        if self.type == TileType.SPRITE:
             current_number = len(SETTINGS.all_sprites)
             #Need some weird coordinates to make it centered.
             self.texture = SPRITES.Sprite(SETTINGS.tile_texture[self.ID], self.ID, (self.pos[0]+SETTINGS.tile_size/3, self.pos[1]+SETTINGS.tile_size/3), 'sprite')
@@ -105,9 +129,9 @@ class Tile:
             self.rect.x = pos[0]
             self.rect.y = pos[1]
             
-            if self.type == 'vdoor' or self.type == 'hdoor':
+            if self.type == TileType.V_DOOR or self.type == TileType.H_DOOR:
                 self.open = 0
-                self.state = 'closed'
+                self.state = TileState.CLOSED
                 #states: closed, opening, open, closing
 
                 self.open_sound = pygame.mixer.Sound(os.path.join('sounds', 'other', 'door_open.ogg'))
@@ -115,60 +139,72 @@ class Tile:
 
                 SETTINGS.all_doors.append(self)
 
-
-    def draw(self, canvas):
+    def draw(self, canvas: pygame.Surface):
+        """
+        Blit the tile icon onto the passed canvas
+        :param canvas:
+        :return:
+        """
         canvas.blit(self.icon, (self.rect.x/4, self.rect.y/4))
 
-    def get_dist(self, pos, *called):
+    def get_dist(self, pos: Tuple[float, float], *called):
+        """
+        Calculate the pixel distance from this tile to passed position
+        :param pos:
+        :param called:
+        :return:
+        """
         xpos = self.rect.center[0] - pos[0]
         ypos = pos[1] - self.rect.center[1]
         self.distance = math.sqrt(xpos*xpos + ypos*ypos)
 
-        if (self.state and self.state != 'closed') and called != ('npc',): #lol
+        if (self.state and self.state != TileState.CLOSED) and called != ('npc',): #lol
             self.sesam_luk_dig_op()
             
         return self.distance
 
     def sesam_luk_dig_op(self):
+        """
+        'Open' the tile, basically interact with the tile
+        :return:
+        """
+
+        # TODO: Probably check the tile type can be opened/interacted with
         if self.open > SETTINGS.tile_size:
             self.open = SETTINGS.tile_size
         elif self.open < 0:
             self.open = 0
             
-        if self.state == 'closed':
-            self.state = 'opening'
+        if self.state == TileState.CLOSED:
+            self.state = TileState.OPENING
             
-        elif self.state == 'opening':
+        elif self.state == TileState.OPENING:
             if self.open == 0:
                 SOUND.play_sound(self.open_sound, self.distance)
                 
             if self.open < SETTINGS.tile_size:
                 self.open += SETTINGS.tile_size * SETTINGS.dt
             else:
-                self.state = 'open'
+                self.state = TileState.OPEN
                 self.solid = False
             if self.open > SETTINGS.tile_size/1.4:
                 self.solid = False
 
-        elif self.state == 'open':
+        elif self.state == TileState.OPEN:
             self.timer += SETTINGS.dt
             if self.timer > 5 and not self.rect.colliderect(SETTINGS.player_rect):
                 for i in SETTINGS.npc_list:
                     if self.rect.colliderect(i.rect):
                         break
                 else:   
-                    self.state = 'closing'
+                    self.state = TileState.CLOSING
                     self.solid = True
                     self.timer = 0
 
-        elif self.state == 'closing':
+        elif self.state == TileState.CLOSING:
             if self.open >= SETTINGS.tile_size:
                 SOUND.play_sound(self.close_sound, self.distance)
             if self.open > 0:
                 self.open -= SETTINGS.tile_size * SETTINGS.dt
             else:
-                self.state = 'closed'
-
-
-            
-        
+                self.state = TileState.CLOSED

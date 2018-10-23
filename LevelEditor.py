@@ -146,6 +146,8 @@ def what_now():
                 print("You made an error somewhere. Please try again.")
             print()
 
+from MAP import TileType
+
 class Canvas:
 
     def __init__(self, width, height):
@@ -169,7 +171,7 @@ class Canvas:
             texture = TEXTURES.all_textures[i]
             t = pygame.image.load(texture).convert_alpha()
             t = pygame.transform.scale(t, (64,64))
-            if SETTINGS.texture_type[i] == 'vdoor':
+            if SETTINGS.texture_type[i] == TileType.V_DOOR:
                 t = pygame.transform.rotate(t, 90)
             self.tile_textures.append(t)
 
@@ -692,7 +694,7 @@ class Tile:
         self.pos = (pos[0]*32, pos[1]*32)
         self.map_pos = pos
         self.texture = pygame.image.load(TEXTURES.all_textures[ID]).convert_alpha()
-        if SETTINGS.texture_type[ID] == 'vdoor':
+        if SETTINGS.texture_type[ID] == TileType.V_DOOR:
             self.texture = pygame.transform.rotate(self.texture, 90)
         self.texture = pygame.transform.scale(self.texture, (32, 32))
         self.rect = self.texture.get_rect()

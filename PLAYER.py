@@ -7,6 +7,7 @@ import SOUND
 import pygame
 import math
 import os
+from MAP import TileType
 
 class Player:
 
@@ -165,7 +166,7 @@ class Player:
         #Interact
                 if key[pygame.K_e]:
                     if SETTINGS.middle_slice:
-                        if SETTINGS.middle_slice_len <= SETTINGS.tile_size*1.5 and (SETTINGS.middle_slice.type == 'vdoor' or SETTINGS.middle_slice.type == 'hdoor'):
+                        if SETTINGS.middle_slice_len <= SETTINGS.tile_size*1.5 and (SETTINGS.middle_slice.type == TileType.V_DOOR or SETTINGS.middle_slice.type == TileType.H_DOOR):
                             SETTINGS.middle_slice.sesam_luk_dig_op()
                         elif SETTINGS.middle_slice_len <= SETTINGS.tile_size and SETTINGS.middle_slice.type == 'end' and not SETTINGS.player_states['fade']:
                             SETTINGS.player_states['fade'] = True

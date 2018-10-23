@@ -6,6 +6,7 @@ import SEGMENTS
 import SETTINGS
 import TEXTURES
 import LEVELS
+from MAP import TileType
 
 class Generator:
 
@@ -243,7 +244,7 @@ class Generator:
 
             t = 0
             for tile in rotseg.array[i]:
-                if SETTINGS.texture_type[tile] == 'hdoor' or SETTINGS.texture_type[tile] == 'vdoor':
+                if SETTINGS.texture_type[tile] == TileType.H_DOOR or SETTINGS.texture_type[tile] == TileType.V_DOOR:
                     
                     for y in range(len(TEXTURES.all_textures)):
                         if y != tile and os.path.samefile(TEXTURES.all_textures[y], TEXTURES.all_textures[tile]):
@@ -421,7 +422,10 @@ class Generator:
                     newseg.level_pos = seg.level_pos
                     changesegs.append((newseg, i)) #Gritty way of doing it...
                 else:
-                    print("WARNING: No segment with doors: ", access, " of type ", x.type)
+                    # TODO: what to print here
+                    #print("WARNING: No segment with doors: ", access, " of type ", x.type)
+                    print("WARNING: No segment with doors: ", access)
+
             i += 1
 
         #Finally replace array and self.segpath segments with new segments.

@@ -10,6 +10,7 @@ import math
 import pygame
 # stats format in bottom of script
 from duga_enum import DugaEnum
+from MAP import TileType
 
 
 class NpcState(DugaEnum):
@@ -350,9 +351,9 @@ class Npc:
                 next_wall = next_wall[0]
 
             if SETTINGS.tile_visible[next_wall.ID]:
-                if next_wall.type != 'hdoor' and next_wall.type != 'vdoor':
+                if next_wall.type != TileType.H_DOOR and next_wall.type != TileType.V_DOOR:
                     break
-                elif next_wall.type == 'hdoor' or next_wall.type == 'vdoor':
+                elif next_wall.type == TileType.H_DOOR or next_wall.type == TileType.V_DOOR:
                     if next_wall.solid:
                         break
             # if player is spotted
