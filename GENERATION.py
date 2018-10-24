@@ -244,7 +244,7 @@ class Generator:
 
             t = 0
             for tile in rotseg.array[i]:
-                if SETTINGS.texture_type[tile] == TileType.H_DOOR or SETTINGS.texture_type[tile] == TileType.V_DOOR:
+                if SETTINGS.texture_type[tile] == TileType.HDOOR or SETTINGS.texture_type[tile] == TileType.VDOOR:
                     
                     for y in range(len(TEXTURES.all_textures)):
                         if y != tile and os.path.samefile(TEXTURES.all_textures[y], TEXTURES.all_textures[tile]):

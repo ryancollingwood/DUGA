@@ -362,9 +362,9 @@ class Npc(PhysicalEntity):
                 next_wall = next_wall[0]
 
             if SETTINGS.tile_visible[next_wall.ID]:
-                if next_wall.type != TileType.H_DOOR and next_wall.type != TileType.V_DOOR:
+                if next_wall.type != TileType.HDOOR and next_wall.type != TileType.VDOOR:
                     break
-                elif next_wall.type == TileType.H_DOOR or next_wall.type == TileType.V_DOOR:
+                elif next_wall.type == TileType.HDOOR or next_wall.type == TileType.VDOOR:
                     if next_wall.solid:
                         break
             # if player is spotted

@@ -22,3 +22,15 @@ class DugaEnum(Enum, metaclass=DugaEnumMeta):
             return self.value == other.value
         except AttributeError:
             return False
+
+    def __gt__(self, other):
+        return self.value > other.value
+
+    def __ge__(self, other):
+        return self.value >= other.value
+
+    def __le__(self, other):
+        return self.value <= other.value
+
+    def __lt__(self, other):
+        return self.value < other.value

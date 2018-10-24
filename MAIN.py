@@ -30,6 +30,7 @@ import GENERATION
 import MENU
 import MUSIC
 import TUTORIAL
+from MAP import TileType
 
 pygame.init()
 pygame.font.init()
@@ -237,7 +238,7 @@ def sort_atan(x):
     if theta > 180:
         theta -= 360
 
-    if x.type == 'end':
+    if x.type == TileType.END:
         SETTINGS.end_angle = theta
 
     theta = abs(theta)
@@ -263,7 +264,7 @@ def render_screen(canvas):
     # if faster than list iteration
     SETTINGS.rendered_tiles = tuple(
         tile for tile in SETTINGS.all_solid_tiles if
-        tile.type in ["hdoor", "vdoor", "wall"] and
+        tile.type in [TileType.HDOOR, TileType.VDOOR, TileType.WALL] and
         tile.distance and SETTINGS.tile_visible[tile.ID] and
         (
             (

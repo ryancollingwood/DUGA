@@ -110,13 +110,13 @@ class Raycast:
     def find_offset(self, position, ray_number, angle, tile, hv):
         #position is H_x or V_y
         if hv == 'v':
-            if tile.type == TileType.V_DOOR:
+            if tile.type == TileType.VDOOR:
                 offset = abs(int(position - tile.rect.y)) - tile.open
             else:
                 offset = abs(int(position - tile.rect.y))
 
         else:
-            if tile.type == TileType.H_DOOR:
+            if tile.type == TileType.HDOOR:
                 offset = abs(int(position - tile.rect.x)) - tile.open
             else:
                 offset = abs(int(position - tile.rect.x))
@@ -183,7 +183,7 @@ class Raycast:
                         H_hit = True
                         H_texture = SETTINGS.tile_texture[tile.ID]
                         self.current_htile = tile
-                        if tile.type == TileType.H_DOOR:
+                        if tile.type == TileType.HDOOR:
                             H_y -= self.door_size
                             H_x += self.door_size / math.tan(math.radians(angle))
                             H_offset = offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
@@ -198,7 +198,7 @@ class Raycast:
                         H_hit = True
                         H_texture = SETTINGS.tile_texture[tile.ID]
                         self.current_htile = tile
-                        if tile.type == TileType.H_DOOR:
+                        if tile.type == TileType.HDOOR:
                             H_y += self.door_size
                             H_x -= self.door_size / math.tan(math.radians(angle))
                             H_offset = offset = self.find_offset(H_x, ray_number, angle, tile, 'h')
@@ -217,7 +217,7 @@ class Raycast:
                         V_hit = True
                         V_texture = SETTINGS.tile_texture[tile.ID]
                         self.current_vtile = tile
-                        if tile.type == TileType.V_DOOR:
+                        if tile.type == TileType.VDOOR:
                             V_x += self.door_size
                             V_y -= self.door_size * math.tan(math.radians(angle))
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')
@@ -232,7 +232,7 @@ class Raycast:
                         V_hit = True
                         V_texture = SETTINGS.tile_texture[tile.ID]
                         self.current_vtile = tile
-                        if tile.type == TileType.V_DOOR:
+                        if tile.type == TileType.VDOOR:
                             V_x -= self.door_size
                             V_y += self.door_size * math.tan(math.radians(angle))
                             V_offset = self.find_offset(V_y, ray_number, angle, tile, 'v')

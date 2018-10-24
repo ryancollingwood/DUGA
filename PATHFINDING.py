@@ -33,13 +33,13 @@ def pathfind(start, end):
         end_point = [x for x in SETTINGS.all_tiles if x.map_pos == end][0]
         
         #Report errors
-        if SETTINGS.tile_solid[start_point.ID] and (start_point.type != TileType.H_DOOR and start_point.type != TileType.V_DOOR):
+        if SETTINGS.tile_solid[start_point.ID] and (start_point.type != TileType.HDOOR and start_point.type != TileType.VDOOR):
             print("=== WARNING: ===")
             print("Error! Start point in pathfinding is a solid block!")
             print(start_point.map_pos, start_point.ID)
             print()
             error = True
-        if SETTINGS.tile_solid[end_point.ID] and (end_point.type != TileType.H_DOOR and end_point.type != TileType.V_DOOR):
+        if SETTINGS.tile_solid[end_point.ID] and (end_point.type != TileType.HDOOR and end_point.type != TileType.VDOOR):
             print("=== WARNING: ===")
             print("Error! End point in pathfinding is a solid block!")
             print(end_point.map_pos, end_point.ID)
@@ -90,7 +90,7 @@ def pathfind(start, end):
             #Add adjecent nodes to openlist if they are not in closedlist and are not solid
             for adj in adjacent:
                 
-                if (adj.type == TileType.H_DOOR or adj.type == TileType.V_DOOR or not SETTINGS.tile_solid[adj.ID]) and adj not in closedlist:
+                if (adj.type == TileType.HDOOR or adj.type == TileType.VDOOR or not SETTINGS.tile_solid[adj.ID]) and adj not in closedlist:
                     if (adj in openlist and openlist[adj][0] > closedlist[current_point][0]+1) or adj not in openlist:
                         openlist[adj] = [closedlist[current_point][0]+1, find_distance(adj, end_point), 0, current_point]
                         openlist[adj][2] = f_value(adj, openlist)

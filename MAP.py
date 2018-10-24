@@ -39,7 +39,7 @@ class Map:
     def move_inaccessible_entities(self):      
         wa = []
         for i in SETTINGS.walkable_area:
-            if i.type != TileType.H_DOOR and i.type != TileType.V_DOOR:
+            if i.type != TileType.HDOOR and i.type != TileType.VDOOR:
                 wa.append(i.map_pos)
             
         move_items = [x for x in SETTINGS.levels_list[SETTINGS.current_level].items if list(x[0]) not in wa]
@@ -81,8 +81,11 @@ from PHYSICALENTITIES import PhysicalEntity
 
 class TileType(DugaEnum):
     SPRITE = "sprite"
-    V_DOOR = "vdoor"
-    H_DOOR = "hdoor"
+    VDOOR = "vdoor"
+    HDOOR = "hdoor"
+    WALL = "wall"
+    END = "end"
+    AIR = "air"
 
 
 class TileState(DugaEnum):
@@ -103,7 +106,7 @@ class Tile(PhysicalEntity):
         """
         
         self.ID = ID
-        self.type = SETTINGS.texture_type[self.ID]
+        self.type = TileType[SETTINGS.texture_type[self.ID]]
         
         if self.type == TileType.SPRITE:
             rect = pygame.Rect(pos[0], pos[1], SETTINGS.tile_size / 2, SETTINGS.tile_size / 2)
@@ -129,7 +132,7 @@ class Tile(PhysicalEntity):
             self.rect.y = pos[1]
             self.icon = pygame.transform.scale(self.texture, (16, 16)).convert()
             
-            if self.type == TileType.V_DOOR or self.type == TileType.H_DOOR:
+            if self.type == TileType.VDOOR or self.type == TileType.HDOOR:
                 self.open = 0
                 self.state = TileState.CLOSED
                 #states: closed, opening, open, closing
