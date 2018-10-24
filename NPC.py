@@ -10,6 +10,7 @@ import math
 import pygame
 # stats format in bottom of script
 from duga_enum import DugaEnum
+from PHYSICALENTITIES import PhysicalEntity
 from MAP import TileType
 
 
@@ -51,20 +52,30 @@ class NpcSide(namedtuple("NpcSide", "name,degree_min,degree_max,player_in_view,s
         return self.name == obj
 
 
-class Npc:
+class Npc(PhysicalEntity):
     def __init__(self, stats, sounds, directional_sprite):
+        
+        # Calling Physical Entity Init
+        map_pos = stats['pos']
+        pos = [map_pos[0] * SETTINGS.tile_size, map_pos[1] * SETTINGS.tile_size]
+        rect = pygame.Rect((pos[0], pos[1]), (SETTINGS.tile_size / 3, SETTINGS.tile_size / 3))
+        
+        # self.map_pos = stats['pos']
+        # self.pos = [self.map_pos[0] * SETTINGS.tile_size, self.map_pos[1] * SETTINGS.tile_size]
+        # self.rect = pygame.Rect((self.pos[0], self.pos[1]), (SETTINGS.tile_size / 3, SETTINGS.tile_size / 3))
+        
+        super().__init__(map_pos, True, rect, pos)
+        
         # Technical settings
         self.stats = stats  # Used for creating new NPCs
         self.sounds = sounds
         self.ID = stats['id']
-        self.map_pos = stats['pos']
-        self.pos = [self.map_pos[0] * SETTINGS.tile_size, self.map_pos[1] * SETTINGS.tile_size]
         self.face = stats['face']
         self.frame_interval = stats['spf']
         self.dda_list = SETTINGS.walkable_area + [x for x in SETTINGS.all_solid_tiles if x.type == 'sprite']
 
         # Visual and rect settings
-        self.rect = pygame.Rect((self.pos[0], self.pos[1]), (SETTINGS.tile_size / 3, SETTINGS.tile_size / 3))
+        
         self.rect.center = (self.pos[0] + SETTINGS.tile_size / 2, self.pos[1] + SETTINGS.tile_size / 2)
         self.real_x = self.rect.x
         self.real_y = self.rect.y

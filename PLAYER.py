@@ -8,10 +8,19 @@ import pygame
 import math
 import os
 from MAP import TileType
+from PHYSICALENTITIES import PhysicalEntity
 
-class Player:
+
+class Player(PhysicalEntity):
 
     def __init__(self, pos):
+        self.sprite = pygame.Surface([SETTINGS.tile_size / 12, SETTINGS.tile_size / 12])
+        rect = self.sprite.get_rect()
+        SETTINGS.player_rect = rect
+        map_pos = (int(rect.centerx / SETTINGS.tile_size), int(rect.centery / SETTINGS.tile_size))
+    
+        super().__init__(map_pos, True, self.sprite.get_rect(), pos)
+    
         self.max_speed = SETTINGS.player_speed
         self.speed = 0
         self.angle = SETTINGS.player_angle
@@ -21,12 +30,10 @@ class Player:
         self.real_y = pos[1]
 
         self.color = SETTINGS.BLUE
-        self.sprite = pygame.Surface([SETTINGS.tile_size / 12, SETTINGS.tile_size / 12])
         self.sprite.fill(self.color)
-        self.rect = self.sprite.get_rect()
+        
         self.rect.x = self.real_x
         self.rect.y = self.real_y
-        SETTINGS.player_rect = self.rect
         self.last_pos_tile = None
 
         self.mouse = pygame.mouse
@@ -284,7 +291,8 @@ class Player:
                     self.rect.top = tile.rect.bottom
                     self.real_y = self.rect.y
 
-        SETTINGS.player_map_pos = [int(self.rect.centerx / SETTINGS.tile_size), int(self.rect.centery / SETTINGS.tile_size)]
+        self.map_pos = [int(self.rect.centerx / SETTINGS.tile_size), int(self.rect.centery / SETTINGS.tile_size)]
+        SETTINGS.player_map_pos = self.map_pos
 
         #check if player is out of bounds and teleport them back.
         generator_check_list = [x for x in SETTINGS.walkable_area if x.map_pos == SETTINGS.player_map_pos]

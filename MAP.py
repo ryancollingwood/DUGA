@@ -77,7 +77,7 @@ class Map:
 
 from typing import List
 from duga_enum import DugaEnum
-
+from PHYSICALENTITIES import PhysicalEntity
 
 class TileType(DugaEnum):
     SPRITE = "sprite"
@@ -92,7 +92,7 @@ class TileState(DugaEnum):
     OPEN = "open"
 
 
-class Tile:
+class Tile(PhysicalEntity):
     
     def __init__(self, ID: int, pos: List[float], map_pos: List[int]):
         """
@@ -101,33 +101,33 @@ class Tile:
         :param pos: Pixel Distance
         :param map_pos: Map Grid Position
         """
+        
         self.ID = ID
-        #position in pixels
-        self.pos = pos
         self.type = SETTINGS.texture_type[self.ID]
+        
+        if self.type == TileType.SPRITE:
+            rect = pygame.Rect(pos[0], pos[1], SETTINGS.tile_size / 2, SETTINGS.tile_size / 2)
+        else:
+            self.texture = SETTINGS.tile_texture[self.ID].texture
+            self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size, SETTINGS.tile_size)).convert()
+            rect = self.texture.get_rect()
+
+        super().__init__(map_pos, SETTINGS.tile_solid[self.ID], rect, pos)
+        
         #position in tiles
-        self.map_pos = map_pos
         self.distance = None
-        self.solid = SETTINGS.tile_solid[self.ID]
         #For doors opening
         self.state = None
         self.timer = 0
         self.atan = 0
         
         if self.type == TileType.SPRITE:
-            current_number = len(SETTINGS.all_sprites)
             #Need some weird coordinates to make it centered.
             self.texture = SPRITES.Sprite(SETTINGS.tile_texture[self.ID], self.ID, (self.pos[0]+SETTINGS.tile_size/3, self.pos[1]+SETTINGS.tile_size/3), 'sprite')
-            
-            self.rect = pygame.Rect(pos[0], pos[1], SETTINGS.tile_size/2, SETTINGS.tile_size/2)
-
         else:
-            self.texture = SETTINGS.tile_texture[self.ID].texture
-            self.icon = pygame.transform.scale(self.texture, (16,16)).convert()
-            self.texture = pygame.transform.scale(self.texture, (SETTINGS.tile_size, SETTINGS.tile_size)).convert()
-            self.rect = self.texture.get_rect()
             self.rect.x = pos[0]
             self.rect.y = pos[1]
+            self.icon = pygame.transform.scale(self.texture, (16, 16)).convert()
             
             if self.type == TileType.V_DOOR or self.type == TileType.H_DOOR:
                 self.open = 0
