@@ -264,7 +264,7 @@ def render_screen(canvas):
     # if faster than list iteration
     SETTINGS.rendered_tiles = tuple(
         tile for tile in SETTINGS.all_solid_tiles if
-        tile.type in [TileType.HDOOR, TileType.VDOOR, TileType.WALL] and
+        tile.type in [TileType.HDOOR, TileType.VDOOR, TileType.WALL, TileType.END] and
         tile.distance and SETTINGS.tile_visible[tile.ID] and
         (
             (
