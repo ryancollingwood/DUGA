@@ -31,6 +31,7 @@ import MENU
 import MUSIC
 import TUTORIAL
 from MAP import TileType
+import numpy as np
 
 pygame.init()
 pygame.font.init()
@@ -276,6 +277,31 @@ def render_screen(canvas):
             )
         )
     )
+
+    SETTINGS.rendered_tiles_dimensions_bottom = np.array([
+        np.array(
+            (tile.rect.bottomleft[0], tile.rect.bottom, tile.rect.bottomright[0], tile.distance, tile.atan)
+        ) for tile in SETTINGS.rendered_tiles
+    ])
+
+    SETTINGS.rendered_tiles_dimensions_top = np.array([
+        np.array(
+            (tile.rect.topleft[0], tile.rect.top, tile.rect.topright[0], tile.distance, tile.atan)
+        ) for tile in SETTINGS.rendered_tiles
+    ])
+
+    SETTINGS.rendered_tiles_dimensions_left = np.array([
+        np.array(
+            (tile.rect.topleft[1], tile.rect.left, tile.rect.bottomleft[1], tile.distance, tile.atan)
+        ) for tile in SETTINGS.rendered_tiles
+    ])
+
+    SETTINGS.rendered_tiles_dimensions_right = np.array([
+        np.array(
+            (tile.rect.topright[1], tile.rect.right, tile.rect.bottomright[1], tile.distance, tile.atan)
+        )
+        for tile in SETTINGS.rendered_tiles
+    ])
 
 
     #Render all items in zbuffer

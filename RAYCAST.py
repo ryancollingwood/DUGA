@@ -4,6 +4,7 @@ import SETTINGS
 import PLAYER
 import pygame
 import math
+import numpy as np
 
 pygame.display.init()
 
@@ -92,6 +93,9 @@ class Raycast:
         for tile in SETTINGS.all_solid_tiles:
             tile.distance = tile.get_dist(SETTINGS.player_rect.center)
 
+        if len(SETTINGS.rendered_tiles) == 0:
+            return
+
         while ray < fov:
             degree = angle - ray
             if degree <= 0:
@@ -172,9 +176,56 @@ class Raycast:
 
             if self.check_hit(V_hit, H_hit, H_distance, V_distance, True):
                 break
-                
-            for tile in SETTINGS.rendered_tiles:
-                
+
+            bottom_hit = np.where(
+                np.logical_and(
+                    player_rect.centery > SETTINGS.rendered_tiles_dimensions_bottom[:,1],
+                    np.logical_and(
+                        SETTINGS.rendered_tiles_dimensions_bottom[:,1] == H_y,
+                        H_x >= SETTINGS.rendered_tiles_dimensions_bottom[:,0],
+                        H_x <= SETTINGS.rendered_tiles_dimensions_bottom[:,2],
+                    )
+                )
+            )
+
+            top_hit = np.where(
+                np.logical_and(
+                    player_rect.centery < SETTINGS.rendered_tiles_dimensions_top[:, 1],
+                    np.logical_and(
+                        SETTINGS.rendered_tiles_dimensions_top[:, 1] == H_y,
+                        H_x >= SETTINGS.rendered_tiles_dimensions_top[:, 0],
+                        H_x <= SETTINGS.rendered_tiles_dimensions_top[:, 2],
+                    )
+                )
+            )
+
+            left_hit = np.where(
+                np.logical_and(
+                    player_rect.centerx < SETTINGS.rendered_tiles_dimensions_left[:, 1],
+                    np.logical_and(
+                        SETTINGS.rendered_tiles_dimensions_left[:, 1] == V_x,
+                        V_y >= SETTINGS.rendered_tiles_dimensions_left[:, 0],
+                        V_y <= SETTINGS.rendered_tiles_dimensions_left[:, 2],
+                    )
+                )
+            )
+
+            right_hit = np.where(
+                np.logical_and(
+                    player_rect.centerx > SETTINGS.rendered_tiles_dimensions_right[:, 1],
+                    np.logical_and(
+                        SETTINGS.rendered_tiles_dimensions_right[:, 1] == V_x,
+                        V_y >= SETTINGS.rendered_tiles_dimensions_right[:, 0],
+                        V_y <= SETTINGS.rendered_tiles_dimensions_right[:, 2],
+                    )
+                )
+            )
+
+            search_indexes = (np.concatenate(([bottom_hit[0], top_hit[0], left_hit[0], right_hit[0]]), axis=None))
+
+            for search_index in search_indexes:
+
+                tile = SETTINGS.rendered_tiles[search_index]
                 if self.check_hit(V_hit, H_hit, H_distance, V_distance, False):
                     break
                 
