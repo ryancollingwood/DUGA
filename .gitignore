@@ -8,3 +8,4 @@ pyinstaller.exe
 *.dat
 *.log
 profiling_results
+data/settings.dat
