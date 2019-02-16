@@ -9,3 +9,4 @@ pyinstaller.exe
 *.log
 profiling_results
 data/settings.dat
+.vscode/settings.json
